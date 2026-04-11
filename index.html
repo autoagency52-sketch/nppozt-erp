@@ -985,10 +985,16 @@ function setSyncStatus(state) {
 // Все запросы через GET + URLSearchParams — работает с https://
 async function gsCall(params) {
   const url = GS_URL + '?' + new URLSearchParams(params).toString();
-  const res  = await fetch(url);
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || 'GS error');
-  return data;
+  try {
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'GS error');
+    return data;
+  } catch(e) {
+    console.error('gsCall failed:', params.action, params.table, e.message);
+    throw e;
+  }
 }
 
 // Сохранить таблицу в GS
@@ -1056,13 +1062,13 @@ async function syncNow() {
     await saveTable('sales',            DB.sales);
     await saveTable('payments',         DB.payments);
     await saveTable('planDays',         DB.planDays.map(d=>({date:d.date, data:JSON.stringify(d.data)})));
-    await saveTable('settings',         [DB.settings]);
+    await saveTable('settings', [{data: JSON.stringify(DB.settings||{})}]);
     await saveTable('ref_counterparty', DB.ref.counterparty);
     await saveTable('ref_product',      DB.ref.product);
     await saveTable('ref_material',     DB.ref.material);
     await saveTable('employees',        DB.employees);
-    await saveTable('salaryLogs',       DB.salaryLogs);
-    await saveTable('salPremiums', [DB.salPremiums||{}]);
+    await saveTable('salaryLogs', DB.salaryLogs.map(d=>({date:d.date, data:JSON.stringify(d)})));
+    await saveTable('salPremiums', [{data: JSON.stringify(DB.salPremiums||{})}]);
     setSyncStatus('ok');
     toast('Данные сохранены в Google Sheets ✓');
     setTimeout(() => setSyncStatus('idle'), 3000);
@@ -1095,13 +1101,22 @@ async function loadAll() {
     if (sales.length)    DB.sales      = sales;
     if (payments.length) DB.payments   = payments;
     if (planRaw.length)  DB.planDays   = planRaw.map(r=>({date:r.date, data:typeof r.data==='string'?JSON.parse(r.data):r.data}));
-    if (settings.length) DB.settings   = settings[0];
+    if (settings.length && settings[0]?.data) {
+      try { DB.settings = JSON.parse(settings[0].data); } catch(e) { DB.settings = {}; }
+    }
     if (refCP.length)    DB.ref.counterparty = refCP;
     if (refProd.length)  DB.ref.product      = refProd;
     if (refMat.length)   DB.ref.material     = refMat;
     if (emps.length)     DB.employees        = emps;
-    if (salLogs.length)  DB.salaryLogs       = salLogs;
-    if (salPrem?.length) DB.salPremiums = salPrem[0];
+    if (salLogs.length) {
+      DB.salaryLogs = salLogs.map(r => {
+        if (r.data) { try { return JSON.parse(r.data); } catch(e) {} }
+        return r; // старый формат - обратная совместимость
+      });
+    }
+    if (salPrem?.length && salPrem[0]?.data) {
+      try { DB.salPremiums = JSON.parse(salPrem[0].data); } catch(e) { DB.salPremiums = {}; }
+    }
     if (!DB.salPremiums) DB.salPremiums = {};
     setSyncStatus('ok');
     toast('Данные загружены из Google Sheets ✓');
