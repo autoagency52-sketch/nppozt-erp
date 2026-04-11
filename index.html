@@ -356,6 +356,7 @@ input,select,textarea,button{font-family:var(--sans)}
     <button class="nav-btn" onclick="switchTab('recv')">📥 Приёмка</button>
     <button class="nav-btn" onclick="switchTab('prod')">🏭 Производство</button>
     <button class="nav-btn" onclick="switchTab('sales')">📦 Продажи</button>
+    <button class="nav-btn" onclick="switchTab('salary')">👷 Зарплата</button>
     <button class="nav-btn" onclick="switchTab('fin')">💰 Финансы</button>
   </div>
   <div class="hdr-sep"></div>
@@ -433,7 +434,7 @@ input,select,textarea,button{font-family:var(--sans)}
         </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Наименование</th><th>ИНН</th><th>Тип</th><th>Телефон</th><th></th></tr></thead>
+            <thead><tr><th>Наименование</th><th>ИНН</th><th>Тип</th><th>Телефон</th><th>Email</th><th></th></tr></thead>
             <tbody id="ref-counterparty-tbody"></tbody>
           </table>
         </div>
@@ -516,7 +517,7 @@ input,select,textarea,button{font-family:var(--sans)}
         </div>
         <div class="form-row" style="margin-bottom:4px">
           <div class="form-lbl" style="color:var(--text2)">Ставка НДС</div>
-          <input class="inp w50" id="recv-vat" placeholder="20" value="20" oninput="calcRecvTotals()" style="width:50px">
+          <input class="inp w50" id="recv-vat" placeholder="22" value="22" oninput="calcRecvTotals()" style="width:50px">
           <span class="unit">%</span>
         </div>
         <div class="form-row" style="margin-bottom:4px">
@@ -538,7 +539,7 @@ input,select,textarea,button{font-family:var(--sans)}
         </div>
         <div class="form-row" style="margin-bottom:4px">
           <div class="form-lbl" style="color:var(--text2)">Ставка НДС</div>
-          <input class="inp" id="recv-extra-vat-rate" placeholder="20" value="20" oninput="calcRecvTotals()" style="width:50px">
+          <input class="inp" id="recv-extra-vat-rate" placeholder="22" value="22" oninput="calcRecvTotals()" style="width:50px">
           <span class="unit">%</span>
         </div>
         <div class="form-row" style="margin-bottom:4px">
@@ -714,36 +715,43 @@ input,select,textarea,button{font-family:var(--sans)}
     <div class="sec">
       <div class="sec-hdr">Новая отгрузка</div>
       <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="sale-date"></div>
-      <div class="form-row"><div class="form-lbl">Контрагент</div><input class="inp w120" id="sale-client" placeholder="Покупатель"></div>
-      <div class="form-row"><div class="form-lbl">Артикул</div>
-        <select class="sel" id="sale-art" style="width:120px">
-          <option>BSALT-5Ф</option><option>BSALT-8Ф</option><option>BSALT-10Ф</option>
-          <option>BSALT-13Ф</option><option>BSALT-16Ф</option>
-          <option>BSALT-5ТФ</option><option>BSALT-8ТФ</option><option>BSALT-10ТФ</option>
-          <option>BSALT-13ТФ</option><option>BSALT-16ТФ</option>
-          <option>Клей FP</option>
-        </select>
+
+      <div class="form-row"><div class="form-lbl">Контрагент</div>
+        <select class="sel" id="sale-client-sel" style="width:140px" onchange="document.getElementById('sale-client-inn').textContent=getSaleClientInn(this.value)"></select>
       </div>
-      <div class="form-row"><div class="form-lbl">Кол-во</div><input class="inp w80" id="sale-qty" placeholder="0" onchange="calcSaleTotals()"> <span class="unit" id="sale-unit">м²</span></div>
-      <div class="form-row"><div class="form-lbl">Цена без НДС</div><input class="inp w80" id="sale-price" placeholder="0" onchange="calcSaleTotals()"> <span class="unit">₽</span></div>
+      <div class="form-row"><div class="form-lbl" style="color:var(--text3)">ИНН</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="sale-client-inn">—</div>
+      </div>
+
       <div class="form-row"><div class="form-lbl">НДС %</div>
-        <select class="sel w60" id="sale-vat" onchange="calcSaleTotals()">
-          <option value="20">20%</option><option value="0">0%</option>
-        </select>
+        <input class="inp" id="sale-vat-global" value="22" placeholder="22" style="width:50px" oninput="renderSaleItems()">
+        <span class="unit">% (для новых строк)</span>
       </div>
-      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin-top:6px;font-size:11px">
-        <div class="form-row" style="margin:0 0 3px"><div class="form-lbl" style="color:var(--text2)">Сумма с НДС</div><div style="font-family:var(--mono);color:var(--blue)" id="sale-with-vat">—</div></div>
-        <div class="form-row" style="margin:0"><div class="form-lbl" style="color:var(--text2)">С/с (авто)</div><div style="font-family:var(--mono);color:var(--amber)" id="sale-cost">—</div></div>
-      </div>
-      <div class="form-row" style="margin-top:8px"><div class="form-lbl">№ накл./УПД</div><input class="inp w120" id="sale-invoice" placeholder="УПД №"></div>
-      <div class="form-row"><div class="form-lbl">Оплата</div>
-        <select class="sel" id="sale-paid" style="width:120px">
-          <option value="no">Не оплачено</option><option value="yes">Оплачено</option><option value="partial">Частично</option>
-        </select>
-      </div>
-      <div class="form-row"><div class="form-lbl">Сумма оплаты</div><input class="inp w80" id="sale-paid-amt" placeholder="0"> <span class="unit">₽</span></div>
+      <div class="form-row"><div class="form-lbl">№ накл./УПД</div><input class="inp w120" id="sale-invoice" placeholder="УПД №"></div>
       <div class="form-row"><div class="form-lbl">Ожид. оплата</div><input type="date" class="inp w120" id="sale-pay-date"></div>
-      <button class="btn g" style="width:100%;margin-top:8px" onclick="addSale()">+ Добавить отгрузку</button>
+
+      <div class="subsec">Позиции отгрузки</div>
+      <div id="sale-items-list"></div>
+      <button class="add-row-btn" onclick="addSaleItem()" style="margin-bottom:6px">+ Добавить позицию</button>
+
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:6px;padding:8px;font-size:11px;margin-bottom:8px">
+        <div class="form-row" style="margin:0 0 3px"><div class="form-lbl" style="color:var(--text2)">Итого б/НДС</div><div style="font-family:var(--mono);color:var(--text)" id="sale-total-no-vat">—</div></div>
+        <div class="form-row" style="margin:0 0 3px"><div class="form-lbl" style="color:var(--text2)">Итого с НДС</div><div style="font-family:var(--mono);color:var(--blue)" id="sale-total-vat">—</div></div>
+        <div class="form-row" style="margin:0"><div class="form-lbl" style="color:var(--text2)">С/с итого</div><div style="font-family:var(--mono);color:var(--amber)" id="sale-total-cost">—</div></div>
+      </div>
+
+      <div class="subsec">Оплата</div>
+      <div class="form-row"><div class="form-lbl">Статус</div>
+        <select class="sel" id="sale-paid" style="width:140px" onchange="toggleSalePaidAmt()">
+          <option value="no">Не оплачено</option>
+          <option value="yes">Оплачено полностью</option>
+          <option value="partial">Частично</option>
+        </select>
+      </div>
+      <div id="sale-paid-amt-row" style="display:none">
+        <div class="form-row"><div class="form-lbl">Сумма оплаты ₽</div><input class="inp w80" id="sale-paid-amt" placeholder="0"> <span class="unit">₽</span></div>
+      </div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addSale()">+ Сохранить отгрузку</button>
     </div>
   </div>
   <div class="main-area">
@@ -763,8 +771,7 @@ input,select,textarea,button{font-family:var(--sans)}
       <div style="overflow-x:auto">
         <table class="tbl">
           <thead><tr>
-            <th>Дата</th><th>Контрагент</th><th>Артикул</th>
-            <th class="r">Кол-во</th><th class="r">Цена б/НДС</th>
+            <th>Дата</th><th>Контрагент</th><th>Позиции</th>
             <th class="r">Сумма б/НДС</th><th class="r">Сумма с НДС</th>
             <th class="r">С/с</th><th class="r">Маржа</th>
             <th>Накл.№</th><th>Оплата</th><th>Ожид. дата</th><th></th>
@@ -780,6 +787,66 @@ input,select,textarea,button{font-family:var(--sans)}
           <thead><tr><th>Контрагент</th><th class="r">Отгружено</th><th class="r">Оплачено</th><th class="r">Долг</th><th>Ближ. дата оплаты</th></tr></thead>
           <tbody id="debitor-tbody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА: ЗАРПЛАТА
+════════════════════════════════════════ -->
+<div class="page" id="page-salary">
+  <!-- Две колонки: левая=навигация по дням, правая=ввод -->
+  <div style="display:grid;grid-template-columns:200px 1fr;height:100%;overflow:hidden">
+
+    <!-- Левая панель: список дней периода -->
+    <div style="background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:10px">
+      <div class="sec-hdr">Период</div>
+      <div class="form-row" style="margin-bottom:6px">
+        <div class="form-lbl" style="font-size:10px">Месяц</div>
+        <input type="month" class="inp" id="sal-month" style="width:110px" onchange="renderSalary()">
+      </div>
+      <div style="display:flex;gap:4px;margin-bottom:8px">
+        <button class="btn sm" id="sal-p1-btn" onclick="setSalPeriodFilter('1')" style="flex:1">П1 (1-15)</button>
+        <button class="btn sm" id="sal-p2-btn" onclick="setSalPeriodFilter('2')" style="flex:1">П2 (16-кон.)</button>
+      </div>
+      <div id="sal-day-list" style="display:flex;flex-direction:column;gap:3px"></div>
+
+      <div style="margin-top:12px">
+        <div class="sec-hdr">Параметры налогов</div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">НДФЛ %</div><input class="inp w60" id="sal-ndfl" value="13" oninput="renderSalPeriodSummary()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Взносы до порога %</div><input class="inp w60" id="sal-ins1" value="30.2" oninput="renderSalPeriodSummary()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Взносы сверх %</div><input class="inp w60" id="sal-ins2" value="7.6" oninput="renderSalPeriodSummary()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Порог МСП (₽)</div><input class="inp w80" id="sal-threshold" value="33660" oninput="renderSalPeriodSummary()"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="sec-hdr">Сотрудники</div>
+        <button class="btn sm g" style="width:100%;margin-bottom:6px" onclick="openEmpModal()">+ Добавить</button>
+        <div id="sal-emp-list"></div>
+      </div>
+    </div>
+
+    <!-- Правая часть: вкладки День / Итог периода -->
+    <div style="display:flex;flex-direction:column;overflow:hidden">
+      <div class="day-tabs-wrap" id="sal-view-tabs" style="border-bottom:1px solid var(--border)">
+        <div class="dtab active" id="sal-tab-day" onclick="switchSalView('day')">
+          <div class="dd">📅 День</div><div class="dw" id="sal-active-date-lbl">—</div>
+        </div>
+        <div class="dtab" id="sal-tab-period" onclick="switchSalView('period')">
+          <div class="dd">📊 Итог периода</div><div class="dw">сводная</div>
+        </div>
+      </div>
+
+      <!-- ВИД: ДЕНЬ -->
+      <div id="sal-view-day" style="flex:1;overflow-y:auto;padding:12px">
+        <div class="alert info"><span>ℹ</span><span>Выберите день в левой панели для ввода данных.</span></div>
+      </div>
+
+      <!-- ВИД: ИТОГ ПЕРИОДА -->
+      <div id="sal-view-period" style="flex:1;overflow-y:auto;padding:12px;display:none">
+        <div id="sal-period-summary"></div>
       </div>
     </div>
   </div>
@@ -870,7 +937,11 @@ let DB = {
     counterparty: [], // [{id,name,inn,type:'supplier'|'buyer'|'both',phone,email}]
     product:      [], // [{id,code,name,unit,vatRate}]
     material:     [], // [{id,code,name,unit,type:'pf'|'raw'}]
-  }
+  },
+  employees: [],   // [{id,name,position,type:'piece'|'salary',salaryBase,guarantee,
+                   //    rates:{sew5f:3,sew5nf:3,sew8f:4,...,fol_f5:2.5,...,glue:1.75,skladSmena:2800},
+                   //    ytdGross:0}] — ytdGross сбрасывается 1 янв
+  salaryLogs: []   // [{id,date,empId,op,art,qty,rate,gross,period:'1'|'2'}]
 };
 
 let currentTab = 'plan';
@@ -989,6 +1060,9 @@ async function syncNow() {
     await saveTable('ref_counterparty', DB.ref.counterparty);
     await saveTable('ref_product',      DB.ref.product);
     await saveTable('ref_material',     DB.ref.material);
+    await saveTable('employees',        DB.employees);
+    await saveTable('salaryLogs',       DB.salaryLogs);
+    await saveTable('salPremiums', [DB.salPremiums||{}]);
     setSyncStatus('ok');
     toast('Данные сохранены в Google Sheets ✓');
     setTimeout(() => setSyncStatus('idle'), 3000);
@@ -1002,7 +1076,7 @@ async function syncNow() {
 async function loadAll() {
   setSyncStatus('loading');
   try {
-    const [recv, prod, sales, payments, planRaw, settings, refCP, refProd, refMat] = await Promise.all([
+    const [recv, prod, sales, payments, planRaw, settings, refCP, refProd, refMat, emps, salLogs, salPrem] = await Promise.all([
       loadTable('receipts'),
       loadTable('production'),
       loadTable('sales'),
@@ -1012,6 +1086,9 @@ async function loadAll() {
       loadTable('ref_counterparty'),
       loadTable('ref_product'),
       loadTable('ref_material'),
+      loadTable('employees'),
+      loadTable('salaryLogs'),
+      loadTable('salPremiums'),
     ]);
     if (recv.length)     DB.receipts   = recv;
     if (prod.length)     DB.production = prod;
@@ -1022,6 +1099,10 @@ async function loadAll() {
     if (refCP.length)    DB.ref.counterparty = refCP;
     if (refProd.length)  DB.ref.product      = refProd;
     if (refMat.length)   DB.ref.material     = refMat;
+    if (emps.length)     DB.employees        = emps;
+    if (salLogs.length)  DB.salaryLogs       = salLogs;
+    if (salPrem?.length) DB.salPremiums = salPrem[0];
+    if (!DB.salPremiums) DB.salPremiums = {};
     setSyncStatus('ok');
     toast('Данные загружены из Google Sheets ✓');
     renderAll();
@@ -1051,7 +1132,8 @@ function renderTab(tab) {
   if (tab==='ref')   { renderRef(); populateSupplierSelect(); }
   if (tab==='recv')  { renderRecv(); }
   if (tab==='prod')  { renderProd(); }
-  if (tab==='sales') { renderSales(); }
+  if (tab==='sales')  { populateBuyerSelect(); renderSaleItems(); renderSales(); }
+  if (tab==='salary') { renderSalary(); }
   if (tab==='fin')   { renderFin(); }
   if (tab==='plan')  { renderPlanTabs(); }
 }
@@ -1059,6 +1141,10 @@ function renderTab(tab) {
 function renderAll() {
   renderRef();
   populateSupplierSelect();
+  populateBuyerSelect();
+  renderSaleItems();
+  renderSalary();
+  populateEmpSelects();
   renderPlanTabs();
   renderRecv();
   renderProd();
@@ -1073,83 +1159,139 @@ const TYPE_LABELS = {supplier:'Поставщик', buyer:'Покупатель'
 const MAT_TYPE_LABELS = {raw:'Сырьё', pf:'Полуфабрикат'};
 
 let refModalType = '';
-function openRefModal(type) {
+// editId !== null → режим редактирования существующей записи
+function openRefModal(type, editId=null) {
   refModalType = type;
-  const titles = {counterparty:'Новый контрагент', product:'Новая ГП', material:'Новый материал/ПФ'};
+  const isEdit = editId !== null;
+
+  // Находим существующую запись если редактируем
+  const existing = isEdit ? DB.ref[type].find(r=>r.id===editId) : null;
+
+  const titles = {
+    counterparty: isEdit ? 'Редактировать контрагента' : 'Новый контрагент',
+    product:      isEdit ? 'Редактировать ГП'          : 'Новая ГП',
+    material:     isEdit ? 'Редактировать материал/ПФ' : 'Новый материал/ПФ'
+  };
+
+  const V = (key, def='') => existing?.[key] ?? def; // значение поля с fallback
+
   const bodies = {
     counterparty: `
       <div class="modal-row">
-        <div class="modal-field full"><div class="field-lbl">Наименование</div><input class="field-inp" id="ref-name" placeholder="ООО Пример"></div>
+        <div class="modal-field full"><div class="field-lbl">Наименование</div>
+          <input class="field-inp" id="ref-name" placeholder="ООО Пример" value="${V('name')}">
+        </div>
       </div>
       <div class="modal-row">
-        <div class="modal-field"><div class="field-lbl">ИНН</div><input class="field-inp" id="ref-inn" placeholder="1234567890"></div>
+        <div class="modal-field"><div class="field-lbl">ИНН</div>
+          <input class="field-inp" id="ref-inn" placeholder="1234567890" value="${V('inn')}">
+        </div>
         <div class="modal-field"><div class="field-lbl">Тип</div>
           <select class="field-inp" id="ref-type">
-            <option value="supplier">Поставщик</option>
-            <option value="buyer">Покупатель</option>
-            <option value="both">Оба</option>
+            <option value="supplier" ${V('type')==='supplier'?'selected':''}>Поставщик</option>
+            <option value="buyer"    ${V('type')==='buyer'   ?'selected':''}>Покупатель</option>
+            <option value="both"     ${V('type')==='both'    ?'selected':''}>Оба</option>
           </select>
         </div>
       </div>
       <div class="modal-row">
-        <div class="modal-field"><div class="field-lbl">Телефон</div><input class="field-inp" id="ref-phone" placeholder="+7..."></div>
-        <div class="modal-field"><div class="field-lbl">Email</div><input class="field-inp" id="ref-email" placeholder="@"></div>
+        <div class="modal-field"><div class="field-lbl">Телефон</div>
+          <input class="field-inp" id="ref-phone" placeholder="+7..." value="${V('phone')}">
+        </div>
+        <div class="modal-field"><div class="field-lbl">Email</div>
+          <input class="field-inp" id="ref-email" placeholder="@" value="${V('email')}">
+        </div>
       </div>`,
     product: `
       <div class="modal-row">
-        <div class="modal-field"><div class="field-lbl">Артикул/Код</div><input class="field-inp" id="ref-code" placeholder="BSALT-5Ф"></div>
+        <div class="modal-field"><div class="field-lbl">Артикул/Код</div>
+          <input class="field-inp" id="ref-code" placeholder="BSALT-5Ф" value="${V('code')}">
+        </div>
         <div class="modal-field"><div class="field-lbl">Ед. изм.</div>
-          <select class="field-inp" id="ref-unit"><option>м²</option><option>кг</option><option>шт</option></select>
+          <select class="field-inp" id="ref-unit">
+            <option ${V('unit')==='м²'?'selected':''}>м²</option>
+            <option ${V('unit')==='кг'?'selected':''}>кг</option>
+            <option ${V('unit')==='шт'?'selected':''}>шт</option>
+          </select>
         </div>
       </div>
       <div class="modal-row">
-        <div class="modal-field full"><div class="field-lbl">Наименование</div><input class="field-inp" id="ref-name" placeholder="Базальтовый материал BSALT-5Ф"></div>
+        <div class="modal-field full"><div class="field-lbl">Наименование</div>
+          <input class="field-inp" id="ref-name" placeholder="Базальтовый материал BSALT-5Ф" value="${V('name')}">
+        </div>
       </div>
       <div class="modal-row">
-        <div class="modal-field"><div class="field-lbl">Ставка НДС %</div><input class="field-inp" id="ref-vat" value="20" placeholder="20"></div>
+        <div class="modal-field"><div class="field-lbl">Ставка НДС %</div>
+          <input class="field-inp" id="ref-vat" placeholder="22" value="${V('vatRate',22)}">
+        </div>
       </div>`,
     material: `
       <div class="modal-row">
-        <div class="modal-field"><div class="field-lbl">Код</div><input class="field-inp" id="ref-code" placeholder="Х5"></div>
+        <div class="modal-field"><div class="field-lbl">Код</div>
+          <input class="field-inp" id="ref-code" placeholder="Х5" value="${V('code')}">
+        </div>
         <div class="modal-field"><div class="field-lbl">Ед. изм.</div>
-          <select class="field-inp" id="ref-unit"><option>м²</option><option>кг</option><option>шт</option></select>
+          <select class="field-inp" id="ref-unit">
+            <option ${V('unit')==='м²'?'selected':''}>м²</option>
+            <option ${V('unit')==='кг'?'selected':''}>кг</option>
+            <option ${V('unit')==='шт'?'selected':''}>шт</option>
+          </select>
         </div>
       </div>
       <div class="modal-row">
-        <div class="modal-field full"><div class="field-lbl">Наименование</div><input class="field-inp" id="ref-name" placeholder="Холст БСТВ 5мм"></div>
+        <div class="modal-field full"><div class="field-lbl">Наименование</div>
+          <input class="field-inp" id="ref-name" placeholder="Холст БСТВ 5мм" value="${V('name')}">
+        </div>
       </div>
       <div class="modal-row">
         <div class="modal-field"><div class="field-lbl">Тип</div>
-          <select class="field-inp" id="ref-mat-type"><option value="raw">Сырьё</option><option value="pf">Полуфабрикат</option></select>
+          <select class="field-inp" id="ref-mat-type">
+            <option value="raw" ${V('matType')==='raw'?'selected':''}>Сырьё</option>
+            <option value="pf"  ${V('matType')==='pf' ?'selected':''}>Полуфабрикат</option>
+          </select>
         </div>
       </div>`
   };
+
   openModal(titles[type], bodies[type], () => {
     const name = document.getElementById('ref-name')?.value?.trim();
     if (!name) { toast('Введите наименование','err'); return false; }
+
     if (type === 'counterparty') {
-      DB.ref.counterparty.push({
-        id: uid(), name,
+      const record = {
+        id:    isEdit ? editId : uid(),
+        name,
         inn:   document.getElementById('ref-inn')?.value?.trim()||'',
         type:  document.getElementById('ref-type')?.value||'supplier',
         phone: document.getElementById('ref-phone')?.value?.trim()||'',
         email: document.getElementById('ref-email')?.value?.trim()||''
-      });
+      };
+      if (isEdit) DB.ref.counterparty = DB.ref.counterparty.map(r=>r.id===editId?record:r);
+      else        DB.ref.counterparty.push(record);
+
     } else if (type === 'product') {
-      DB.ref.product.push({
-        id: uid(), name,
+      const record = {
+        id:      isEdit ? editId : uid(),
+        name,
         code:    document.getElementById('ref-code')?.value?.trim()||'',
         unit:    document.getElementById('ref-unit')?.value||'м²',
-        vatRate: parseFloat(document.getElementById('ref-vat')?.value)||20
-      });
+        vatRate: parseFloat(document.getElementById('ref-vat')?.value)||22
+      };
+      if (isEdit) DB.ref.product = DB.ref.product.map(r=>r.id===editId?record:r);
+      else        DB.ref.product.push(record);
+
     } else if (type === 'material') {
-      DB.ref.material.push({
-        id: uid(), name,
+      const record = {
+        id:      isEdit ? editId : uid(),
+        name,
         code:    document.getElementById('ref-code')?.value?.trim()||'',
         unit:    document.getElementById('ref-unit')?.value||'м²',
         matType: document.getElementById('ref-mat-type')?.value||'raw'
-      });
+      };
+      if (isEdit) DB.ref.material = DB.ref.material.map(r=>r.id===editId?record:r);
+      else        DB.ref.material.push(record);
     }
+
     renderRef();
     populateSupplierSelect();
     syncNow();
@@ -1157,6 +1299,7 @@ function openRefModal(type) {
 }
 
 function deleteRef(type, id) {
+  if (!confirm('Удалить запись?')) return;
   DB.ref[type] = DB.ref[type].filter(r=>r.id!==id);
   renderRef();
   populateSupplierSelect();
@@ -1170,8 +1313,12 @@ function renderRef() {
     <td class="m" style="font-family:var(--mono)">${c.inn||'—'}</td>
     <td><span class="badge info">${TYPE_LABELS[c.type]||c.type}</span></td>
     <td class="m">${c.phone||'—'}</td>
-    <td><button class="btn del sm" onclick="deleteRef('counterparty','${c.id}')">✕</button></td>
-  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет контрагентов. Добавьте через кнопку «+»</td></tr>';
+    <td class="m">${c.email||'—'}</td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="openRefModal('counterparty','${c.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteRef('counterparty','${c.id}')">✕</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px">Нет контрагентов. Добавьте через кнопку «+»</td></tr>';
 
   const prBody = document.getElementById('ref-product-tbody');
   if (prBody) prBody.innerHTML = DB.ref.product.map(p=>`<tr>
@@ -1179,7 +1326,10 @@ function renderRef() {
     <td class="b">${p.name}</td>
     <td class="m">${p.unit}</td>
     <td class="m">${p.vatRate}%</td>
-    <td><button class="btn del sm" onclick="deleteRef('product','${p.id}')">✕</button></td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="openRefModal('product','${p.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteRef('product','${p.id}')">✕</button>
+    </td>
   </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет позиций ГП</td></tr>';
 
   const matBody = document.getElementById('ref-material-tbody');
@@ -1188,7 +1338,10 @@ function renderRef() {
     <td class="b">${m.name}</td>
     <td class="m">${m.unit}</td>
     <td><span class="badge ${m.matType==='raw'?'amb':'teal'}">${MAT_TYPE_LABELS[m.matType]||m.matType}</span></td>
-    <td><button class="btn del sm" onclick="deleteRef('material','${m.id}')">✕</button></td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="openRefModal('material','${m.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteRef('material','${m.id}')">✕</button>
+    </td>
   </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет материалов/ПФ</td></tr>';
 }
 
@@ -1294,7 +1447,72 @@ function addReceipt() {
   toast('Приход добавлен ✓');
 }
 
+function editReceipt(id) {
+  const r = DB.receipts.find(x=>x.id===id);
+  if (!r) return;
+  openModal('Редактировать приход', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="er-date" value="${r.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Материал</div><input class="field-inp" id="er-mat" value="${r.mat||''}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Поставщик</div><input class="field-inp" id="er-sup" value="${r.sup||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Кол-во</div><input class="field-inp" id="er-qty" value="${r.qty||0}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Цена с НДС</div><input class="field-inp" id="er-price-vat" value="${r.priceVat||r.price||0}"></div>
+      <div class="modal-field"><div class="field-lbl">НДС %</div><input class="field-inp" id="er-vat" value="${r.vatRate||r.vat||22}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Накл. расходы с НДС</div><input class="field-inp" id="er-extra-vat" value="${r.extraVat||0}"></div>
+      <div class="modal-field"><div class="field-lbl">НДС накл. %</div><input class="field-inp" id="er-extra-vat-rate" value="${r.extraVatRate||22}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Накл.№/УПД</div><input class="field-inp" id="er-invoice" value="${r.invoice||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Оплата</div>
+        <select class="field-inp" id="er-paid">
+          <option value="no"      ${r.paid==='no'     ?'selected':''}>Нет</option>
+          <option value="yes"     ${r.paid==='yes'    ?'selected':''}>Да</option>
+          <option value="partial" ${r.paid==='partial'?'selected':''}>Частично</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Сумма оплаты</div><input class="field-inp" id="er-paid-amt" value="${r.paidAmt||0}"></div>
+    </div>
+  `, () => {
+    const qty         = parseFloat(document.getElementById('er-qty').value)||0;
+    const priceVat    = parseFloat(document.getElementById('er-price-vat').value)||0;
+    const vatRate     = parseFloat(document.getElementById('er-vat').value)||0;
+    const extraVat    = parseFloat(document.getElementById('er-extra-vat').value)||0;
+    const extraVatRate= parseFloat(document.getElementById('er-extra-vat-rate').value)||0;
+    const priceNoVat  = vatRate > 0 ? priceVat/(1+vatRate/100) : priceVat;
+    const extraNoVat  = extraVatRate > 0 ? extraVat/(1+extraVatRate/100) : extraVat;
+    const extraPerUnit= qty > 0 ? extraNoVat/qty : 0;
+    const unitPrice   = priceNoVat + extraPerUnit;
+    const withVat     = priceVat*qty + extraVat;
+    const total       = unitPrice*qty;
+    const updated = {
+      ...r,
+      date:     document.getElementById('er-date').value,
+      sup:      document.getElementById('er-sup').value,
+      mat:      document.getElementById('er-mat').value,
+      qty, priceVat, vatRate, priceNoVat,
+      extraVat, extraVatRate, extraNoVat,
+      unitPrice, withVat, total,
+      invoice:  document.getElementById('er-invoice').value,
+      paid:     document.getElementById('er-paid').value,
+      paidAmt:  parseFloat(document.getElementById('er-paid-amt').value)||0,
+    };
+    DB.receipts = DB.receipts.map(x=>x.id===id?updated:x);
+    renderRecv();
+    syncNow();
+    toast('Запись обновлена ✓');
+  });
+}
+
 function deleteReceipt(id) {
+  if (!confirm('Удалить запись прихода?')) return;
   DB.receipts = DB.receipts.filter(r=>r.id!==id);
   renderRecv();
   syncNow();
@@ -1310,13 +1528,21 @@ function renderRecv() {
 
   let totalCost = 0, totalDebt = 0, totalPaid = 0;
   DB.receipts.forEach(r => {
-    totalCost += r.total||0;
-    totalPaid += r.paidAmt||0;
+    const sumWithVat = r.withVat || 0; // платим поставщику с НДС
+    totalCost += sumWithVat;
+    if (r.paid === 'yes') {
+      // Полностью оплачено — берём всю сумму с НДС
+      totalPaid += sumWithVat;
+    } else if (r.paid === 'partial') {
+      // Частично — берём фактически оплаченное
+      totalPaid += r.paidAmt || 0;
+    }
+    // paid === 'no' — ничего не оплачено
   });
-  totalDebt = totalCost - totalPaid;
+  totalDebt = Math.max(0, totalCost - totalPaid);
 
   document.getElementById('kv-recv-total').textContent = fmtMoney(totalCost);
-  document.getElementById('kv-recv-debt').textContent  = fmtMoney(Math.max(0,totalDebt));
+  document.getElementById('kv-recv-debt').textContent  = fmtMoney(totalDebt);
   document.getElementById('kv-recv-paid').textContent  = fmtMoney(totalPaid);
 
   // Остатки сырья
@@ -1342,7 +1568,10 @@ function renderRecv() {
       <td class="g">${fmtMoney(r.total)}</td>
       <td class="m">${r.invoice||'—'}</td>
       <td><span class="badge ${paidCls}">${r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?'ЧАСТИЧНО':'НЕ ОПЛ.'}</span></td>
-      <td><button class="btn del sm" onclick="deleteReceipt('${r.id}')">✕</button></td>
+      <td style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn sm" onclick="editReceipt('${r.id}')" title="Редактировать">✏</button>
+        <button class="btn del sm" onclick="deleteReceipt('${r.id}')">✕</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -1504,7 +1733,47 @@ function addProdOp() {
   toast('Операция проведена ✓');
 }
 
+function editProdOp(id) {
+  const r = DB.production.find(x=>x.id===id);
+  if (!r) return;
+  const opNames = {sew:'Прошив', fol:'Фольгирование', glue:'Изгот. клея'};
+  openModal('Редактировать операцию', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="ep-date" value="${r.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Операция</div>
+        <select class="field-inp" id="ep-op">
+          <option value="sew"  ${r.op==='sew' ?'selected':''}>Прошив</option>
+          <option value="fol"  ${r.op==='fol' ?'selected':''}>Фольгирование</option>
+          <option value="glue" ${r.op==='glue'?'selected':''}>Изгот. клея</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Артикул/ГП</div><input class="field-inp" id="ep-art" value="${r.art||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Кол-во</div><input class="field-inp" id="ep-qty" value="${r.qty||0}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">С/с на ед. (₽)</div><input class="field-inp" id="ep-cost" value="${fmtDec(r.costUnit||0)}"></div>
+    </div>
+    <div style="padding:8px;background:var(--bg3);border-radius:5px;font-size:10px;color:var(--text3)">
+      Списание сырья пересчитается по техкартам при сохранении
+    </div>
+  `, () => {
+    const qty     = parseFloat(document.getElementById('ep-qty').value)||0;
+    const op      = document.getElementById('ep-op').value;
+    const art     = document.getElementById('ep-art').value;
+    const costUnit= parseFloat(document.getElementById('ep-cost').value.replace(',','.'))||0;
+    const cons    = getConsumption(op, art, qty);
+    const updated = {...r, date:document.getElementById('ep-date').value, op, art, qty, costUnit, consumption:cons};
+    DB.production = DB.production.map(x=>x.id===id?updated:x);
+    renderProd();
+    syncNow();
+    toast('Операция обновлена ✓');
+  });
+}
+
 function deleteProdOp(id) {
+  if (!confirm('Удалить производственную операцию?')) return;
   DB.production = DB.production.filter(r=>r.id!==id);
   renderProd();
   syncNow();
@@ -1569,7 +1838,10 @@ function renderProd() {
     <td class="am">${fmtDec(r.costUnit)}</td>
     <td class="g">${fmtMoney((r.costUnit||0)*(r.qty||0))}</td>
     <td class="m" style="font-size:10px">${(r.consumption||[]).map(c=>`${c.mat}: ${fmtDec(c.qty,1)}`).join(' | ')}</td>
-    <td><button class="btn del sm" onclick="deleteProdOp('${r.id}')">✕</button></td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="editProdOp('${r.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteProdOp('${r.id}')">✕</button>
+    </td>
   </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:16px">Нет операций</td></tr>';
 
   // Склад ГП
@@ -1609,40 +1881,230 @@ function renderProd() {
 // ═══════════════════════════════════════════════════════
 //  ВКЛАДКА ПРОДАЖИ
 // ═══════════════════════════════════════════════════════
-function calcSaleTotals() {
-  const qty   = parseFloat(document.getElementById('sale-qty').value)||0;
-  const price = parseFloat(document.getElementById('sale-price').value)||0;
-  const vat   = parseFloat(document.getElementById('sale-vat').value)||0;
-  const withVat = price * qty * (1+vat/100);
-  document.getElementById('sale-with-vat').textContent = fmtMoney(withVat);
-  const art = document.getElementById('sale-art').value;
+// Позиции текущей новой отгрузки
+let saleItems = []; // [{art, qty, price, vat}]
+
+function getSaleClientInn(name) {
+  const cp = DB.ref.counterparty.find(c=>c.name===name);
+  return cp?.inn || '—';
+}
+
+function toggleSalePaidAmt() {
+  const v = document.getElementById('sale-paid')?.value;
+  const row = document.getElementById('sale-paid-amt-row');
+  if (row) row.style.display = v==='partial' ? '' : 'none';
+}
+
+const ARTS_SALE = ['BSALT-5Ф','BSALT-8Ф','BSALT-10Ф','BSALT-13Ф','BSALT-16Ф',
+                   'BSALT-5ТФ','BSALT-8ТФ','BSALT-10ТФ','BSALT-13ТФ','BSALT-16ТФ','Клей FP'];
+
+function addSaleItem() {
+  const vat = parseFloat(document.getElementById('sale-vat-global')?.value)||22;
+  saleItems.push({art:'BSALT-5Ф', qty:0, price:0, vat});
+  renderSaleItems();
+}
+
+function removeSaleItem(i) {
+  saleItems.splice(i,1);
+  renderSaleItems();
+}
+
+function renderSaleItems() {
   const gpStock = calcGpStock();
-  const costUnit = gpStock[art]?.avgCost || 0;
-  document.getElementById('sale-cost').textContent = fmtMoney(costUnit*qty) + ` (${fmtDec(costUnit)} ₽/ед.)`;
+  const vatGlobal = parseFloat(document.getElementById('sale-vat-global')?.value)||22;
+  const list = document.getElementById('sale-items-list');
+  if (!list) return;
+
+  let totalNoVat=0, totalVat=0, totalCost=0;
+  saleItems.forEach(it=>{
+    const sum = it.price*(it.qty||0);
+    const sumV = sum*(1+(it.vat||vatGlobal)/100);
+    const cu   = gpStock[it.art]?.avgCost||0;
+    totalNoVat += sum;
+    totalVat   += sumV;
+    totalCost  += cu*(it.qty||0);
+  });
+
+  list.innerHTML = saleItems.map((it,i)=>{
+    const cu = gpStock[it.art]?.avgCost||0;
+    const unit = it.art==='Клей FP'?'кг':'м²';
+    return `<div style="background:var(--bg3);border-radius:5px;padding:6px 8px;margin-bottom:5px;font-size:11px">
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+        <select class="sel" style="flex:1;font-size:11px"
+          onchange="saleItems[${i}].art=this.value;renderSaleItems()">
+          ${ARTS_SALE.map(a=>`<option ${it.art===a?'selected':''}>${a}</option>`).join('')}
+        </select>
+        <button class="del-btn" onclick="removeSaleItem(${i})">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Кол-во (${unit})</div>
+          <input class="inp" style="width:100%;font-size:11px" value="${it.qty||''}" placeholder="0"
+            oninput="saleItems[${i}].qty=parseFloat(this.value)||0;renderSaleItems()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Цена б/НДС</div>
+          <input class="inp" style="width:100%;font-size:11px" value="${it.price||''}" placeholder="0"
+            oninput="saleItems[${i}].price=parseFloat(this.value)||0;renderSaleItems()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">НДС %</div>
+          <input class="inp" style="width:100%;font-size:11px" value="${it.vat??vatGlobal}" placeholder="22"
+            oninput="saleItems[${i}].vat=parseFloat(this.value)||0;renderSaleItems()">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;font-family:var(--mono);font-size:10px">
+        <span style="color:var(--text2)">С НДС: <span style="color:var(--blue)">${fmtMoney(it.price*(it.qty||0)*(1+(it.vat??vatGlobal)/100))}</span></span>
+        <span style="color:var(--text3)">С/с: ${fmtDec(cu)} ₽/ед.</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const S = id => document.getElementById(id);
+  if(S('sale-total-no-vat')) S('sale-total-no-vat').textContent = fmtMoney(totalNoVat);
+  if(S('sale-total-vat'))    S('sale-total-vat').textContent    = fmtMoney(totalVat);
+  if(S('sale-total-cost'))   S('sale-total-cost').textContent   = fmtMoney(totalCost);
 }
 
 function addSale() {
   const date    = document.getElementById('sale-date').value || today();
-  const client  = document.getElementById('sale-client').value;
-  const art     = document.getElementById('sale-art').value;
-  const qty     = parseFloat(document.getElementById('sale-qty').value)||0;
-  const price   = parseFloat(document.getElementById('sale-price').value)||0;
-  const vat     = parseFloat(document.getElementById('sale-vat').value)||0;
+  const client  = document.getElementById('sale-client-sel')?.value || '';
   const invoice = document.getElementById('sale-invoice').value;
   const paid    = document.getElementById('sale-paid').value;
-  const paidAmt = parseFloat(document.getElementById('sale-paid-amt').value)||0;
   const payDate = document.getElementById('sale-pay-date').value;
-  if (!qty||!price||!client) { toast('Заполните все поля','err'); return; }
-  const gpStock  = calcGpStock();
-  const costUnit = gpStock[art]?.avgCost||0;
-  const withVat  = price*qty*(1+vat/100);
-  DB.sales.push({id:uid(),date,client,art,qty,price,vat,invoice,paid,paidAmt,payDate,costUnit,withVat});
+  if (!client) { toast('Выберите контрагента', 'err'); return; }
+  if (saleItems.length === 0) { toast('Добавьте хотя бы одну позицию', 'err'); return; }
+  if (saleItems.some(it=>!it.qty||!it.price)) { toast('Заполните количество и цену во всех позициях','err'); return; }
+
+  // Считаем итого по всем позициям
+  const gpStock = calcGpStock();
+  let totalWithVat = 0, totalNoVat = 0, totalCost = 0;
+  saleItems.forEach(it => {
+    totalNoVat   += it.price * it.qty;
+    totalWithVat += it.price * it.qty * (1 + (it.vat||22)/100);
+    totalCost    += (gpStock[it.art]?.avgCost||0) * it.qty;
+  });
+
+  // Сумма оплаты
+  let paidAmt = 0;
+  if (paid === 'yes')     paidAmt = totalWithVat;
+  else if (paid === 'partial') paidAmt = parseFloat(document.getElementById('sale-paid-amt')?.value)||0;
+
+  DB.sales.push({
+    id: uid(), date, client, invoice, paid, paidAmt, payDate,
+    items: [...saleItems],        // массив позиций
+    withVat: totalWithVat,
+    price: totalNoVat,            // сумма б/НДС (для совместимости)
+    qty: saleItems.reduce((s,it)=>s+it.qty,0),
+    art: saleItems.length===1 ? saleItems[0].art : 'Несколько',
+    costUnit: saleItems.length>0 ? totalCost/saleItems.reduce((s,it)=>s+it.qty,0) : 0,
+  });
+  saleItems = [];
+  renderSaleItems();
   renderSales();
   syncNow();
   toast('Отгрузка добавлена ✓');
 }
 
+function editSale(id) {
+  const r = DB.sales.find(x=>x.id===id);
+  if (!r) return;
+  // Получаем позиции — либо items[], либо старый формат (один артикул)
+  const items = r.items && r.items.length
+    ? r.items
+    : [{art: r.art||'BSALT-5Ф', qty: r.qty||0, price: r.price||0, vat: r.vat||22}];
+
+  const buyers = DB.ref.counterparty.filter(c=>c.type==='buyer'||c.type==='both');
+  const clientOpts = buyers.map(c=>`<option ${c.name===r.client?'selected':''}>${c.name}</option>`).join('');
+
+  openModal('Редактировать отгрузку', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="es-date" value="${r.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Контрагент</div>
+        <select class="field-inp" id="es-client">
+          ${clientOpts||`<option>${r.client||''}</option>`}
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Накл.№/УПД</div><input class="field-inp" id="es-invoice" value="${r.invoice||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Ожид. оплата</div><input type="date" class="field-inp" id="es-pay-date" value="${r.payDate||''}"></div>
+    </div>
+
+    <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Позиции</div>
+    ${items.map((it,i)=>`
+      <div style="background:var(--bg3);border-radius:5px;padding:6px 8px;margin-bottom:4px;font-size:11px">
+        <select class="field-inp" id="es-art-${i}" style="width:100%;margin-bottom:4px">
+          ${ARTS_SALE.map(a=>`<option ${it.art===a?'selected':''}>${a}</option>`).join('')}
+        </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">Кол-во</div>
+            <input class="field-inp" id="es-qty-${i}" value="${it.qty||0}"></div>
+          <div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">Цена б/НДС</div>
+            <input class="field-inp" id="es-price-${i}" value="${it.price||0}"></div>
+          <div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">НДС %</div>
+            <input class="field-inp" id="es-vat-${i}" value="${it.vat||22}"></div>
+        </div>
+      </div>`).join('')}
+
+    <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Оплата</div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Статус</div>
+        <select class="field-inp" id="es-paid" onchange="document.getElementById('es-paid-amt-wrap').style.display=this.value==='partial'?'':'none'">
+          <option value="no"      ${r.paid==='no'     ?'selected':''}>Не оплачено</option>
+          <option value="yes"     ${r.paid==='yes'    ?'selected':''}>Оплачено полностью</option>
+          <option value="partial" ${r.paid==='partial'?'selected':''}>Частично</option>
+        </select>
+      </div>
+      <div class="modal-field" id="es-paid-amt-wrap" style="display:${r.paid==='partial'?'':'none'}">
+        <div class="field-lbl">Сумма оплаты ₽</div>
+        <input class="field-inp" id="es-paid-amt" value="${r.paidAmt||0}">
+      </div>
+    </div>
+  `, () => {
+    const gpStock = calcGpStock();
+    const newItems = items.map((_,i) => ({
+      art:   document.getElementById(`es-art-${i}`)?.value||'',
+      qty:   parseFloat(document.getElementById(`es-qty-${i}`)?.value)||0,
+      price: parseFloat(document.getElementById(`es-price-${i}`)?.value)||0,
+      vat:   parseFloat(document.getElementById(`es-vat-${i}`)?.value)||22,
+    }));
+
+    let totalWithVat=0, totalNoVat=0, totalCost=0;
+    newItems.forEach(it=>{
+      totalNoVat   += it.price*it.qty;
+      totalWithVat += it.price*it.qty*(1+(it.vat||22)/100);
+      totalCost    += (gpStock[it.art]?.avgCost||0)*it.qty;
+    });
+
+    const paidStatus = document.getElementById('es-paid').value;
+    let paidAmt = 0;
+    if (paidStatus==='yes')     paidAmt = totalWithVat;
+    else if (paidStatus==='partial') paidAmt = parseFloat(document.getElementById('es-paid-amt')?.value)||0;
+
+    const updated = {
+      ...r,
+      date:    document.getElementById('es-date').value,
+      client:  document.getElementById('es-client').value,
+      invoice: document.getElementById('es-invoice').value,
+      payDate: document.getElementById('es-pay-date').value,
+      paid: paidStatus, paidAmt,
+      items: newItems,
+      withVat: totalWithVat,
+      price: totalNoVat,
+      qty: newItems.reduce((s,it)=>s+it.qty,0),
+      art: newItems.length===1 ? newItems[0].art : 'Несколько',
+      costUnit: newItems.length>0 ? totalCost/Math.max(1,newItems.reduce((s,it)=>s+it.qty,0)) : 0,
+    };
+    DB.sales = DB.sales.map(x=>x.id===id?updated:x);
+    renderSales();
+    syncNow();
+    toast('Отгрузка обновлена ✓');
+  });
+}
+
 function deleteSale(id) {
+  if (!confirm('Удалить запись отгрузки?')) return;
   DB.sales = DB.sales.filter(r=>r.id!==id);
   renderSales();
   syncNow();
@@ -1653,66 +2115,792 @@ function renderSales() {
   const rows = filterMonth ? DB.sales.filter(r=>r.date&&r.date.startsWith(filterMonth)) : DB.sales;
   const sorted = [...rows].sort((a,b)=>b.date>a.date?1:-1);
 
-  let rev=0,revVat=0,debt=0,paid=0;
+  // KPI — правильная дебиторка
+  let rev=0, revVat=0, debt=0, paid=0;
   DB.sales.forEach(r=>{
-    const sum=r.price*(r.qty||0);
-    rev+=sum; revVat+=r.withVat||0;
-    paid+=r.paidAmt||0;
+    const sumNoVat = r.price||0;     // сумма б/НДС
+    const sumVat   = r.withVat||0;
+    rev    += sumNoVat;
+    revVat += sumVat;
+    if (r.paid==='yes')          paid += sumVat;
+    else if (r.paid==='partial') paid += r.paidAmt||0;
+    // paid==='no' → ничего не добавляем к paid
   });
-  debt=revVat-paid;
-  document.getElementById('kv-sale-rev').textContent    =fmtMoney(rev);
-  document.getElementById('kv-sale-rev-vat').textContent=fmtMoney(revVat);
-  document.getElementById('kv-sale-debt').textContent   =fmtMoney(Math.max(0,debt));
-  document.getElementById('kv-sale-paid').textContent   =fmtMoney(paid);
+  debt = Math.max(0, revVat - paid);
 
-  const tbody=document.getElementById('sale-tbody');
-  if(!tbody)return;
-  tbody.innerHTML=sorted.map(r=>{
-    const sum=r.price*(r.qty||0);
-    const cost=(r.costUnit||0)*(r.qty||0);
-    const margin=sum-cost;
-    const marginPct=sum>0?margin/sum*100:0;
-    const paidCls=r.paid==='yes'?'ok':r.paid==='partial'?'amb':'bad';
-    const unit=r.art==='Клей FP'?'кг':'м²';
+  document.getElementById('kv-sale-rev').textContent    = fmtMoney(rev);
+  document.getElementById('kv-sale-rev-vat').textContent= fmtMoney(revVat);
+  document.getElementById('kv-sale-debt').textContent   = fmtMoney(debt);
+  document.getElementById('kv-sale-paid').textContent   = fmtMoney(paid);
+
+  const tbody = document.getElementById('sale-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.map(r=>{
+    const items    = r.items && r.items.length ? r.items : [{art:r.art, qty:r.qty||0, price:r.price||0, vat:r.vat||22}];
+    const sumNoVat = r.price||0;
+    const sumVat   = r.withVat||0;
+    const totalCost= items.reduce((s,it)=>{
+      const gp = calcGpStock();
+      return s + (gp[it.art]?.avgCost||r.costUnit||0)*(it.qty||0);
+    },0);
+    const margin   = sumNoVat - totalCost;
+    const paidCls  = r.paid==='yes'?'ok':r.paid==='partial'?'amb':'bad';
+    const paidLbl  = r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?`ЧАСТИЧНО (${fmtMoney(r.paidAmt||0)})`:'НЕ ОПЛ.';
+
+    const artsList = items.length===1
+      ? `${items[0].art} × ${fmtNum(items[0].qty)}`
+      : items.map(it=>`${it.art} × ${fmtNum(it.qty)}`).join(', ');
+
     return `<tr>
       <td class="m">${fmtDate(r.date)}</td>
       <td class="b">${r.client||'—'}</td>
-      <td>${r.art}</td>
-      <td class="r">${fmtNum(r.qty)} ${unit}</td>
-      <td class="r">${fmtDec(r.price)}</td>
-      <td class="r">${fmtMoney(sum)}</td>
-      <td class="bl">${fmtMoney(r.withVat)}</td>
-      <td class="am">${fmtMoney(cost)}</td>
-      <td class="${margin>=0?'g':'red'}">${fmtMoney(margin)} (${fmtDec(marginPct,1)}%)</td>
+      <td style="font-size:10px;max-width:200px">${artsList}</td>
+      <td class="r">${fmtMoney(sumNoVat)}</td>
+      <td class="bl">${fmtMoney(sumVat)}</td>
+      <td class="am">${fmtMoney(totalCost)}</td>
+      <td class="${margin>=0?'g':'red'}">${fmtMoney(margin)}</td>
       <td class="m">${r.invoice||'—'}</td>
-      <td><span class="badge ${paidCls}">${r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?'ЧАСТИЧНО':'НЕ ОПЛ.'}</span></td>
+      <td><span class="badge ${paidCls}">${paidLbl}</span></td>
       <td class="m">${r.payDate?fmtDate(r.payDate):'—'}</td>
-      <td><button class="btn del sm" onclick="deleteSale('${r.id}')">✕</button></td>
+      <td style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn sm" onclick="editSale('${r.id}')" title="Редактировать">✏</button>
+        <button class="btn del sm" onclick="deleteSale('${r.id}')">✕</button>
+      </td>
     </tr>`;
-  }).join('')||'<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:16px">Нет отгрузок</td></tr>';
+  }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:16px">Нет отгрузок</td></tr>';
 
-  // Дебиторка по клиентам
+  // Дебиторка по клиентам — правильная логика
   const debitors={};
   DB.sales.forEach(r=>{
-    if(!debitors[r.client])debitors[r.client]={shipped:0,paid:0,payDate:''};
-    debitors[r.client].shipped+=r.withVat||0;
-    debitors[r.client].paid+=r.paidAmt||0;
-    if(r.payDate&&(!debitors[r.client].payDate||r.payDate<debitors[r.client].payDate))
-      debitors[r.client].payDate=r.payDate;
+    const cl = r.client||'?';
+    if (!debitors[cl]) debitors[cl]={shipped:0, paid:0, payDate:''};
+    debitors[cl].shipped += r.withVat||0;
+    if (r.paid==='yes')          debitors[cl].paid += r.withVat||0;
+    else if (r.paid==='partial') debitors[cl].paid += r.paidAmt||0;
+    if (r.payDate&&(!debitors[cl].payDate||r.payDate<debitors[cl].payDate))
+      debitors[cl].payDate = r.payDate;
   });
-  const dBody=document.getElementById('debitor-tbody');
-  if(dBody){
-    dBody.innerHTML=Object.entries(debitors).map(([cl,d])=>{
-      const debt=d.shipped-d.paid;
+  const dBody = document.getElementById('debitor-tbody');
+  if (dBody) {
+    dBody.innerHTML = Object.entries(debitors).map(([cl,d])=>{
+      const debt = Math.max(0, d.shipped - d.paid);
       return `<tr>
         <td class="b">${cl}</td>
         <td class="r">${fmtMoney(d.shipped)}</td>
         <td class="g">${fmtMoney(d.paid)}</td>
-        <td class="${debt>0?'am':'zero'}">${fmtMoney(Math.max(0,debt))}</td>
+        <td class="${debt>0?'am':'zero'}">${fmtMoney(debt)}</td>
         <td class="m">${d.payDate?fmtDate(d.payDate):'—'}</td>
       </tr>`;
     }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет задолженностей</td></tr>';
   }
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ЗАРПЛАТА
+// ═══════════════════════════════════════════════════════
+
+const SAL_OPS = {
+  // Индивидуальные (прошив)
+  sew5f:'Прошив 5мм Ф', sew5nf:'Прошив 5мм НФ',
+  sew8f:'Прошив 8мм Ф', sew8nf:'Прошив 8мм НФ',
+  sew10f:'Прошив 10мм Ф', sew10nf:'Прошив 10мм НФ',
+  sew13f:'Прошив 13мм Ф', sew13nf:'Прошив 13мм НФ',
+  sew16f:'Прошив 16мм Ф', sew16nf:'Прошив 16мм НФ',
+  // Бригадные (фольгирование + клей)
+  fol_f5:'Фольг. Ф 5мм', fol_f8:'Фольг. Ф 8-16мм',
+  fol_tf5:'Фольг. ТФ 5мм', fol_tf8:'Фольг. ТФ 8-16мм',
+  glue:'Клей FP (кг)',
+};
+const SAL_BRIGADE = new Set(['fol_f5','fol_f8','fol_tf5','fol_tf8','glue']);
+const SAL_UNITS   = {glue:'кг'};
+
+// activeDay — выбранная дата YYYY-MM-DD
+let salActiveDate = '';
+let salPeriodFilter = '1'; // '1' или '2'
+let salView = 'day';       // 'day' | 'period'
+
+function getSalPeriod(dateStr) {
+  if (!dateStr) return '1';
+  return new Date(dateStr).getDate() <= 15 ? '1' : '2';
+}
+function getSalPayDate(dateStr) {
+  if (!dateStr) return '';
+  const dt = new Date(dateStr);
+  if (getSalPeriod(dateStr) === '1') {
+    return `25.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`;
+  }
+  const next = new Date(dt.getFullYear(), dt.getMonth()+1, 10);
+  return `10.${String(next.getMonth()+1).padStart(2,'0')}.${next.getFullYear()}`;
+}
+
+// Получаем запись дня из salaryLogs (один объект на дату)
+// dayData: {date, indiv:[{empId,op,qty,rate,gross}], brigade:[{op,qty,rate,gross,members:[empId]}]}
+function getDayData(dateStr) {
+  return DB.salaryLogs.find(d => d.date === dateStr) || null;
+}
+function setDayData(dateStr, data) {
+  const idx = DB.salaryLogs.findIndex(d => d.date === dateStr);
+  if (idx >= 0) DB.salaryLogs[idx] = data;
+  else          DB.salaryLogs.push(data);
+}
+function emptyDayData(dateStr) {
+  return { date: dateStr, indiv: [], brigade: [], brigadeMembers: [], absences: {} };
+}
+
+// Все рабочие дни периода
+function getPeriodDays(monthStr, period) {
+  if (!monthStr) return [];
+  const [y, m] = monthStr.split('-').map(Number);
+  const startD = period === '1' ? 1 : 16;
+  const endD   = period === '1' ? 15 : new Date(y, m, 0).getDate();
+  const days = [];
+  for (let d = startD; d <= endD; d++) {
+    const dt = new Date(y, m-1, d);
+    const dow = dt.getDay();
+    if (dow !== 0 && dow !== 6) { // пропускаем выходные
+      days.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+    }
+  }
+  return days;
+}
+
+function setSalPeriodFilter(p) {
+  salPeriodFilter = p;
+  document.getElementById('sal-p1-btn').className = 'btn sm' + (p==='1'?' g':'');
+  document.getElementById('sal-p2-btn').className = 'btn sm' + (p==='2'?' g':'');
+  salActiveDate = '';
+  renderSalary();
+}
+
+function switchSalView(view) {
+  salView = view;
+  document.getElementById('sal-view-day').style.display    = view==='day'    ? '' : 'none';
+  document.getElementById('sal-view-period').style.display = view==='period' ? '' : 'none';
+  document.getElementById('sal-tab-day').className    = 'dtab' + (view==='day'?   ' active':'');
+  document.getElementById('sal-tab-period').className = 'dtab' + (view==='period'?' active':'');
+  if (view === 'period') renderSalPeriodSummary();
+}
+
+function populateEmpSelects() {
+  const listEl = document.getElementById('sal-emp-list');
+  if (listEl) {
+    listEl.innerHTML = DB.employees.map(e => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid var(--border)">
+        <div>
+          <div style="font-size:11px;font-weight:600">${e.name}</div>
+          <div style="font-size:9px;color:var(--text3)">${e.position||''}</div>
+        </div>
+        <div style="display:flex;gap:3px">
+          <button class="btn sm" onclick="openEmpModal('${e.id}')" style="padding:2px 5px">✏</button>
+          <button class="btn del sm" onclick="deleteEmployee('${e.id}')" style="padding:2px 5px">✕</button>
+        </div>
+      </div>`).join('') || '<div style="font-size:10px;color:var(--text3);padding:4px">Нет сотрудников</div>';
+  }
+}
+
+function renderSalary() {
+  const monthStr = document.getElementById('sal-month')?.value || '';
+  const days     = monthStr ? getPeriodDays(monthStr, salPeriodFilter) : [];
+
+  // Устанавливаем активную дату
+  if (!salActiveDate && days.length) salActiveDate = days[0];
+
+  // Список дней
+  const listEl = document.getElementById('sal-day-list');
+  const DAYS_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  if (listEl) {
+    listEl.innerHTML = days.map(d => {
+      const dd   = getDayData(d);
+      const hasData = dd && (dd.indiv?.length || dd.brigade?.length);
+      const dt   = new Date(d);
+      const label= `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')} ${DAYS_SHORT[dt.getDay()]}`;
+      const isActive = d === salActiveDate;
+      return `<div onclick="selectSalDay('${d}')" style="
+        padding:5px 8px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;
+        display:flex;align-items:center;justify-content:space-between;
+        background:${isActive?'var(--bg5)':'transparent'};
+        border:1px solid ${isActive?'var(--green)':'transparent'};
+        color:${isActive?'var(--green)':'var(--text2)'};
+      ">
+        <span>${label}</span>
+        ${hasData?'<span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>':''}
+      </div>`;
+    }).join('') || '<div style="font-size:10px;color:var(--text3)">Выберите месяц</div>';
+  }
+
+  // Дата в заголовке
+  const lbl = document.getElementById('sal-active-date-lbl');
+  if (lbl && salActiveDate) {
+    const dt = new Date(salActiveDate);
+    lbl.textContent = `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`;
+  }
+
+  populateEmpSelects();
+  if (salView === 'day') renderSalDay(salActiveDate);
+  else renderSalPeriodSummary();
+}
+
+function selectSalDay(dateStr) {
+  salActiveDate = dateStr;
+  switchSalView('day');
+  renderSalary();
+}
+
+// ─── ДНЕВНОЙ ВИД ───
+function renderSalDay(dateStr) {
+  const cont = document.getElementById('sal-view-day');
+  if (!cont) return;
+  if (!dateStr) { cont.innerHTML = '<div class="alert info"><span>ℹ</span><span>Выберите день.</span></div>'; return; }
+
+  const dd      = getDayData(dateStr) || emptyDayData(dateStr);
+  const period  = getSalPeriod(dateStr);
+  const payDate = getSalPayDate(dateStr);
+  const dt      = new Date(dateStr);
+  const dayLabel= `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')} · Период ${period} · Выплата ${payDate}`;
+  const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+  // Типы отсутствия
+  const ABSENCE_TYPES = {vacation:'Отпуск', sick:'Больничный', admin:'Административный'};
+
+  // Итог дня по сотрудникам (производственные)
+  const prodEmps = new Set(DB.employees.filter(e=>e.empType!=='office').map(e=>e.id));
+  const dayTotals = {};
+  (dd.indiv||[]).forEach(r => { dayTotals[r.empId] = (dayTotals[r.empId]||0) + (r.gross||0); });
+  // Бригада: считаем только присутствующих членов
+  const brigadeMembers = new Set();
+  (dd.brigade||[]).forEach(b => (b.members||[]).forEach(id => brigadeMembers.add(id)));
+  const brigadeGrossTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
+  brigadeMembers.forEach(empId => {
+    const share = brigadeMembers.size > 0 ? brigadeGrossTotal / brigadeMembers.size : 0;
+    dayTotals[empId] = (dayTotals[empId]||0) + share;
+  });
+  const totalDay = Object.values(dayTotals).reduce((s,v)=>s+v,0);
+
+  // Производственные сотрудники — статусы явки
+  const prodEmployees = DB.employees.filter(e=>e.empType!=='office');
+  const officeEmployees = DB.employees.filter(e=>e.empType==='office');
+  const absences = dd.absences || {}; // {empId: 'vacation'|'sick'|'admin'}
+
+  // Блок явки производственных
+  const attendanceBlock = prodEmployees.length ? `
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><div class="card-title" style="color:var(--amber)">👥 Явка производственных сотрудников</div></div>
+      <div style="padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px">
+        ${prodEmployees.map(e => {
+          const abs = absences[e.id];
+          const inBrigade = brigadeMembers.has(e.id);
+          const gross = dayTotals[e.id] || 0;
+          const absBtns = Object.entries(ABSENCE_TYPES).map(([k,v]) =>
+            `<button class="btn sm" style="font-size:9px;padding:2px 6px;${abs===k?'background:var(--amber);color:#000;border-color:transparent':''}"
+              onclick="toggleAbsence('${dateStr}','${e.id}','${k}')">${v}</button>`
+          ).join('');
+          return `<div style="background:var(--bg3);border-radius:6px;padding:6px 10px;min-width:160px;border:1px solid ${abs?'var(--amber)':inBrigade?'var(--green)':'var(--border)'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:4px">${e.name}</div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px">${e.position||''}</div>
+            ${abs ? `<div style="font-size:10px;color:var(--amber);margin-bottom:4px">📋 ${ABSENCE_TYPES[abs]}</div>` : ''}
+            ${gross>0&&!abs ? `<div style="font-size:10px;color:var(--green);margin-bottom:4px">✓ Начислено: ${fmtMoney(gross)}</div>` : ''}
+            <div style="display:flex;gap:3px;flex-wrap:wrap">${absBtns}
+              ${abs ? `<button class="btn sm" style="font-size:9px;padding:2px 6px;color:var(--text3)" onclick="toggleAbsence('${dateStr}','${e.id}','')">Убрать</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  cont.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:800;font-family:var(--mono)">${DAYS_RU[dt.getDay()]}, ${dayLabel}</div>
+    </div>
+    ${totalDay>0||Object.keys(absences).length>0 ? `<div class="kpi-grid c4" style="margin-bottom:10px">
+      <div class="kcard ok"><div class="kl">Начислено за день</div><div class="kv g">${fmtMoney(totalDay)}</div></div>
+      <div class="kcard"><div class="kl">В бригаде</div><div class="kv">${brigadeMembers.size} чел.</div></div>
+      <div class="kcard amb"><div class="kl">Отсутствуют</div><div class="kv a">${Object.keys(absences).length} чел.</div></div>
+      <div class="kcard"><div class="kl">Выплата</div><div class="kv" style="font-size:13px">${payDate}</div></div>
+    </div>` : ''}
+    ${attendanceBlock}
+
+    <!-- ИНДИВИДУАЛЬНЫЙ ПРОШИВ -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--purple)">🔨 Прошив — индивидуальная сдельщина</div>
+        <div class="card-actions"><button class="btn sm" onclick="addIndivRow('${dateStr}')">+ Строка</button></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Сотрудник</th><th>Операция</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Начислено</th><th></th></tr></thead>
+          <tbody>${renderIndivRows(dd, dateStr)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- БРИГАДНЫЙ КОТЁЛ: сначала операции, потом состав -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--green)">◈ Фольгирование и Клей — бригадный котёл</div>
+        <div class="card-actions"><button class="btn sm g" onclick="addBrigadeOp('${dateStr}')">+ Операция</button></div>
+      </div>
+      ${renderBrigadeBlock(dd, dateStr)}
+    </div>
+
+    <!-- ОФИСНЫЕ СОТРУДНИКИ -->
+    ${officeEmployees.length ? `<div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><div class="card-title" style="color:var(--blue)">💼 Офисные сотрудники — явка и отсутствие</div></div>
+      <div style="padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px">
+        ${officeEmployees.map(e => {
+          const abs = absences[e.id];
+          const absBtns = Object.entries(ABSENCE_TYPES).map(([k,v])=>
+            `<button class="btn sm" style="font-size:9px;padding:2px 6px;${abs===k?'background:var(--amber);color:#000;border-color:transparent':''}"
+              onclick="toggleAbsence('${dateStr}','${e.id}','${k}')">${v}</button>`).join('');
+          return `<div style="background:var(--bg3);border-radius:6px;padding:6px 10px;min-width:160px;border:1px solid ${abs?'var(--amber)':'var(--border)'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:3px">${e.name}</div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px">${e.position||''} · Оклад ${fmtMoney(e.salaryBase||0)}</div>
+            ${abs ? `<div style="font-size:10px;color:var(--amber);margin-bottom:4px">📋 ${ABSENCE_TYPES[abs]}</div>` : '<div style="font-size:10px;color:var(--green);margin-bottom:4px">✓ Рабочий день</div>'}
+            <div style="display:flex;gap:3px;flex-wrap:wrap">${absBtns}
+              ${abs ? `<button class="btn sm" style="font-size:9px;padding:2px 6px" onclick="toggleAbsence('${dateStr}','${e.id}','')">Убрать</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function renderIndivRows(dd, dateStr) {
+  const opOpts = Object.entries(SAL_OPS)
+    .filter(([k])=>!SAL_BRIGADE.has(k))
+    .map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+
+  return (dd.indiv||[]).map((r,i) => {
+    const empOpts = DB.employees.map(e=>`<option value="${e.id}" ${e.id===r.empId?'selected':''}>${e.name}</option>`).join('');
+    const opSelOpts = Object.entries(SAL_OPS).filter(([k])=>!SAL_BRIGADE.has(k))
+      .map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('');
+    return `<tr>
+      <td><select class="sel" style="width:120px" onchange="updateIndivRow('${dateStr}',${i},'empId',this.value)">
+        ${empOpts}</select></td>
+      <td><select class="sel" style="width:140px" onchange="updateIndivRow('${dateStr}',${i},'op',this.value);autoFillRate('${dateStr}',${i})">
+        ${opSelOpts}</select></td>
+      <td><input class="ci r" style="width:70px;border:1px solid var(--border);border-radius:3px;padding:2px 5px" value="${r.qty||''}"
+        oninput="updateIndivRow('${dateStr}',${i},'qty',parseFloat(this.value)||0);calcIndivGross('${dateStr}',${i})"></td>
+      <td><input class="ci r" style="width:70px;border:1px solid var(--border);border-radius:3px;padding:2px 5px" value="${r.rate||''}"
+        oninput="updateIndivRow('${dateStr}',${i},'rate',parseFloat(this.value)||0);calcIndivGross('${dateStr}',${i})"></td>
+      <td class="g" id="indiv-gross-${i}">${fmtMoney(r.gross||0)}</td>
+      <td><button class="btn del sm" onclick="removeIndivRow('${dateStr}',${i})">✕</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Нет записей. Нажмите «+ Строка»</td></tr>';
+}
+
+function renderBrigadeBlock(dd, dateStr) {
+  const ops = (dd.brigade||[]);
+  const brigadeMembers = dd.brigadeMembers || []; // единый состав бригады на день
+  const totalGross = ops.reduce((s,b)=>s+(b.gross||0),0);
+  const nMembers = brigadeMembers.length;
+  const perPerson = nMembers > 0 ? totalGross / nMembers : 0;
+
+  // Таблица операций
+  const opsHtml = ops.length ? `
+    <div style="overflow-x:auto;margin-bottom:8px">
+      <table class="tbl">
+        <thead><tr><th>Операция</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Сумма</th><th></th></tr></thead>
+        <tbody>
+          ${ops.map((b,bi) => {
+            const opSelOpts = Object.entries(SAL_OPS).filter(([k])=>SAL_BRIGADE.has(k))
+              .map(([k,v])=>`<option value="${k}" ${k===b.op?'selected':''}>${v}</option>`).join('');
+            const unit = SAL_UNITS[b.op]||'м²';
+            return `<tr>
+              <td><select class="sel" onchange="updateBrigadeOp('${dateStr}',${bi},'op',this.value)">${opSelOpts}</select></td>
+              <td><input class="ci r" style="width:70px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+                value="${b.qty||''}" placeholder="0"
+                oninput="updateBrigadeOp('${dateStr}',${bi},'qty',parseFloat(this.value)||0)">
+                <span style="font-size:9px;color:var(--text3)">${unit}</span></td>
+              <td><input class="ci r" style="width:60px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+                value="${b.rate||''}" placeholder="0"
+                oninput="updateBrigadeOp('${dateStr}',${bi},'rate',parseFloat(this.value)||0)">
+                <span style="font-size:9px;color:var(--text3)">₽/${unit}</span></td>
+              <td class="g">${fmtMoney((b.qty||0)*(b.rate||0))}</td>
+              <td><button class="btn del sm" onclick="removeBrigadeOp('${dateStr}',${bi})">✕</button></td>
+            </tr>`;
+          }).join('')}
+          <tr style="border-top:1px solid var(--border2)">
+            <td colspan="3" style="font-weight:700;padding:5px 10px">ИТОГО КОТЁЛ</td>
+            <td class="g" style="font-weight:700">${fmtMoney(totalGross)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>` : `<div style="text-align:center;color:var(--text3);font-size:11px;padding:12px">
+      Нет операций. Нажмите «+ Операция»</div>`;
+
+  // Состав бригады — единый на день, галочки
+  const prodEmps = DB.employees.filter(e=>e.empType!=='office');
+  const membersHtml = prodEmps.length ? `
+    <div style="border-top:1px solid var(--border);padding:8px 10px">
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+        Состав бригады в этот день (${nMembers} чел.)
+        ${nMembers>0 ? `→ <span style="color:var(--amber);font-family:var(--mono)">${fmtMoney(perPerson)}</span> каждому` : ''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${prodEmps.map(e => {
+          const abs = (dd.absences||{})[e.id];
+          const inBrigade = brigadeMembers.includes(e.id);
+          const disabled = !!abs; // если отсутствует — нельзя добавить в бригаду
+          return `<label style="display:flex;align-items:center;gap:5px;cursor:${disabled?'not-allowed':'pointer'};opacity:${disabled?0.4:1}">
+            <input type="checkbox" ${inBrigade?'checked':''} ${disabled?'disabled':''}
+              onchange="toggleBrigadeMemberDay('${dateStr}','${e.id}',this.checked)">
+            <div>
+              <div style="font-size:11px;font-weight:600">${e.name}</div>
+              ${abs ? `<div style="font-size:9px;color:var(--amber)">${{vacation:'Отпуск',sick:'Больничный',admin:'Административный'}[abs]}</div>` : ''}
+            </div>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  return opsHtml + membersHtml;
+}
+
+// ─── МУТАЦИИ ДАННЫХ ───
+function saveDayAndRefresh(dateStr) {
+  // Ничего не делаем — данные уже в памяти, сохраняем при явном действии
+  renderSalDay(dateStr);
+  renderSalary();
+  syncNow();
+}
+
+function addIndivRow(dateStr) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  const firstEmp = DB.employees[0]?.id || '';
+  dd.indiv = [...(dd.indiv||[]), {empId:firstEmp, op:'sew5f', qty:0, rate:0, gross:0}];
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+function removeIndivRow(dateStr, idx) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  dd.indiv.splice(idx, 1);
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+function updateIndivRow(dateStr, idx, key, val) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.indiv[idx]) return;
+  dd.indiv[idx][key] = val;
+  // Автоподстановка тарифа при смене операции или сотрудника
+  if (key === 'op' || key === 'empId') {
+    const emp = DB.employees.find(e=>e.id===dd.indiv[idx].empId);
+    const rate = emp?.rates?.[dd.indiv[idx].op] || 0;
+    if (rate) dd.indiv[idx].rate = rate;
+  }
+  dd.indiv[idx].gross = (dd.indiv[idx].qty||0) * (dd.indiv[idx].rate||0);
+  setDayData(dateStr, dd);
+}
+
+function autoFillRate(dateStr, idx) {
+  const dd = getDayData(dateStr);
+  if (!dd?.indiv[idx]) return;
+  const emp = DB.employees.find(e=>e.id===dd.indiv[idx].empId);
+  const rate = emp?.rates?.[dd.indiv[idx].op] || 0;
+  if (rate) { dd.indiv[idx].rate = rate; setDayData(dateStr, dd); }
+}
+
+function calcIndivGross(dateStr, idx) {
+  const dd = getDayData(dateStr);
+  if (!dd?.indiv[idx]) return;
+  const g = (dd.indiv[idx].qty||0) * (dd.indiv[idx].rate||0);
+  dd.indiv[idx].gross = g;
+  setDayData(dateStr, dd);
+  const el = document.getElementById(`indiv-gross-${idx}`);
+  if (el) el.textContent = fmtMoney(g);
+}
+
+// Операции котла
+function addBrigadeOp(dateStr) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  dd.brigade = [...(dd.brigade||[]), {op:'fol_f5', qty:0, rate:0, gross:0}];
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+function removeBrigadeOp(dateStr, idx) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  dd.brigade.splice(idx, 1);
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+function updateBrigadeOp(dateStr, idx, key, val) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.brigade[idx]) return;
+  dd.brigade[idx][key] = val;
+  dd.brigade[idx].gross = (dd.brigade[idx].qty||0) * (dd.brigade[idx].rate||0);
+  setDayData(dateStr, dd);
+  // Обновляем итоговую сумму в таблице без полного перерендера
+  saveDayAndRefresh(dateStr);
+}
+
+// Состав бригады — единый список на весь день
+function toggleBrigadeMemberDay(dateStr, empId, checked) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.brigadeMembers) dd.brigadeMembers = [];
+  if (checked && !dd.brigadeMembers.includes(empId)) dd.brigadeMembers.push(empId);
+  if (!checked) { const i=dd.brigadeMembers.indexOf(empId); if(i>=0) dd.brigadeMembers.splice(i,1); }
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+// Отсутствие сотрудника
+function toggleAbsence(dateStr, empId, type) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.absences) dd.absences = {};
+  if (!type) {
+    delete dd.absences[empId];
+  } else {
+    dd.absences[empId] = type;
+    // Если отсутствует — убираем из бригады
+    if (dd.brigadeMembers) {
+      const i = dd.brigadeMembers.indexOf(empId);
+      if (i>=0) dd.brigadeMembers.splice(i,1);
+    }
+  }
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+// ─── СВОДНАЯ ТАБЛИЦА ПЕРИОДА ───
+function renderSalPeriodSummary() {
+  const cont = document.getElementById('sal-period-summary');
+  if (!cont) return;
+  const monthStr = document.getElementById('sal-month')?.value || '';
+  if (!monthStr) { cont.innerHTML = '<div class="alert info"><span>ℹ</span><span>Выберите месяц.</span></div>'; return; }
+
+  const days = getPeriodDays(monthStr, salPeriodFilter);
+  const ndflRate  = parseFloat(document.getElementById('sal-ndfl')?.value)||13;
+  const ins1Rate  = parseFloat(document.getElementById('sal-ins1')?.value)||30.2;
+  const ins2Rate  = parseFloat(document.getElementById('sal-ins2')?.value)||7.6;
+  const threshold = parseFloat(document.getElementById('sal-threshold')?.value)||33660;
+
+  // Собираем начисления по сотрудникам за весь период
+  const byEmp = {}; // empId -> {gross, days:{date->gross}}
+  DB.employees.forEach(e => { byEmp[e.id] = {emp:e, gross:0, premium:DB.salPremiums?.[monthStr+salPeriodFilter]?.[e.id]||0}; });
+
+  days.forEach(date => {
+    const dd = getDayData(date);
+    if (!dd) return;
+    // Индивидуальный прошив
+    (dd.indiv||[]).forEach(r => {
+      if (!byEmp[r.empId]) return;
+      byEmp[r.empId].gross += r.gross||0;
+    });
+    // Бригадный котёл: единый состав на день
+    const members = dd.brigadeMembers || [];
+    const brigadeTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
+    const per = members.length > 0 ? brigadeTotal / members.length : 0;
+    members.forEach(empId => {
+      if (!byEmp[empId]) return;
+      byEmp[empId].gross += per;
+    });
+  });
+
+  let totGross=0,totNdfl=0,totNet=0,totIns=0,totCost=0,totPremium=0;
+
+  const payDate = getSalPayDate(salPeriodFilter==='1'
+    ? monthStr+'-08'   // любая дата 1-15
+    : monthStr+'-20'); // любая дата 16-31
+
+  const rows = DB.employees.map(e => {
+    const d = byEmp[e.id];
+    const isOffice = e.empType === 'office';
+    // Для офисных — оклад (за полмесяца), для производственных — сдельная
+    const baseGross = isOffice
+      ? (e.salaryBase||0) / 2   // половина оклада на период
+      : (d?.gross||0);
+    const premium = d?.premium||0;
+    const grossWithPremium = baseGross + premium;
+    if (grossWithPremium === 0) return '';
+
+    const ndfl = grossWithPremium * ndflRate/100;
+    const net  = grossWithPremium - ndfl;
+    const base1= Math.min(grossWithPremium, threshold);
+    const base2= Math.max(0, grossWithPremium - threshold);
+    const ins  = base1*ins1Rate/100 + base2*ins2Rate/100;
+    const cost = grossWithPremium + ins;
+
+    totGross+=grossWithPremium; totNdfl+=ndfl; totNet+=net;
+    totIns+=ins; totCost+=cost; totPremium+=premium;
+
+    return `<tr>
+      <td class="b">${e.name}${isOffice?` <span class="badge info" style="font-size:8px">Оклад</span>`:''}</td>
+      <td class="m">${e.position||'—'}</td>
+      <td class="r">${fmtMoney(baseGross)}</td>
+      <td class="r">
+        <input class="ci r" style="width:80px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+          value="${premium||''}" placeholder="0"
+          oninput="setSalPremium('${e.id}','${monthStr}','${salPeriodFilter}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(grossWithPremium)}</td>
+      <td class="am">${fmtMoney(ndfl)}</td>
+      <td class="g">${fmtMoney(net)}</td>
+      <td class="bl">${fmtMoney(ins)}</td>
+      <td class="r" style="font-weight:700">${fmtMoney(cost)}</td>
+    </tr>`;
+  }).join('');
+
+  const period = salPeriodFilter;
+  const payLabel = period==='1'
+    ? '→ Выплата 25-го'
+    : '→ Выплата 10-го следующего месяца';
+
+  cont.innerHTML = `
+    <div class="kpi-grid c4" style="margin-bottom:10px">
+      <div class="kcard ok"><div class="kl">Начислено (сдельная)</div><div class="kv g">${fmtMoney(totGross-totPremium)}</div></div>
+      <div class="kcard amb"><div class="kl">Премии</div><div class="kv a">${fmtMoney(totPremium)}</div></div>
+      <div class="kcard info"><div class="kl">НДФЛ</div><div class="kv b">${fmtMoney(totNdfl)}</div></div>
+      <div class="kcard teal"><div class="kl">К выплате на руки</div><div class="kv t">${fmtMoney(totNet)}</div></div>
+    </div>
+    <div class="kpi-grid c3" style="margin-bottom:10px">
+      <div class="kcard"><div class="kl">Страховые взносы</div><div class="kv">${fmtMoney(totIns)}</div></div>
+      <div class="kcard amb"><div class="kl">Итого затрат на оплату труда</div><div class="kv a">${fmtMoney(totCost)}</div></div>
+      <div class="kcard info"><div class="kl">${payLabel}</div><div class="kv b">${fmtMoney(totNet)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Расчётная ведомость — Период ${period} ${monthStr}</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)">${payLabel}</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Сотрудник</th><th>Должность</th>
+            <th class="r">Сдельная</th><th class="r">Премия</th>
+            <th class="r">Итого нач.</th><th class="r">НДФЛ</th>
+            <th class="r">На руки</th><th class="r">Взносы</th>
+            <th class="r">Затраты</th>
+          </tr></thead>
+          <tbody>${rows||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:16px">Нет данных за период</td></tr>'}</tbody>
+          <tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
+            <td colspan="2" style="padding:5px 10px">Итого</td>
+            <td class="r">${fmtMoney(totGross-totPremium)}</td>
+            <td class="r">${fmtMoney(totPremium)}</td>
+            <td class="r">${fmtMoney(totGross)}</td>
+            <td class="am">${fmtMoney(totNdfl)}</td>
+            <td class="g">${fmtMoney(totNet)}</td>
+            <td class="bl">${fmtMoney(totIns)}</td>
+            <td class="r">${fmtMoney(totCost)}</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// Премии хранятся в отдельном объекте
+if (!DB.salPremiums) DB.salPremiums = {};
+function setSalPremium(empId, monthStr, period, val) {
+  if (!DB.salPremiums) DB.salPremiums = {};
+  const key = monthStr + period;
+  if (!DB.salPremiums[key]) DB.salPremiums[key] = {};
+  DB.salPremiums[key][empId] = val;
+  // Обновляем только итоговые суммы без полного перерендера
+  renderSalPeriodSummary();
+  syncNow();
+}
+
+// Модальное окно сотрудника
+function openEmpModal(empId=null) {
+  const emp = empId ? DB.employees.find(e=>e.id===empId) : null;
+  const V  = (key, def='')  => emp?.[key] ?? def;
+  const VR = (key, def='')  => emp?.rates?.[key] ?? def;
+  const SEW_RATES = [
+    ['sew5f','Прошив 5мм Ф'],['sew5nf','Прошив 5мм НФ'],
+    ['sew8f','Прошив 8мм Ф'],['sew8nf','Прошив 8мм НФ'],
+    ['sew10f','Прошив 10мм Ф'],['sew10nf','Прошив 10мм НФ'],
+    ['sew13f','Прошив 13мм Ф'],['sew13nf','Прошив 13мм НФ'],
+    ['sew16f','Прошив 16мм Ф'],['sew16nf','Прошив 16мм НФ'],
+  ];
+  const FOL_RATES = [
+    ['fol_f5','Фольг.Ф 5мм'],['fol_f8','Фольг.Ф 8-16мм'],
+    ['fol_tf5','Фольг.ТФ 5мм'],['fol_tf8','Фольг.ТФ 8-16мм'],
+    ['glue','Клей (₽/кг)'],
+  ];
+  const isOffice = (V('empType') === 'office');
+  openModal(empId ? 'Редактировать сотрудника' : 'Новый сотрудник', `
+    <div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">ФИО</div>
+        <input class="field-inp" id="emp-name" value="${V('name')}" placeholder="Иванов Иван Иванович">
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Должность</div>
+        <input class="field-inp" id="emp-pos" value="${V('position')}" placeholder="Прошивщик">
+      </div>
+      <div class="modal-field"><div class="field-lbl">Тип сотрудника</div>
+        <select class="field-inp" id="emp-type" onchange="document.getElementById('emp-office-block').style.display=this.value==='office'?'':'none';document.getElementById('emp-prod-block').style.display=this.value==='office'?'none':''">
+          <option value="prod" ${!isOffice?'selected':''}>Производственный (сдельник)</option>
+          <option value="office" ${isOffice?'selected':''}>Офисный (оклад)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Офисный блок -->
+    <div id="emp-office-block" style="display:${isOffice?'':'none'}">
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Оклад (₽/мес)</div>
+          <input class="field-inp" id="emp-salary-base" value="${V('salaryBase',0)}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Производственный блок -->
+    <div id="emp-prod-block" style="display:${isOffice?'none':''}">
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Тарифы прошива (₽/м²)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${SEW_RATES.map(([k,lbl])=>`<div class="modal-field">
+          <div class="field-lbl">${lbl}</div>
+          <input class="field-inp" id="emp-rate-${k}" value="${VR(k)}">
+        </div>`).join('')}
+      </div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Тарифы фольгирования (₽/м² или кг)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${FOL_RATES.map(([k,lbl])=>`<div class="modal-field">
+          <div class="field-lbl">${lbl}</div>
+          <input class="field-inp" id="emp-rate-${k}" value="${VR(k)}">
+        </div>`).join('')}
+      </div>
+    </div>
+  `, () => {
+    const name = document.getElementById('emp-name')?.value?.trim();
+    if (!name) { toast('Введите ФИО','err'); return false; }
+    const empType = document.getElementById('emp-type')?.value || 'prod';
+    const allRateKeys = [...SEW_RATES,...FOL_RATES].map(([k])=>k);
+    const rates = {};
+    if (empType !== 'office') {
+      allRateKeys.forEach(k => {
+        const v = parseFloat(document.getElementById(`emp-rate-${k}`)?.value);
+        if (!isNaN(v) && v > 0) rates[k] = v;
+      });
+    }
+    const record = {
+      id: empId||uid(), name,
+      position:   document.getElementById('emp-pos')?.value||'',
+      empType,
+      salaryBase: parseFloat(document.getElementById('emp-salary-base')?.value)||0,
+      rates,
+      ytdGross:   emp?.ytdGross||0
+    };
+    if (empId) DB.employees = DB.employees.map(e=>e.id===empId?record:e);
+    else       DB.employees.push(record);
+    populateEmpSelects();
+    renderSalary();
+    syncNow();
+    toast(empId?'Обновлено ✓':'Сотрудник добавлен ✓');
+  });
+}
+
+function deleteEmployee(id) {
+  if (!confirm('Удалить сотрудника?')) return;
+  DB.employees = DB.employees.filter(e=>e.id!==id);
+  populateEmpSelects();
+  renderSalary();
+  syncNow();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1762,7 +2950,50 @@ function openModal(title, bodyHtml, onOk) {
 function closeModal(){ document.getElementById('modal').classList.remove('open'); }
 function modalOk(){ if(modalCallback && modalCallback()!==false) closeModal(); }
 
+function editPayment(id) {
+  const p = DB.payments.find(x=>x.id===id);
+  if (!p) return;
+  openModal('Редактировать платёж', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="epm-date" value="${p.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Сумма ₽</div><input class="field-inp" id="epm-amount" value="${p.amount||0}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">Описание</div><input class="field-inp" id="epm-desc" value="${p.desc||''}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Тип</div>
+        <select class="field-inp" id="epm-type">
+          <option value="in"   ${p.type==='in'  ?'selected':''}>Поступление</option>
+          <option value="out"  ${p.type==='out' ?'selected':''}>Расход</option>
+        </select>
+      </div>
+      <div class="modal-field"><div class="field-lbl">Статус</div>
+        <select class="field-inp" id="epm-planned">
+          <option value="fact"    ${!p.planned?'selected':''}>Фактический</option>
+          <option value="planned" ${p.planned ?'selected':''}>Плановый</option>
+        </select>
+      </div>
+    </div>
+  `, () => {
+    const planned = document.getElementById('epm-planned').value === 'planned';
+    const updated = {
+      ...p,
+      date:    document.getElementById('epm-date').value,
+      amount:  parseFloat(document.getElementById('epm-amount').value)||0,
+      desc:    document.getElementById('epm-desc').value,
+      type:    document.getElementById('epm-type').value,
+      planned,
+    };
+    DB.payments = DB.payments.map(x=>x.id===id?updated:x);
+    renderFin();
+    syncNow();
+    toast('Платёж обновлён ✓');
+  });
+}
+
 function deletePayment(id){
+  if (!confirm('Удалить запись платежа?')) return;
   DB.payments=DB.payments.filter(p=>p.id!==id);
   renderFin();syncNow();
 }
@@ -1780,11 +3011,24 @@ function renderFin() {
 
   // Дебиторка
   let debit=0;
-  DB.sales.forEach(r=>{ debit+=Math.max(0,(r.withVat||0)-(r.paidAmt||0)); });
+  DB.sales.forEach(r=>{
+    if (r.paid==='no')          debit += r.withVat||0;
+    else if (r.paid==='partial') debit += Math.max(0,(r.withVat||0)-(r.paidAmt||0));
+    // paid==='yes' → долга нет
+  });
 
-  // Кредиторка
+  // Кредиторка — считаем от суммы с НДС, учитываем статус оплаты
   let credit=0;
-  DB.receipts.forEach(r=>{ credit+=Math.max(0,(r.total||0)-(r.paidAmt||0)); });
+  DB.receipts.forEach(r=>{
+    const sumVat = r.withVat || 0;
+    if (r.paid === 'yes') {
+      // Полностью оплачено — задолженности нет
+    } else if (r.paid === 'partial') {
+      credit += Math.max(0, sumVat - (r.paidAmt||0));
+    } else {
+      credit += sumVat;
+    }
+  });
 
   // Деньги на счёте
   let cash=0;
@@ -2135,16 +3379,22 @@ function init(){
   document.getElementById('recv-date').value  = today();
   document.getElementById('prod-date').value  = today();
   document.getElementById('sale-date').value  = today();
+  document.getElementById('sal-date').value   = today();
   const m=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('recv-filter-month').value=m;
   document.getElementById('prod-filter-month').value=m;
   document.getElementById('sale-filter-month').value=m;
+  const salMonthEl=document.getElementById('sal-month');
+  if(salMonthEl){const n2=new Date();salMonthEl.value=`${n2.getFullYear()}-${String(n2.getMonth()+1).padStart(2,'0')}`;}
+  setSalPeriodFilter('1');
   // Планировщик — начало со следующего понедельника
   const dow=n.getDay();const toMon=dow===1?0:dow===0?1:(8-dow)%7;
   const mon=new Date(n);mon.setDate(mon.getDate()+toMon);
   document.getElementById('plan-start').value=mon.toISOString().split('T')[0];
   updateProdArtList();
   renderRef();
+  populateEmpSelects();
+  renderSalary();
   populateSupplierSelect();
   setSyncStatus('loading');
   loadAll();
