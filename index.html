@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>НПП ОЗТ — Управление производством</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:    #0c0e14;
+  --bg2:   #12141c;
+  --bg3:   #1a1d27;
+  --bg4:   #22263a;
+  --bg5:   #2a2f45;
+  --border: rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.12);
+  --text:  #e8e6df;
+  --text2: #9a98a0;
+  --text3: #55545c;
+  --green: #4ade80;
+  --green2:#16a34a;
+  --blue:  #60a5fa;
+  --blue2: #2563eb;
+  --amber: #fbbf24;
+  --red:   #f87171;
+  --teal:  #2dd4bf;
+  --purple:#a78bfa;
+  --pink:  #f472b6;
+  --mono:  'JetBrains Mono', monospace;
+  --sans:  'Manrope', sans-serif;
+  --radius:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px}
+input,select,textarea,button{font-family:var(--sans)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ═══ HEADER ═══ */
+.hdr{
+  height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:12px;position:relative;z-index:100;
+  box-shadow:0 1px 0 var(--border);
+}
+.logo{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);
+  letter-spacing:.15em;text-transform:uppercase;flex-shrink:0;
+}
+.hdr-sep{width:1px;height:20px;background:var(--border2)}
+.nav{display:flex;gap:2px;background:var(--bg3);border-radius:7px;padding:3px}
+.nav-btn{
+  padding:5px 14px;border-radius:5px;border:none;background:transparent;
+  color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;
+  transition:.15s all;letter-spacing:.02em;white-space:nowrap;
+}
+.nav-btn:hover{color:var(--text2)}
+.nav-btn.active{background:var(--bg5);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sync-status{font-size:10px;font-family:var(--mono);color:var(--text3);display:flex;align-items:center;gap:4px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.ok{background:var(--green);animation:pulse 2s infinite}
+.sync-dot.err{background:var(--red)}
+.sync-dot.saving{background:var(--amber);animation:blink .6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-btn{
+  padding:5px 11px;border-radius:6px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;
+  font-weight:600;transition:.12s all;
+}
+.hdr-btn:hover{background:var(--bg4);color:var(--text)}
+.hdr-btn.primary{background:var(--green2);color:#000;border-color:transparent}
+.hdr-btn.primary:hover{background:var(--green)}
+
+/* ═══ LAYOUT ═══ */
+.app{height:calc(100vh - 52px);display:flex;overflow:hidden}
+.page{display:none;flex:1;overflow:hidden}
+.page.active{display:flex}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
+  overflow-y:auto;padding:12px;
+}
+.main-area{flex:1;overflow-y:auto;padding:14px}
+
+/* ═══ SHARED FORM ELEMENTS ═══ */
+.sec{margin-bottom:16px}
+.sec-hdr{
+  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border);
+}
+.form-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.form-lbl{font-size:11px;color:var(--text2);flex:1;min-width:0}
+.inp{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:4px 7px;color:var(--text);font-size:12px;font-family:var(--mono);
+  transition:.12s border-color;
+}
+.inp:focus{outline:none;border-color:var(--blue)}
+.inp.w60{width:60px;text-align:right}
+.inp.w80{width:80px;text-align:right}
+.inp.w100{width:100px;text-align:right}
+.inp.w120{width:120px}
+.inp.w150{width:150px}
+.inp.w-full{width:100%}
+.sel{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:4px 6px;color:var(--text);font-size:12px;cursor:pointer;
+}
+.sel:focus{outline:none;border-color:var(--blue)}
+.unit{font-size:9px;color:var(--text3);font-family:var(--mono);flex-shrink:0}
+.subsec{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:7px 0 4px}
+
+/* ═══ CARDS / KPI ═══ */
+.kpi-grid{display:grid;gap:8px;margin-bottom:12px}
+.kpi-grid.c2{grid-template-columns:1fr 1fr}
+.kpi-grid.c3{grid-template-columns:1fr 1fr 1fr}
+.kpi-grid.c4{grid-template-columns:repeat(4,1fr)}
+.kpi-grid.c5{grid-template-columns:repeat(5,1fr)}
+.kcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px}
+.kcard.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.04)}
+.kcard.bad{border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.04)}
+.kcard.info{border-color:rgba(96,165,250,.25)}
+.kcard.amb{border-color:rgba(251,191,36,.25)}
+.kcard.teal{border-color:rgba(45,212,191,.25)}
+.kl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.kv{font-size:18px;font-weight:700;font-family:var(--mono)}
+.kv.g{color:var(--green)}.kv.r{color:var(--red)}.kv.b{color:var(--blue)}
+.kv.a{color:var(--amber)}.kv.t{color:var(--teal)}
+.ks{font-size:10px;color:var(--text2);margin-top:3px}
+
+/* ═══ TABLES ═══ */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+.card-hdr{
+  padding:8px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.card-title{font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+.card-actions{margin-left:auto;display:flex;gap:5px}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{
+  font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.06em;padding:5px 10px;border-bottom:1px solid var(--border);text-align:left;
+}
+.tbl th.r{text-align:right}
+.tbl td{padding:5px 10px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl td.r{text-align:right;font-family:var(--mono);font-size:11px}
+.tbl td.b{font-weight:600}
+.tbl td.m{color:var(--text2)}
+.tbl td.g{color:var(--green);font-weight:600;text-align:right;font-family:var(--mono)}
+.tbl td.red{color:var(--red);font-weight:600;text-align:right;font-family:var(--mono)}
+.tbl td.am{color:var(--amber);text-align:right;font-family:var(--mono)}
+.tbl td.bl{color:var(--blue);text-align:right;font-family:var(--mono)}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  padding:5px 11px;border-radius:6px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;
+  font-weight:600;transition:.12s all;
+}
+.btn:hover{background:var(--bg4);color:var(--text)}
+.btn.g{background:var(--green2);color:#000;border-color:transparent}
+.btn.g:hover{background:var(--green)}
+.btn.sm{padding:3px 8px;font-size:10px}
+.btn.del{color:var(--text3);border-color:transparent;background:transparent}
+.btn.del:hover{color:var(--red);background:rgba(248,113,113,.1)}
+.add-row-btn{
+  width:100%;padding:5px;border:1px dashed var(--border2);background:transparent;
+  color:var(--text3);font-size:10px;cursor:pointer;text-align:center;
+}
+.add-row-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ═══ INLINE INPUTS in tables ═══ */
+.ci{
+  background:transparent;border:1px solid transparent;border-radius:3px;
+  padding:2px 5px;color:var(--text);font-family:var(--mono);font-size:11px;
+  transition:.1s;
+}
+.ci:hover{border-color:var(--border2)}
+.ci:focus{outline:none;border-color:var(--blue);background:var(--bg3)}
+.ci.r{text-align:right}
+
+/* ═══ BADGES ═══ */
+.badge{padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:.04em;font-family:var(--mono)}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.bad{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.badge.amb{background:rgba(251,191,36,.12);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
+.badge.info{background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.badge.teal{background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.2)}
+
+/* ═══ ALERTS ═══ */
+.alert{border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:12px;line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.alert.info{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);color:var(--blue)}
+.alert.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber)}
+.alert.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--red)}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;
+  align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  padding:20px;min-width:360px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;
+  box-shadow:var(--shadow);
+}
+.modal-title{font-size:14px;font-weight:800;margin-bottom:14px;color:var(--text)}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.modal-field{display:flex;flex-direction:column;gap:3px}
+.modal-field.full{grid-column:1/-1}
+.field-lbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.field-inp{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:6px 9px;color:var(--text);font-size:12px;width:100%;
+}
+.field-inp:focus{outline:none;border-color:var(--blue)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ═══ TOAST ═══ */
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 16px;font-size:12px;z-index:2000;
+  transform:translateY(80px);opacity:0;transition:.3s all;box-shadow:var(--shadow);
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(74,222,128,.3);color:var(--green)}
+.toast.err{border-color:rgba(248,113,113,.3);color:var(--red)}
+
+/* ═══ PLANNING PAGE ═══ */
+.day-tabs-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 10px;display:flex;overflow-x:auto;flex-shrink:0}
+.day-tabs-wrap::-webkit-scrollbar{height:3px}
+.dtab{
+  padding:8px 11px;font-size:10px;font-weight:800;color:var(--text3);cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;display:flex;flex-direction:column;
+  align-items:center;gap:1px;font-family:var(--mono);transition:.1s;flex-shrink:0;
+}
+.dtab:hover{color:var(--text2)}.dtab.active{color:var(--green);border-bottom-color:var(--green)}
+.dtab .dd{font-size:12px;font-weight:800}
+.dtab .dw{font-size:9px}
+.dtab .da{width:5px;height:5px;border-radius:50%;margin:1px auto 0;display:none}
+.dtab .da.show{display:block}
+.plan-layout{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.plan-day{flex:1;overflow-y:auto;padding:12px}
+
+/* thick cards */
+.thick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+.tcard{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.tcard-hdr{padding:5px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px}
+.tcard-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tcard-name{font-size:11px;font-weight:800}
+.tcard-body{padding:3px 0}
+.trow{display:flex;align-items:center;padding:3px 9px;border-bottom:.5px solid var(--border);gap:5px}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:rgba(255,255,255,.015)}
+.tr-lbl{flex:1;min-width:0}
+.tr-name{font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-type{font-size:8px;color:var(--text3);font-family:var(--mono)}
+.num{font-family:var(--mono);font-size:10px;text-align:right;min-width:44px}
+.pos{color:var(--green)}.neg{color:var(--red)}.warn{color:var(--amber)}.zero{color:var(--text3)}
+.row-gp .tr-name{color:var(--text)}
+.row-pf .tr-name{color:var(--purple)}
+.row-nf .tr-name{color:var(--teal)}
+.row-hx .tr-name{color:var(--amber)}
+
+/* need block */
+.need-block{background:var(--bg2);border:1px solid rgba(45,212,191,.2);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.need-hdr{padding:6px 10px;border-bottom:1px solid var(--border);background:rgba(45,212,191,.04);display:flex;align-items:center;gap:6px}
+.need-title{font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:.07em}
+
+/* ops */
+.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.op-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.op-hdr{
+  padding:5px 9px;border-bottom:1px solid var(--border);font-size:9px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--text2);display:flex;align-items:center;gap:5px;
+  cursor:pointer;user-select:none;list-style:none;
+}
+.op-body{padding:6px 8px}
+.op-thick{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px}
+.op-row{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.op-lbl{font-size:10px;color:var(--text2);flex:1}
+.op-inp{
+  width:64px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  padding:2px 4px;color:var(--purple);font-family:var(--mono);font-size:11px;text-align:right;
+}
+.op-inp:focus{outline:none;border-color:var(--purple)}
+.op-inp.fol{color:var(--green)}.op-inp.fol:focus{border-color:var(--green)}
+.op-cap{font-size:8px;color:var(--text3);font-family:var(--mono);min-width:40px;text-align:right}
+.op-pct{font-size:9px;font-family:var(--mono);min-width:28px;text-align:right}
+.op-bar{height:2px;background:var(--bg4);border-radius:1px;margin-bottom:3px}
+.op-bar-fill{height:100%;border-radius:1px;transition:width .3s}
+
+/* list cards (bstv/shipments) */
+.list-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.list-hdr{padding:5px 9px;border-bottom:1px solid var(--border);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:5px}
+.list-row{display:flex;align-items:center;gap:5px;padding:4px 9px;border-bottom:.5px solid var(--border)}
+.list-row:last-child{border-bottom:none}
+.add-btn{width:100%;padding:4px;border:1px dashed var(--border2);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;text-align:center}
+.add-btn:hover{border-color:var(--blue);color:var(--blue)}
+.add-btn.teal:hover{border-color:var(--teal);color:var(--teal)}
+.del-btn{
+  width:18px;height:18px;border-radius:3px;border:1px solid var(--border2);
+  background:transparent;color:var(--text3);cursor:pointer;font-size:10px;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.del-btn:hover{background:rgba(248,113,113,.12);color:var(--red);border-color:var(--red)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+
+/* ═══ FINANCE ═══ */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:100%}
+.fin-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.fin-panel-hdr{padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px}
+.fin-panel-body{flex:1;overflow-y:auto;padding:8px 0}
+.fin-row{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;border-bottom:.5px solid var(--border)}
+.fin-row:last-child{border-bottom:none}
+.fin-row:hover{background:rgba(255,255,255,.02)}
+.fin-key{font-size:11px;color:var(--text)}
+.fin-val{font-family:var(--mono);font-size:11px}
+.fin-meta{font-size:9px;color:var(--text3);margin-top:1px}
+.fin-total{padding:8px 12px;border-top:1px solid var(--border2);display:flex;justify-content:space-between;font-weight:700;font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ MODAL (универсальный) ═══ -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">—</div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Отмена</button>
+      <button class="btn g" id="modal-ok" onclick="modalOk()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="logo">НПП ОЗТ</div>
+  <div class="hdr-sep"></div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchTab('plan')">📋 Планировщик</button>
+    <button class="nav-btn" onclick="switchTab('ref')">📚 Справочник</button>
+    <button class="nav-btn" onclick="switchTab('recv')">📥 Приёмка</button>
+    <button class="nav-btn" onclick="switchTab('prod')">🏭 Производство</button>
+    <button class="nav-btn" onclick="switchTab('sales')">📦 Продажи</button>
+    <button class="nav-btn" onclick="switchTab('fin')">💰 Финансы</button>
+  </div>
+  <div class="hdr-sep"></div>
+  <div class="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label">—</span>
+  </div>
+  <div class="hdr-right">
+    <button class="hdr-btn" onclick="syncNow()">☁ Синхронизировать</button>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div class="app">
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 1: ПЛАНИРОВЩИК
+════════════════════════════════════════ -->
+<div class="page active" id="page-plan">
+  <div class="sidebar" id="plan-sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Период</div>
+      <div class="form-row"><div class="form-lbl">Начало</div><input type="date" class="inp w120" id="plan-start" onchange="rebuildPlanDays()"></div>
+      <div class="form-row"><div class="form-lbl">Раб. дней</div><input type="number" class="inp w60" id="plan-days" value="10" min="5" max="14" onchange="rebuildPlanDays()"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hdr">Мощности / смену</div>
+      <div class="subsec">Прошив (м²)</div>
+      <div class="form-row"><div class="form-lbl">5 мм</div><input class="inp w60" id="cap-s5" value="1400" onchange="planRecalc()"></div>
+      <div class="form-row"><div class="form-lbl">8 мм</div><input class="inp w60" id="cap-s8" value="1000" onchange="planRecalc()"></div>
+      <div class="form-row"><div class="form-lbl">10-16 мм</div><input class="inp w60" id="cap-s10" value="756" onchange="planRecalc()"></div>
+      <div class="subsec">Фольгирование Ф (м²)</div>
+      <div class="form-row"><div class="form-lbl">5 мм</div><input class="inp w60" id="cap-ff5" value="3000" onchange="planRecalc()"></div>
+      <div class="form-row"><div class="form-lbl">8-16 мм</div><input class="inp w60" id="cap-ff8" value="2500" onchange="planRecalc()"></div>
+      <div class="subsec">Фольгирование ТФ (м²)</div>
+      <div class="form-row"><div class="form-lbl">5 мм</div><input class="inp w60" id="cap-tf5" value="2200" onchange="planRecalc()"></div>
+      <div class="form-row"><div class="form-lbl">8-16 мм</div><input class="inp w60" id="cap-tf8" value="1700" onchange="planRecalc()"></div>
+      <div class="subsec">Клей (кг)</div>
+      <div class="form-row"><div class="form-lbl">2 чел</div><input class="inp w60" id="cap-g2" value="4000" onchange="planRecalc()"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hdr">Поставщики БСТВ</div>
+      <div class="form-row"><div class="form-lbl">1</div><input class="inp w120" id="sup0" value="Нытва"></div>
+      <div class="form-row"><div class="form-lbl">2</div><input class="inp w120" id="sup1" value="Власов"></div>
+      <div class="form-row"><div class="form-lbl">3</div><input class="inp w120" id="sup2" value="ЧСЗ"></div>
+      <div class="form-row"><div class="form-lbl">4</div><input class="inp w120" id="sup3" value="Дятьково"></div>
+      <div class="form-row"><div class="form-lbl">5</div><input class="inp w120" id="sup4" value="Другой"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hdr">Начальные остатки</div>
+      <div class="subsec" style="color:var(--text3);font-size:9px">← берутся из вкладки Производство</div>
+      <button class="btn sm" style="width:100%;margin-top:4px" onclick="syncStockFromProd()">↻ Обновить остатки</button>
+    </div>
+  </div>
+  <div class="plan-layout">
+    <div class="day-tabs-wrap" id="plan-tabs"></div>
+    <div class="plan-day" id="plan-day">
+      <div class="alert info"><span>ℹ</span><span>Настройте период и нажмите «↻ Обновить остатки» для синхронизации с реальным складом.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА: СПРАВОЧНИК
+════════════════════════════════════════ -->
+<div class="page" id="page-ref">
+  <div class="main-area" style="max-width:100%">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+      <!-- КОНТРАГЕНТЫ -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr">
+          <div class="card-title">Контрагенты</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openRefModal('counterparty')">+ Добавить</button></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Наименование</th><th>ИНН</th><th>Тип</th><th>Телефон</th><th></th></tr></thead>
+            <tbody id="ref-counterparty-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ГОТОВАЯ ПРОДУКЦИЯ -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr">
+          <div class="card-title">Готовая продукция</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openRefModal('product')">+ Добавить</button></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Артикул</th><th>Наименование</th><th>Ед.</th><th>НДС%</th><th></th></tr></thead>
+            <tbody id="ref-product-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ПОЛУФАБРИКАТЫ И СЫРЬЁ -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr">
+          <div class="card-title">Полуфабрикаты и сырьё</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openRefModal('material')">+ Добавить</button></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Код</th><th>Наименование</th><th>Ед.</th><th>Тип</th><th></th></tr></thead>
+            <tbody id="ref-material-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 2: ПРИЁМКА
+════════════════════════════════════════ -->
+<div class="page" id="page-recv">
+  <div class="sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Добавить приход</div>
+      <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="recv-date"></div>
+
+      <div class="form-row"><div class="form-lbl">Поставщик</div>
+        <select class="sel" id="recv-sup" style="width:140px" onchange="updateRecvSupInn()"></select>
+      </div>
+      <div class="form-row"><div class="form-lbl" style="color:var(--text3)">ИНН</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="recv-sup-inn">—</div>
+      </div>
+
+      <div class="form-row"><div class="form-lbl">Материал</div>
+        <select class="sel" id="recv-mat" style="width:140px" onchange="updateRecvUnit();calcRecvTotals()">
+          <option value="Х5">Холст Х5</option>
+          <option value="Х8">Холст Х8</option>
+          <option value="Х10">Холст Х10</option>
+          <option value="Х13">Холст Х13</option>
+          <option value="Х16">Холст Х16</option>
+          <option value="Плёнка">Плёнка</option>
+          <option value="Фольга Ф">Фольга Ф (тонкая)</option>
+          <option value="Фольга ТФ">Фольга ТФ (толстая)</option>
+          <option value="Нить">Нить</option>
+          <option value="Клей-сырьё">Сырьё для клея</option>
+          <option value="Прочее">Прочее</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Кол-во</div>
+        <input class="inp w80" id="recv-qty" placeholder="0" oninput="calcRecvTotals()">
+        <span class="unit" id="recv-unit">м²</span>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin:6px 0;font-size:11px">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Цена товара</div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Цена с НДС</div>
+          <input class="inp w80" id="recv-price-vat" placeholder="0" oninput="calcRecvTotals()">
+          <span class="unit">₽</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Ставка НДС</div>
+          <input class="inp w50" id="recv-vat" placeholder="20" value="20" oninput="calcRecvTotals()" style="width:50px">
+          <span class="unit">%</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text3)">Цена без НДС</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="recv-price-no-vat">—</div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-lbl" style="color:var(--text3)">Сумма без НДС</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="recv-sum-no-vat">—</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin:6px 0;font-size:11px">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Накладные расходы</div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Сумма с НДС</div>
+          <input class="inp w80" id="recv-extra-vat" placeholder="0" oninput="calcRecvTotals()">
+          <span class="unit">₽</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Ставка НДС</div>
+          <input class="inp" id="recv-extra-vat-rate" placeholder="20" value="20" oninput="calcRecvTotals()" style="width:50px">
+          <span class="unit">%</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text3)">Сумма НДС</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="recv-extra-vat-sum">—</div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-lbl" style="color:var(--text3)">Без НДС / на ед.</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--amber)" id="recv-extra-per-unit">—</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:6px;padding:8px;margin:6px 0;font-size:11px">
+        <div class="form-row" style="margin-bottom:3px">
+          <div class="form-lbl" style="color:var(--text2)">Итого с НДС</div>
+          <div style="font-family:var(--mono);color:var(--blue)" id="recv-with-vat">—</div>
+        </div>
+        <div class="form-row" style="margin-bottom:3px">
+          <div class="form-lbl" style="color:var(--text2)">Учётная цена/ед</div>
+          <div style="font-family:var(--mono);color:var(--amber);font-weight:700" id="recv-unit-price">—</div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-lbl" style="color:var(--text2)">Учётная сумма</div>
+          <div style="font-family:var(--mono);color:var(--green);font-weight:700" id="recv-total">—</div>
+        </div>
+      </div>
+
+      <div class="form-row"><div class="form-lbl">Номер накл./УПД</div><input class="inp w120" id="recv-invoice" placeholder="УПД №"></div>
+      <div class="form-row"><div class="form-lbl">Оплачено</div>
+        <select class="sel" id="recv-paid" style="width:120px">
+          <option value="no">Нет</option><option value="yes">Да</option><option value="partial">Частично</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Сумма оплаты</div><input class="inp w80" id="recv-paid-amt" placeholder="0"> <span class="unit">₽</span></div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addReceipt()">+ Добавить приход</button>
+    </div>
+  </div>
+  <div class="main-area">
+    <div class="kpi-grid c4" id="recv-kpi">
+      <div class="kcard info"><div class="kl">Поступило за период</div><div class="kv b" id="kv-recv-total">—</div></div>
+      <div class="kcard amb"><div class="kl">Кредиторская задолженность</div><div class="kv a" id="kv-recv-debt">—</div></div>
+      <div class="kcard"><div class="kl">Оплачено поставщикам</div><div class="kv" id="kv-recv-paid">—</div></div>
+      <div class="kcard teal"><div class="kl">Учётная ст-ть склада сырья</div><div class="kv t" id="kv-recv-stock">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Журнал приёмки</div>
+        <div class="card-actions">
+          <input type="month" class="inp" id="recv-filter-month" onchange="renderRecv()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Поставщик</th><th>Материал</th>
+            <th class="r">Кол-во</th><th class="r">Цена с НДС</th>
+            <th class="r">Цена б/НДС</th><th class="r">Итого с НДС</th>
+            <th class="r">Накл. расх.</th>
+            <th class="r">Учётная цена</th><th class="r">Учётная сумма</th>
+            <th>Накл.№</th><th>Оплата</th><th></th>
+          </tr></thead>
+          <tbody id="recv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Остатки сырья (по учётным ценам)</div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Материал</th><th class="r">Кол-во</th><th class="r">Ед.</th><th class="r">Ср. учётная цена</th><th class="r">Стоимость</th></tr></thead>
+          <tbody id="raw-stock-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 3: ПРОИЗВОДСТВО
+════════════════════════════════════════ -->
+<div class="page" id="page-prod">
+  <div class="sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Добавить операцию</div>
+      <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="prod-date"></div>
+      <div class="form-row"><div class="form-lbl">Операция</div>
+        <select class="sel" id="prod-op" style="width:120px" onchange="updateProdArtList()">
+          <option value="sew">Прошив</option>
+          <option value="fol">Фольгирование</option>
+          <option value="glue">Изготовление клея</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Артикул/ГП</div>
+        <select class="sel" id="prod-art" style="width:120px"></select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Кол-во</div><input class="inp w80" id="prod-qty" placeholder="0" onchange="calcProdCost()"> <span class="unit" id="prod-unit">м²</span></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin-top:6px;font-size:11px">
+        <div class="subsec" style="margin-top:0">Списание сырья (авто)</div>
+        <div id="prod-consumption" style="color:var(--text2)">—</div>
+      </div>
+      <div class="form-row" style="margin-top:8px"><div class="form-lbl">С/с ед. (авто)</div><div style="font-family:var(--mono);color:var(--green)" id="prod-cost-unit">—</div></div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addProdOp()">+ Провести операцию</button>
+    </div>
+    <div class="sec">
+      <div class="sec-hdr">Техкарты (нормы на 1 м²)</div>
+      <div class="subsec">БСТВ (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Все артикулы</div><input class="inp w60" id="tc-bstv" value="1.0" onchange="calcProdCost()"></div>
+      <div class="subsec">Плёнка (м²/м²) — только Ф</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-film" value="1.05" onchange="calcProdCost()"></div>
+      <div class="subsec">Нить (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-thread" value="1.0" onchange="calcProdCost()"></div>
+      <div class="subsec">Фольга Ф (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-foil-f" value="1.05" onchange="calcProdCost()"></div>
+      <div class="subsec">Фольга ТФ (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-foil-tf" value="1.05" onchange="calcProdCost()"></div>
+      <div class="subsec">Клей: сырьё (кг/кг)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-glue-raw" value="1.0" onchange="calcProdCost()"></div>
+    </div>
+  </div>
+  <div class="main-area">
+    <div class="kpi-grid c4" id="prod-kpi">
+      <div class="kcard ok"><div class="kl">Произведено за период (м²)</div><div class="kv g" id="kv-prod-m2">—</div></div>
+      <div class="kcard ok"><div class="kl">Произведено клей (кг)</div><div class="kv g" id="kv-prod-kg">—</div></div>
+      <div class="kcard info"><div class="kl">С/с произведённой ГП</div><div class="kv b" id="kv-prod-cost">—</div></div>
+      <div class="kcard teal"><div class="kl">Стоимость склада ГП</div><div class="kv t" id="kv-prod-stock-val">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Журнал производственных операций</div>
+        <div class="card-actions">
+          <input type="month" class="inp" id="prod-filter-month" onchange="renderProd()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Операция</th><th>Артикул/ГП</th>
+            <th class="r">Кол-во</th><th class="r">С/с ед.</th><th class="r">С/с итого</th>
+            <th>Списано сырья</th><th></th>
+          </tr></thead>
+          <tbody id="prod-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="kpi-grid c2">
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title">Склад ГП и полуфабрикатов</div></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Артикул</th><th class="r">Кол-во</th><th class="r">С/с ед.</th><th class="r">Стоимость</th></tr></thead>
+            <tbody id="gp-stock-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title">Движение по артикулам (период)</div></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Артикул</th><th class="r">Произведено</th><th class="r">Отгружено</th><th class="r">Остаток</th></tr></thead>
+            <tbody id="prod-movement-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 4: ПРОДАЖИ
+════════════════════════════════════════ -->
+<div class="page" id="page-sales">
+  <div class="sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Новая отгрузка</div>
+      <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="sale-date"></div>
+      <div class="form-row"><div class="form-lbl">Контрагент</div><input class="inp w120" id="sale-client" placeholder="Покупатель"></div>
+      <div class="form-row"><div class="form-lbl">Артикул</div>
+        <select class="sel" id="sale-art" style="width:120px">
+          <option>BSALT-5Ф</option><option>BSALT-8Ф</option><option>BSALT-10Ф</option>
+          <option>BSALT-13Ф</option><option>BSALT-16Ф</option>
+          <option>BSALT-5ТФ</option><option>BSALT-8ТФ</option><option>BSALT-10ТФ</option>
+          <option>BSALT-13ТФ</option><option>BSALT-16ТФ</option>
+          <option>Клей FP</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Кол-во</div><input class="inp w80" id="sale-qty" placeholder="0" onchange="calcSaleTotals()"> <span class="unit" id="sale-unit">м²</span></div>
+      <div class="form-row"><div class="form-lbl">Цена без НДС</div><input class="inp w80" id="sale-price" placeholder="0" onchange="calcSaleTotals()"> <span class="unit">₽</span></div>
+      <div class="form-row"><div class="form-lbl">НДС %</div>
+        <select class="sel w60" id="sale-vat" onchange="calcSaleTotals()">
+          <option value="20">20%</option><option value="0">0%</option>
+        </select>
+      </div>
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin-top:6px;font-size:11px">
+        <div class="form-row" style="margin:0 0 3px"><div class="form-lbl" style="color:var(--text2)">Сумма с НДС</div><div style="font-family:var(--mono);color:var(--blue)" id="sale-with-vat">—</div></div>
+        <div class="form-row" style="margin:0"><div class="form-lbl" style="color:var(--text2)">С/с (авто)</div><div style="font-family:var(--mono);color:var(--amber)" id="sale-cost">—</div></div>
+      </div>
+      <div class="form-row" style="margin-top:8px"><div class="form-lbl">№ накл./УПД</div><input class="inp w120" id="sale-invoice" placeholder="УПД №"></div>
+      <div class="form-row"><div class="form-lbl">Оплата</div>
+        <select class="sel" id="sale-paid" style="width:120px">
+          <option value="no">Не оплачено</option><option value="yes">Оплачено</option><option value="partial">Частично</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Сумма оплаты</div><input class="inp w80" id="sale-paid-amt" placeholder="0"> <span class="unit">₽</span></div>
+      <div class="form-row"><div class="form-lbl">Ожид. оплата</div><input type="date" class="inp w120" id="sale-pay-date"></div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addSale()">+ Добавить отгрузку</button>
+    </div>
+  </div>
+  <div class="main-area">
+    <div class="kpi-grid c4">
+      <div class="kcard ok"><div class="kl">Выручка б/НДС</div><div class="kv g" id="kv-sale-rev">—</div></div>
+      <div class="kcard info"><div class="kl">Выручка с НДС</div><div class="kv b" id="kv-sale-rev-vat">—</div></div>
+      <div class="kcard amb"><div class="kl">Дебиторская задолженность</div><div class="kv a" id="kv-sale-debt">—</div></div>
+      <div class="kcard teal"><div class="kl">Оплачено клиентами</div><div class="kv t" id="kv-sale-paid">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Журнал отгрузок</div>
+        <div class="card-actions">
+          <input type="month" class="inp" id="sale-filter-month" onchange="renderSales()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Контрагент</th><th>Артикул</th>
+            <th class="r">Кол-во</th><th class="r">Цена б/НДС</th>
+            <th class="r">Сумма б/НДС</th><th class="r">Сумма с НДС</th>
+            <th class="r">С/с</th><th class="r">Маржа</th>
+            <th>Накл.№</th><th>Оплата</th><th>Ожид. дата</th><th></th>
+          </tr></thead>
+          <tbody id="sale-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Дебиторская задолженность по клиентам</div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Контрагент</th><th class="r">Отгружено</th><th class="r">Оплачено</th><th class="r">Долг</th><th>Ближ. дата оплаты</th></tr></thead>
+          <tbody id="debitor-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 5: ФИНАНСЫ
+════════════════════════════════════════ -->
+<div class="page" id="page-fin">
+  <div class="main-area" style="max-width:100%">
+    <div class="kpi-grid c5" style="margin-bottom:12px">
+      <div class="kcard ok"><div class="kl">Деньги на счёте</div><div class="kv g" id="kv-fin-cash">—</div><div class="ks">фактический остаток</div></div>
+      <div class="kcard info"><div class="kl">Дебиторка (нам должны)</div><div class="kv b" id="kv-fin-debit">—</div><div class="ks">ожидаемые поступления</div></div>
+      <div class="kcard amb"><div class="kl">Кредиторка (мы должны)</div><div class="kv a" id="kv-fin-credit">—</div><div class="ks">обязательства перед поставщиками</div></div>
+      <div class="kcard teal"><div class="kl">Склад ГП (по с/с)</div><div class="kv t" id="kv-fin-stock">—</div><div class="ks">замороженные средства</div></div>
+      <div class="kcard" id="kcard-fin-result"><div class="kl">Финансовый результат</div><div class="kv" id="kv-fin-result">—</div><div class="ks">деньги + дебит + склад − кредит</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <!-- P&L -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title">P&L — Прибыли и убытки</div>
+          <div class="card-actions"><select class="sel" id="fin-period" onchange="renderFin()" style="font-size:10px">
+            <option value="month">Текущий месяц</option>
+            <option value="all">Всё время</option>
+          </select></div>
+        </div>
+        <div class="fin-panel-body" id="pnl-body" style="padding:0"></div>
+      </div>
+      <!-- Поступления ДДС -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title" style="color:var(--green)">↓ Ожидаемые поступления</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openAddPayment('in')">+ Добавить</button></div>
+        </div>
+        <div class="fin-panel-body" id="income-body" style="padding:0"></div>
+        <div class="fin-total" id="income-total">—</div>
+      </div>
+      <!-- Платежи ДДС -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title" style="color:var(--red)">↑ Предстоящие платежи</div>
+          <div class="card-actions"><button class="btn sm" style="color:var(--red);border-color:rgba(248,113,113,.3)" onclick="openAddPayment('out')">+ Добавить</button></div>
+        </div>
+        <div class="fin-panel-body" id="expense-body" style="padding:0"></div>
+        <div class="fin-total" id="expense-total">—</div>
+      </div>
+    </div>
+
+    <!-- Баланс счёта -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Движение денег — расчётный счёт</div>
+        <div class="card-actions">
+          <button class="btn sm g" onclick="openAddPayment('fact')">+ Фактический платёж</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Тип</th><th>Контрагент/описание</th>
+            <th class="r">Приход</th><th class="r">Расход</th><th class="r">Остаток</th><th></th>
+          </tr></thead>
+          <tbody id="cashflow-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  КОНФИГУРАЦИЯ
+// ═══════════════════════════════════════════════════════
+const GS_URL = 'https://script.google.com/macros/s/AKfycbzC0vd34pjqKioZyiy_f7P9zTbrmmlZO6Xacw1XZSVvv1vSfsq2dJwi4vK1bhrzRZUwkQ/exec';
+
+// ═══════════════════════════════════════════════════════
+//  БАЗА ДАННЫХ (в памяти)
+// ═══════════════════════════════════════════════════════
+let DB = {
+  receipts:   [],   // [{id,date,sup,mat,qty,...}]
+  production: [],   // [{id,date,op,art,qty,costUnit,consumption:[{mat,qty}]}]
+  sales:      [],   // [{id,date,client,art,qty,price,vat,invoice,paid,paidAmt,payDate}]
+  payments:   [],   // [{id,date,type:'in'|'out'|'fact',desc,amount,counterparty,done}]
+  planDays:   [],   // [{date, data:{bstv,shipments,sew...,fol...}}]
+  settings:   {},
+  ref: {
+    counterparty: [], // [{id,name,inn,type:'supplier'|'buyer'|'both',phone,email}]
+    product:      [], // [{id,code,name,unit,vatRate}]
+    material:     [], // [{id,code,name,unit,type:'pf'|'raw'}]
+  }
+};
+
+let currentTab = 'plan';
+let isSyncing  = false;
+
+// ═══════════════════════════════════════════════════════
+//  УТИЛИТЫ
+// ═══════════════════════════════════════════════════════
+const fmtMoney = n => Math.round(n||0).toLocaleString('ru-RU') + ' ₽';
+const fmtNum   = n => Math.round(n||0).toLocaleString('ru-RU');
+const fmtDec   = (n,d=2) => (n||0).toFixed(d).replace('.',',');
+const fmtDate  = d => { if(!d) return '—'; const dt=new Date(d); return `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`; };
+const today    = () => new Date().toISOString().split('T')[0];
+const uid      = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+function toast(msg, type='ok', dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.className = 'toast', dur);
+}
+
+function setSyncStatus(state) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  const states = {
+    idle:   ['', 'Синхронизировано'],
+    saving: ['saving', 'Сохраняю...'],
+    ok:     ['ok', 'Сохранено'],
+    err:    ['err', 'Ошибка синхронизации'],
+    loading:['saving', 'Загрузка...']
+  };
+  const [cls, text] = states[state] || ['','—'];
+  dot.className = `sync-dot ${cls}`;
+  lbl.textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════════════════
+// Все запросы через GET + URLSearchParams — работает с https://
+async function gsCall(params) {
+  const url = GS_URL + '?' + new URLSearchParams(params).toString();
+  const res  = await fetch(url);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'GS error');
+  return data;
+}
+
+// Сохранить таблицу в GS
+async function saveTable(name, arr) {
+  // Пустой массив — просто очищаем лист, не пишем данные
+  if (!arr || arr.length === 0) {
+    await gsCall({action:'clear', table:name});
+    return;
+  }
+  const keys = Object.keys(arr[0]);
+  // Если объект пустой (нет ключей) — пропускаем
+  if (keys.length === 0) return;
+  const rows = [keys, ...arr.map(r => keys.map(k => {
+    const v = r[k];
+    return v === undefined || v === null ? '' : JSON.stringify(v);
+  }))];
+  // Разбиваем на чанки по 50 строк (URL лимит)
+  const CHUNK = 50;
+  const header   = rows[0];
+  const dataRows = rows.slice(1);
+  if (dataRows.length === 0) {
+    // Только заголовок
+    await gsCall({action:'save', table:name, rows:JSON.stringify([header]), chunk:0, total:1, clear:'1'});
+    return;
+  }
+  const chunks = [];
+  for (let i=0; i<dataRows.length; i+=CHUNK) chunks.push(dataRows.slice(i,i+CHUNK));
+  for (let ci=0; ci<chunks.length; ci++) {
+    const chunkRows = ci===0 ? [header,...chunks[ci]] : chunks[ci];
+    await gsCall({
+      action: 'save',
+      table:  name,
+      rows:   JSON.stringify(chunkRows),
+      chunk:  ci,
+      total:  chunks.length,
+      clear:  ci===0 ? '1' : '0'
+    });
+  }
+}
+
+// Загрузить таблицу из GS
+async function loadTable(name) {
+  try {
+    const json = await gsCall({action:'load', table:name});
+    const rows = json.rows || [];
+    if (!rows || rows.length < 2) return [];
+    const keys = rows[0];
+    return rows.slice(1).map(row => {
+      const obj = {};
+      keys.forEach((k,i) => {
+        try { obj[k] = JSON.parse(row[i]); } catch { obj[k] = row[i]; }
+      });
+      return obj;
+    });
+  } catch(e) { console.error('loadTable error:', e); return []; }
+}
+
+async function syncNow() {
+  if (isSyncing) return;
+  isSyncing = true;
+  setSyncStatus('saving');
+  try {
+    await saveTable('receipts',         DB.receipts);
+    await saveTable('production',       DB.production);
+    await saveTable('sales',            DB.sales);
+    await saveTable('payments',         DB.payments);
+    await saveTable('planDays',         DB.planDays.map(d=>({date:d.date, data:JSON.stringify(d.data)})));
+    await saveTable('settings',         [DB.settings]);
+    await saveTable('ref_counterparty', DB.ref.counterparty);
+    await saveTable('ref_product',      DB.ref.product);
+    await saveTable('ref_material',     DB.ref.material);
+    setSyncStatus('ok');
+    toast('Данные сохранены в Google Sheets ✓');
+    setTimeout(() => setSyncStatus('idle'), 3000);
+  } catch(e) {
+    setSyncStatus('err');
+    toast('Ошибка сохранения: ' + e.message, 'err');
+  }
+  isSyncing = false;
+}
+
+async function loadAll() {
+  setSyncStatus('loading');
+  try {
+    const [recv, prod, sales, payments, planRaw, settings, refCP, refProd, refMat] = await Promise.all([
+      loadTable('receipts'),
+      loadTable('production'),
+      loadTable('sales'),
+      loadTable('payments'),
+      loadTable('planDays'),
+      loadTable('settings'),
+      loadTable('ref_counterparty'),
+      loadTable('ref_product'),
+      loadTable('ref_material'),
+    ]);
+    if (recv.length)     DB.receipts   = recv;
+    if (prod.length)     DB.production = prod;
+    if (sales.length)    DB.sales      = sales;
+    if (payments.length) DB.payments   = payments;
+    if (planRaw.length)  DB.planDays   = planRaw.map(r=>({date:r.date, data:typeof r.data==='string'?JSON.parse(r.data):r.data}));
+    if (settings.length) DB.settings   = settings[0];
+    if (refCP.length)    DB.ref.counterparty = refCP;
+    if (refProd.length)  DB.ref.product      = refProd;
+    if (refMat.length)   DB.ref.material     = refMat;
+    setSyncStatus('ok');
+    toast('Данные загружены из Google Sheets ✓');
+    renderAll();
+    setTimeout(() => setSyncStatus('idle'), 3000);
+  } catch(e) {
+    setSyncStatus('err');
+    toast('Ошибка загрузки. Работаем офлайн.', 'err', 4000);
+  }
+}
+
+// Автосохранение каждые 60 сек
+setInterval(() => { if(!isSyncing) syncNow(); }, 60000);
+
+// ═══════════════════════════════════════════════════════
+//  НАВИГАЦИЯ
+// ═══════════════════════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  if (tab==='ref')   { renderRef(); populateSupplierSelect(); }
+  if (tab==='recv')  { renderRecv(); }
+  if (tab==='prod')  { renderProd(); }
+  if (tab==='sales') { renderSales(); }
+  if (tab==='fin')   { renderFin(); }
+  if (tab==='plan')  { renderPlanTabs(); }
+}
+
+function renderAll() {
+  renderRef();
+  populateSupplierSelect();
+  renderPlanTabs();
+  renderRecv();
+  renderProd();
+  renderSales();
+  renderFin();
+}
+
+// ═══════════════════════════════════════════════════════
+//  СПРАВОЧНИК
+// ═══════════════════════════════════════════════════════
+const TYPE_LABELS = {supplier:'Поставщик', buyer:'Покупатель', both:'Оба'};
+const MAT_TYPE_LABELS = {raw:'Сырьё', pf:'Полуфабрикат'};
+
+let refModalType = '';
+function openRefModal(type) {
+  refModalType = type;
+  const titles = {counterparty:'Новый контрагент', product:'Новая ГП', material:'Новый материал/ПФ'};
+  const bodies = {
+    counterparty: `
+      <div class="modal-row">
+        <div class="modal-field full"><div class="field-lbl">Наименование</div><input class="field-inp" id="ref-name" placeholder="ООО Пример"></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">ИНН</div><input class="field-inp" id="ref-inn" placeholder="1234567890"></div>
+        <div class="modal-field"><div class="field-lbl">Тип</div>
+          <select class="field-inp" id="ref-type">
+            <option value="supplier">Поставщик</option>
+            <option value="buyer">Покупатель</option>
+            <option value="both">Оба</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Телефон</div><input class="field-inp" id="ref-phone" placeholder="+7..."></div>
+        <div class="modal-field"><div class="field-lbl">Email</div><input class="field-inp" id="ref-email" placeholder="@"></div>
+      </div>`,
+    product: `
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Артикул/Код</div><input class="field-inp" id="ref-code" placeholder="BSALT-5Ф"></div>
+        <div class="modal-field"><div class="field-lbl">Ед. изм.</div>
+          <select class="field-inp" id="ref-unit"><option>м²</option><option>кг</option><option>шт</option></select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field full"><div class="field-lbl">Наименование</div><input class="field-inp" id="ref-name" placeholder="Базальтовый материал BSALT-5Ф"></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Ставка НДС %</div><input class="field-inp" id="ref-vat" value="20" placeholder="20"></div>
+      </div>`,
+    material: `
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Код</div><input class="field-inp" id="ref-code" placeholder="Х5"></div>
+        <div class="modal-field"><div class="field-lbl">Ед. изм.</div>
+          <select class="field-inp" id="ref-unit"><option>м²</option><option>кг</option><option>шт</option></select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field full"><div class="field-lbl">Наименование</div><input class="field-inp" id="ref-name" placeholder="Холст БСТВ 5мм"></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Тип</div>
+          <select class="field-inp" id="ref-mat-type"><option value="raw">Сырьё</option><option value="pf">Полуфабрикат</option></select>
+        </div>
+      </div>`
+  };
+  openModal(titles[type], bodies[type], () => {
+    const name = document.getElementById('ref-name')?.value?.trim();
+    if (!name) { toast('Введите наименование','err'); return false; }
+    if (type === 'counterparty') {
+      DB.ref.counterparty.push({
+        id: uid(), name,
+        inn:   document.getElementById('ref-inn')?.value?.trim()||'',
+        type:  document.getElementById('ref-type')?.value||'supplier',
+        phone: document.getElementById('ref-phone')?.value?.trim()||'',
+        email: document.getElementById('ref-email')?.value?.trim()||''
+      });
+    } else if (type === 'product') {
+      DB.ref.product.push({
+        id: uid(), name,
+        code:    document.getElementById('ref-code')?.value?.trim()||'',
+        unit:    document.getElementById('ref-unit')?.value||'м²',
+        vatRate: parseFloat(document.getElementById('ref-vat')?.value)||20
+      });
+    } else if (type === 'material') {
+      DB.ref.material.push({
+        id: uid(), name,
+        code:    document.getElementById('ref-code')?.value?.trim()||'',
+        unit:    document.getElementById('ref-unit')?.value||'м²',
+        matType: document.getElementById('ref-mat-type')?.value||'raw'
+      });
+    }
+    renderRef();
+    populateSupplierSelect();
+    syncNow();
+  });
+}
+
+function deleteRef(type, id) {
+  DB.ref[type] = DB.ref[type].filter(r=>r.id!==id);
+  renderRef();
+  populateSupplierSelect();
+  syncNow();
+}
+
+function renderRef() {
+  const cpBody = document.getElementById('ref-counterparty-tbody');
+  if (cpBody) cpBody.innerHTML = DB.ref.counterparty.map(c=>`<tr>
+    <td class="b">${c.name}</td>
+    <td class="m" style="font-family:var(--mono)">${c.inn||'—'}</td>
+    <td><span class="badge info">${TYPE_LABELS[c.type]||c.type}</span></td>
+    <td class="m">${c.phone||'—'}</td>
+    <td><button class="btn del sm" onclick="deleteRef('counterparty','${c.id}')">✕</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет контрагентов. Добавьте через кнопку «+»</td></tr>';
+
+  const prBody = document.getElementById('ref-product-tbody');
+  if (prBody) prBody.innerHTML = DB.ref.product.map(p=>`<tr>
+    <td class="m" style="font-family:var(--mono)">${p.code||'—'}</td>
+    <td class="b">${p.name}</td>
+    <td class="m">${p.unit}</td>
+    <td class="m">${p.vatRate}%</td>
+    <td><button class="btn del sm" onclick="deleteRef('product','${p.id}')">✕</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет позиций ГП</td></tr>';
+
+  const matBody = document.getElementById('ref-material-tbody');
+  if (matBody) matBody.innerHTML = DB.ref.material.map(m=>`<tr>
+    <td class="m" style="font-family:var(--mono)">${m.code||'—'}</td>
+    <td class="b">${m.name}</td>
+    <td class="m">${m.unit}</td>
+    <td><span class="badge ${m.matType==='raw'?'amb':'teal'}">${MAT_TYPE_LABELS[m.matType]||m.matType}</span></td>
+    <td><button class="btn del sm" onclick="deleteRef('material','${m.id}')">✕</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет материалов/ПФ</td></tr>';
+}
+
+// Заполняем select поставщиков из справочника
+function populateSupplierSelect() {
+  const sel = document.getElementById('recv-sup');
+  if (!sel) return;
+  const suppliers = DB.ref.counterparty.filter(c=>c.type==='supplier'||c.type==='both');
+  const current = sel.value;
+  sel.innerHTML = suppliers.length
+    ? suppliers.map(c=>`<option value="${c.name}" ${c.name===current?'selected':''}>${c.name}</option>`).join('')
+    : '<option value="">— Добавьте поставщиков в Справочник —</option>';
+  updateRecvSupInn();
+}
+
+// Заполняем select клиентов из справочника (для продаж)
+function populateBuyerSelect() {
+  const sel = document.getElementById('sale-client-sel');
+  if (!sel) return;
+  const buyers = DB.ref.counterparty.filter(c=>c.type==='buyer'||c.type==='both');
+  sel.innerHTML = buyers.map(c=>`<option value="${c.name}">${c.name} (${c.inn||'б/ИНН'})</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ПРИЁМКА
+// ═══════════════════════════════════════════════════════
+const MAT_UNITS = {'Х5':'м²','Х8':'м²','Х10':'м²','Х13':'м²','Х16':'м²','Плёнка':'м²','Фольга Ф':'м²','Фольга ТФ':'м²','Нить':'м²','Клей-сырьё':'кг','Прочее':'шт'};
+
+function updateRecvUnit() {
+  const mat = document.getElementById('recv-mat').value;
+  document.getElementById('recv-unit').textContent = MAT_UNITS[mat] || 'ед.';
+}
+
+function updateRecvSupInn() {
+  const name = document.getElementById('recv-sup').value;
+  const cp = DB.ref.counterparty.find(c => c.name === name);
+  document.getElementById('recv-sup-inn').textContent = cp?.inn || '—';
+}
+
+// Новая логика: цена ВВОДИТСЯ с НДС, вычисляем без НДС
+function calcRecvTotals() {
+  const qty      = parseFloat(document.getElementById('recv-qty').value)||0;
+  const priceVat = parseFloat(document.getElementById('recv-price-vat').value)||0;
+  const vatRate  = parseFloat(document.getElementById('recv-vat').value)||0;
+  const extraVat = parseFloat(document.getElementById('recv-extra-vat').value)||0;
+  const extraVatRate = parseFloat(document.getElementById('recv-extra-vat-rate').value)||0;
+
+  // Товар
+  const priceNoVat = vatRate > 0 ? priceVat / (1 + vatRate/100) : priceVat;
+  const sumVat     = priceVat * qty;
+  const sumNoVat   = priceNoVat * qty;
+
+  // Накладные
+  const extraNoVat    = extraVatRate > 0 ? extraVat / (1 + extraVatRate/100) : extraVat;
+  const extraVatSum   = extraVat - extraNoVat;
+  const extraPerUnit  = qty > 0 ? extraNoVat / qty : 0;
+
+  // Учётная цена = цена без НДС + накладные без НДС / кол-во
+  const unitPrice  = priceNoVat + extraPerUnit;
+  const totalAcct  = unitPrice * qty;
+  const totalWithVat = sumVat + extraVat;
+
+  const S = id => document.getElementById(id);
+  if(S('recv-price-no-vat'))  S('recv-price-no-vat').textContent  = fmtDec(priceNoVat) + ' ₽';
+  if(S('recv-sum-no-vat'))    S('recv-sum-no-vat').textContent    = fmtMoney(sumNoVat);
+  if(S('recv-extra-vat-sum')) S('recv-extra-vat-sum').textContent = fmtMoney(extraVatSum);
+  if(S('recv-extra-per-unit'))S('recv-extra-per-unit').textContent= fmtDec(extraPerUnit) + ' ₽/ед.';
+  if(S('recv-with-vat'))      S('recv-with-vat').textContent      = fmtMoney(totalWithVat);
+  if(S('recv-unit-price'))    S('recv-unit-price').textContent    = fmtDec(unitPrice) + ' ₽/ед.';
+  if(S('recv-total'))         S('recv-total').textContent         = fmtMoney(totalAcct);
+}
+
+function addReceipt() {
+  const date        = document.getElementById('recv-date').value || today();
+  const sup         = document.getElementById('recv-sup').value;
+  const mat         = document.getElementById('recv-mat').value;
+  const qty         = parseFloat(document.getElementById('recv-qty').value)||0;
+  const priceVat    = parseFloat(document.getElementById('recv-price-vat').value)||0;
+  const vatRate     = parseFloat(document.getElementById('recv-vat').value)||0;
+  const extraVat    = parseFloat(document.getElementById('recv-extra-vat').value)||0;
+  const extraVatRate= parseFloat(document.getElementById('recv-extra-vat-rate').value)||0;
+  const invoice     = document.getElementById('recv-invoice').value;
+  const paid        = document.getElementById('recv-paid').value;
+  const paidAmt     = parseFloat(document.getElementById('recv-paid-amt').value)||0;
+  if (!qty || !priceVat) { toast('Укажите количество и цену с НДС', 'err'); return; }
+
+  const priceNoVat  = vatRate > 0 ? priceVat / (1 + vatRate/100) : priceVat;
+  const extraNoVat  = extraVatRate > 0 ? extraVat / (1 + extraVatRate/100) : extraVat;
+  const extraPerUnit= qty > 0 ? extraNoVat / qty : 0;
+  const unitPrice   = priceNoVat + extraPerUnit;
+  const withVat     = priceVat * qty + extraVat;
+  const total       = unitPrice * qty; // учётная сумма (без НДС + накладные без НДС)
+
+  DB.receipts.push({
+    id:uid(), date, sup, mat, qty,
+    priceVat, vatRate, priceNoVat,
+    extraVat, extraVatRate, extraNoVat,
+    unitPrice, withVat, total,
+    invoice, paid, paidAmt
+  });
+  renderRecv();
+  syncNow();
+  toast('Приход добавлен ✓');
+}
+
+function deleteReceipt(id) {
+  DB.receipts = DB.receipts.filter(r=>r.id!==id);
+  renderRecv();
+  syncNow();
+}
+
+function renderRecv() {
+  const filterMonth = document.getElementById('recv-filter-month')?.value || '';
+  const rows = filterMonth
+    ? DB.receipts.filter(r => r.date && r.date.startsWith(filterMonth))
+    : DB.receipts;
+
+  const sorted = [...rows].sort((a,b) => b.date > a.date ? 1 : -1);
+
+  let totalCost = 0, totalDebt = 0, totalPaid = 0;
+  DB.receipts.forEach(r => {
+    totalCost += r.total||0;
+    totalPaid += r.paidAmt||0;
+  });
+  totalDebt = totalCost - totalPaid;
+
+  document.getElementById('kv-recv-total').textContent = fmtMoney(totalCost);
+  document.getElementById('kv-recv-debt').textContent  = fmtMoney(Math.max(0,totalDebt));
+  document.getElementById('kv-recv-paid').textContent  = fmtMoney(totalPaid);
+
+  // Остатки сырья
+  const rawStock = calcRawStock();
+  let stockVal = 0;
+  Object.values(rawStock).forEach(m => { Object.values(m).forEach(s => { stockVal += s.val||0; }); });
+  document.getElementById('kv-recv-stock').textContent = fmtMoney(stockVal);
+
+  const tbody = document.getElementById('recv-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.map(r => {
+    const paidCls = r.paid==='yes'?'ok':r.paid==='partial'?'amb':'bad';
+    return `<tr>
+      <td class="m">${fmtDate(r.date)}</td>
+      <td>${r.sup||'—'}</td>
+      <td class="b">${r.mat||'—'}</td>
+      <td class="r">${fmtDec(r.qty,1)} ${MAT_UNITS[r.mat]||''}</td>
+      <td class="r">${fmtDec(r.priceVat||r.price||0)} (${r.vatRate||r.vat||0}%)</td>
+      <td class="r">${fmtDec(r.priceNoVat||0)}</td>
+      <td class="bl">${fmtMoney(r.withVat)}</td>
+      <td class="r">${r.extraVat?fmtMoney(r.extraVat):'—'}</td>
+      <td class="am">${fmtDec(r.unitPrice)}</td>
+      <td class="g">${fmtMoney(r.total)}</td>
+      <td class="m">${r.invoice||'—'}</td>
+      <td><span class="badge ${paidCls}">${r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?'ЧАСТИЧНО':'НЕ ОПЛ.'}</span></td>
+      <td><button class="btn del sm" onclick="deleteReceipt('${r.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  // Остатки сырья
+  const rsBody = document.getElementById('raw-stock-tbody');
+  if (!rsBody) return;
+  rsBody.innerHTML = Object.entries(rawStock).map(([mat, sups]) => {
+    const totQty = Object.values(sups).reduce((s,v)=>s+v.qty,0);
+    const totVal = Object.values(sups).reduce((s,v)=>s+v.val,0);
+    const avgP   = totQty > 0 ? totVal/totQty : 0;
+    return `<tr>
+      <td class="b">${mat}</td>
+      <td class="r">${fmtDec(totQty,1)}</td>
+      <td class="m">${MAT_UNITS[mat]||'ед.'}</td>
+      <td class="am">${fmtDec(avgP)} ₽</td>
+      <td class="g">${fmtMoney(totVal)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:16px">Нет данных</td></tr>';
+}
+
+// Остатки сырья = приход − списание в производство
+function calcRawStock() {
+  const stock = {};
+  DB.receipts.forEach(r => {
+    if (!stock[r.mat]) stock[r.mat] = {};
+    if (!stock[r.mat][r.sup]) stock[r.mat][r.sup] = {qty:0, val:0};
+    stock[r.mat][r.sup].qty += r.qty||0;
+    stock[r.mat][r.sup].val += r.total||0;
+  });
+  DB.production.forEach(op => {
+    (op.consumption||[]).forEach(c => {
+      if (stock[c.mat]) {
+        // Списываем пропорционально из доступных остатков
+        let need = c.qty||0;
+        Object.values(stock[c.mat]).forEach(s => {
+          if (need <= 0) return;
+          const take = Math.min(need, s.qty);
+          const valPer = s.qty > 0 ? s.val/s.qty : 0;
+          s.qty -= take;
+          s.val -= take * valPer;
+          need  -= take;
+        });
+      }
+    });
+  });
+  // Убираем нулевые/отрицательные
+  Object.keys(stock).forEach(mat => {
+    Object.keys(stock[mat]).forEach(sup => {
+      if (stock[mat][sup].qty <= 0.001) delete stock[mat][sup];
+    });
+    if (!Object.keys(stock[mat]).length) delete stock[mat];
+  });
+  return stock;
+}
+
+// Средняя учётная цена материала
+function avgRawPrice(mat) {
+  const stock = calcRawStock();
+  if (!stock[mat]) return 0;
+  const total = Object.values(stock[mat]).reduce((s,v)=>s+v.val,0);
+  const qty   = Object.values(stock[mat]).reduce((s,v)=>s+v.qty,0);
+  return qty > 0 ? total/qty : 0;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ПРОИЗВОДСТВО
+// ═══════════════════════════════════════════════════════
+const ARTS_MATERIAL = [
+  'BSALT-5Ф','BSALT-8Ф','BSALT-10Ф','BSALT-13Ф','BSALT-16Ф',
+  'BSALT-5ТФ','BSALT-8ТФ','BSALT-10ТФ','BSALT-13ТФ','BSALT-16ТФ'
+];
+const ARTS_PF = ['5П','8П','10П','13П','16П','5НФ','8НФ','10НФ','13НФ','16НФ'];
+const ARTS_ALL = [...ARTS_MATERIAL, 'Клей FP', ...ARTS_PF];
+
+function updateProdArtList() {
+  const op  = document.getElementById('prod-op').value;
+  const sel = document.getElementById('prod-art');
+  const opts = op==='sew' ? ARTS_PF :
+               op==='fol' ? ARTS_MATERIAL :
+               ['Клей FP'];
+  sel.innerHTML = opts.map(a=>`<option>${a}</option>`).join('');
+  document.getElementById('prod-unit').textContent = op==='glue'?'кг':'м²';
+  calcProdCost();
+}
+
+function tc(id) { return parseFloat(document.getElementById(id)?.value)||0; }
+
+function getConsumption(op, art, qty) {
+  const cons = [];
+  if (op === 'sew') {
+    // Прошив: расход БСТВ + нить
+    const thk = art.replace(/[ПНФ]/g,'');
+    const xMat = 'Х'+thk;
+    cons.push({mat:xMat, qty:qty*tc('tc-bstv'), unit:'м²'});
+    cons.push({mat:'Нить', qty:qty*tc('tc-thread'), unit:'м²'});
+    if (art.endsWith('П')) {
+      // С плёнкой
+      cons.push({mat:'Плёнка', qty:qty*tc('tc-film'), unit:'м²'});
+    }
+  } else if (op === 'fol') {
+    // Фольгирование: расход пф + фольга
+    const thk   = art.replace(/BSALT-/,'').replace(/[ФТ]/g,'');
+    const isTF  = art.includes('ТФ');
+    const pfKey = isTF ? thk+'НФ' : thk+'П';
+    cons.push({mat:pfKey, qty, unit:'м²', isPf:true});
+    cons.push({mat: isTF?'Фольга ТФ':'Фольга Ф', qty:qty*(isTF?tc('tc-foil-tf'):tc('tc-foil-f')), unit:'м²'});
+  } else if (op === 'glue') {
+    cons.push({mat:'Клей-сырьё', qty:qty*tc('tc-glue-raw'), unit:'кг'});
+  }
+  return cons;
+}
+
+function calcUnitCostByOp(op, art, qty) {
+  const cons = getConsumption(op, art, qty);
+  let cost = 0;
+  cons.forEach(c => {
+    if (c.isPf) {
+      // Пф — берём из остатков производства
+      const pfStock = calcGpStock();
+      const pfEntry = pfStock[c.mat];
+      cost += (pfEntry?.avgCost||0) * c.qty;
+    } else {
+      cost += avgRawPrice(c.mat) * c.qty;
+    }
+  });
+  return qty > 0 ? cost/qty : 0;
+}
+
+function calcProdCost() {
+  const op  = document.getElementById('prod-op')?.value;
+  const art = document.getElementById('prod-art')?.value;
+  const qty = parseFloat(document.getElementById('prod-qty')?.value)||0;
+  if (!op||!art) return;
+  const cons = getConsumption(op, art, qty);
+  const consDiv = document.getElementById('prod-consumption');
+  if (consDiv) consDiv.innerHTML = cons.map(c =>
+    `<div style="display:flex;justify-content:space-between;margin-bottom:2px">
+      <span>${c.mat}</span>
+      <span style="font-family:var(--mono);color:var(--amber)">${fmtDec(c.qty,2)} ${c.unit}</span>
+    </div>`
+  ).join('') || '—';
+  const unitCost = calcUnitCostByOp(op, art, qty);
+  const el = document.getElementById('prod-cost-unit');
+  if (el) el.textContent = fmtDec(unitCost) + ' ₽/ед.';
+}
+
+function addProdOp() {
+  const op  = document.getElementById('prod-op').value;
+  const art = document.getElementById('prod-art').value;
+  const qty = parseFloat(document.getElementById('prod-qty').value)||0;
+  const date= document.getElementById('prod-date').value || today();
+  if (!qty) { toast('Укажите количество', 'err'); return; }
+  const cons     = getConsumption(op, art, qty);
+  const costUnit = calcUnitCostByOp(op, art, qty);
+  DB.production.push({id:uid(), date, op, art, qty, costUnit, consumption:cons});
+  renderProd();
+  document.getElementById('prod-qty').value = '';
+  syncNow();
+  toast('Операция проведена ✓');
+}
+
+function deleteProdOp(id) {
+  DB.production = DB.production.filter(r=>r.id!==id);
+  renderProd();
+  syncNow();
+}
+
+// Склад ГП = производство − продажи (средняя себестоимость)
+function calcGpStock() {
+  const stock = {}; // {art: {qty, totalCost, avgCost}}
+  DB.production.forEach(op => {
+    if (op.op !== 'fol' && op.op !== 'glue' && op.op !== 'sew') return;
+    const art = op.art;
+    if (!stock[art]) stock[art] = {qty:0, totalCost:0, avgCost:0};
+    const cost = (op.costUnit||0) * (op.qty||0);
+    stock[art].qty       += op.qty||0;
+    stock[art].totalCost += cost;
+    stock[art].avgCost    = stock[art].qty > 0 ? stock[art].totalCost/stock[art].qty : 0;
+  });
+  // Списываем продажи
+  DB.sales.forEach(s => {
+    const art = s.art;
+    if (stock[art] && stock[art].qty > 0) {
+      const take    = Math.min(s.qty||0, stock[art].qty);
+      const valPer  = stock[art].avgCost;
+      stock[art].qty       -= take;
+      stock[art].totalCost -= take * valPer;
+    }
+  });
+  return stock;
+}
+
+function renderProd() {
+  const filterMonth = document.getElementById('prod-filter-month')?.value || '';
+  const rows = filterMonth
+    ? DB.production.filter(r => r.date && r.date.startsWith(filterMonth))
+    : DB.production;
+  const sorted = [...rows].sort((a,b) => b.date > a.date ? 1 : -1);
+
+  let totalM2=0, totalKg=0, totalCost=0;
+  rows.forEach(r => {
+    if (r.op==='glue') totalKg += r.qty||0;
+    else totalM2 += r.qty||0;
+    totalCost += (r.costUnit||0)*(r.qty||0);
+  });
+
+  const gpStock = calcGpStock();
+  let stockVal = 0;
+  Object.values(gpStock).forEach(s => { stockVal += s.totalCost||0; });
+
+  document.getElementById('kv-prod-m2').textContent       = fmtNum(totalM2) + ' м²';
+  document.getElementById('kv-prod-kg').textContent       = fmtNum(totalKg) + ' кг';
+  document.getElementById('kv-prod-cost').textContent     = fmtMoney(totalCost);
+  document.getElementById('kv-prod-stock-val').textContent= fmtMoney(stockVal);
+
+  const tbody = document.getElementById('prod-tbody');
+  if (!tbody) return;
+  const opNames = {sew:'Прошив', fol:'Фольгирование', glue:'Изгот. клея'};
+  tbody.innerHTML = sorted.map(r => `<tr>
+    <td class="m">${fmtDate(r.date)}</td>
+    <td><span class="badge ${r.op==='fol'?'ok':r.op==='sew'?'info':'teal'}">${opNames[r.op]||r.op}</span></td>
+    <td class="b">${r.art}</td>
+    <td class="r">${fmtNum(r.qty)} ${r.op==='glue'?'кг':'м²'}</td>
+    <td class="am">${fmtDec(r.costUnit)}</td>
+    <td class="g">${fmtMoney((r.costUnit||0)*(r.qty||0))}</td>
+    <td class="m" style="font-size:10px">${(r.consumption||[]).map(c=>`${c.mat}: ${fmtDec(c.qty,1)}`).join(' | ')}</td>
+    <td><button class="btn del sm" onclick="deleteProdOp('${r.id}')">✕</button></td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:16px">Нет операций</td></tr>';
+
+  // Склад ГП
+  const gpBody = document.getElementById('gp-stock-tbody');
+  if (gpBody) {
+    gpBody.innerHTML = Object.entries(gpStock)
+      .filter(([,s])=>s.qty>0.01)
+      .sort((a,b)=>a[0]>b[0]?1:-1)
+      .map(([art,s])=>`<tr>
+        <td class="b">${art}</td>
+        <td class="r">${fmtNum(s.qty)}</td>
+        <td class="am">${fmtDec(s.avgCost)}</td>
+        <td class="g">${fmtMoney(s.totalCost)}</td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px">Склад пуст</td></tr>';
+  }
+
+  // Движение
+  const mvBody = document.getElementById('prod-movement-tbody');
+  if (mvBody) {
+    const produced = {};
+    DB.production.forEach(r => { produced[r.art]=(produced[r.art]||0)+(r.qty||0); });
+    const shipped  = {};
+    DB.sales.forEach(r => { shipped[r.art]=(shipped[r.art]||0)+(r.qty||0); });
+    const allArts = new Set([...Object.keys(produced),...Object.keys(shipped)]);
+    mvBody.innerHTML = [...allArts].sort().map(art => {
+      const p = produced[art]||0, s = shipped[art]||0, rem = (gpStock[art]?.qty)||0;
+      return `<tr>
+        <td class="b">${art}</td>
+        <td class="r">${fmtNum(p)}</td>
+        <td class="r">${fmtNum(s)}</td>
+        <td class="${rem<0?'red':rem===0?'zero':'pos'}">${fmtNum(rem)}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px">Нет данных</td></tr>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ПРОДАЖИ
+// ═══════════════════════════════════════════════════════
+function calcSaleTotals() {
+  const qty   = parseFloat(document.getElementById('sale-qty').value)||0;
+  const price = parseFloat(document.getElementById('sale-price').value)||0;
+  const vat   = parseFloat(document.getElementById('sale-vat').value)||0;
+  const withVat = price * qty * (1+vat/100);
+  document.getElementById('sale-with-vat').textContent = fmtMoney(withVat);
+  const art = document.getElementById('sale-art').value;
+  const gpStock = calcGpStock();
+  const costUnit = gpStock[art]?.avgCost || 0;
+  document.getElementById('sale-cost').textContent = fmtMoney(costUnit*qty) + ` (${fmtDec(costUnit)} ₽/ед.)`;
+}
+
+function addSale() {
+  const date    = document.getElementById('sale-date').value || today();
+  const client  = document.getElementById('sale-client').value;
+  const art     = document.getElementById('sale-art').value;
+  const qty     = parseFloat(document.getElementById('sale-qty').value)||0;
+  const price   = parseFloat(document.getElementById('sale-price').value)||0;
+  const vat     = parseFloat(document.getElementById('sale-vat').value)||0;
+  const invoice = document.getElementById('sale-invoice').value;
+  const paid    = document.getElementById('sale-paid').value;
+  const paidAmt = parseFloat(document.getElementById('sale-paid-amt').value)||0;
+  const payDate = document.getElementById('sale-pay-date').value;
+  if (!qty||!price||!client) { toast('Заполните все поля','err'); return; }
+  const gpStock  = calcGpStock();
+  const costUnit = gpStock[art]?.avgCost||0;
+  const withVat  = price*qty*(1+vat/100);
+  DB.sales.push({id:uid(),date,client,art,qty,price,vat,invoice,paid,paidAmt,payDate,costUnit,withVat});
+  renderSales();
+  syncNow();
+  toast('Отгрузка добавлена ✓');
+}
+
+function deleteSale(id) {
+  DB.sales = DB.sales.filter(r=>r.id!==id);
+  renderSales();
+  syncNow();
+}
+
+function renderSales() {
+  const filterMonth = document.getElementById('sale-filter-month')?.value||'';
+  const rows = filterMonth ? DB.sales.filter(r=>r.date&&r.date.startsWith(filterMonth)) : DB.sales;
+  const sorted = [...rows].sort((a,b)=>b.date>a.date?1:-1);
+
+  let rev=0,revVat=0,debt=0,paid=0;
+  DB.sales.forEach(r=>{
+    const sum=r.price*(r.qty||0);
+    rev+=sum; revVat+=r.withVat||0;
+    paid+=r.paidAmt||0;
+  });
+  debt=revVat-paid;
+  document.getElementById('kv-sale-rev').textContent    =fmtMoney(rev);
+  document.getElementById('kv-sale-rev-vat').textContent=fmtMoney(revVat);
+  document.getElementById('kv-sale-debt').textContent   =fmtMoney(Math.max(0,debt));
+  document.getElementById('kv-sale-paid').textContent   =fmtMoney(paid);
+
+  const tbody=document.getElementById('sale-tbody');
+  if(!tbody)return;
+  tbody.innerHTML=sorted.map(r=>{
+    const sum=r.price*(r.qty||0);
+    const cost=(r.costUnit||0)*(r.qty||0);
+    const margin=sum-cost;
+    const marginPct=sum>0?margin/sum*100:0;
+    const paidCls=r.paid==='yes'?'ok':r.paid==='partial'?'amb':'bad';
+    const unit=r.art==='Клей FP'?'кг':'м²';
+    return `<tr>
+      <td class="m">${fmtDate(r.date)}</td>
+      <td class="b">${r.client||'—'}</td>
+      <td>${r.art}</td>
+      <td class="r">${fmtNum(r.qty)} ${unit}</td>
+      <td class="r">${fmtDec(r.price)}</td>
+      <td class="r">${fmtMoney(sum)}</td>
+      <td class="bl">${fmtMoney(r.withVat)}</td>
+      <td class="am">${fmtMoney(cost)}</td>
+      <td class="${margin>=0?'g':'red'}">${fmtMoney(margin)} (${fmtDec(marginPct,1)}%)</td>
+      <td class="m">${r.invoice||'—'}</td>
+      <td><span class="badge ${paidCls}">${r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?'ЧАСТИЧНО':'НЕ ОПЛ.'}</span></td>
+      <td class="m">${r.payDate?fmtDate(r.payDate):'—'}</td>
+      <td><button class="btn del sm" onclick="deleteSale('${r.id}')">✕</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:16px">Нет отгрузок</td></tr>';
+
+  // Дебиторка по клиентам
+  const debitors={};
+  DB.sales.forEach(r=>{
+    if(!debitors[r.client])debitors[r.client]={shipped:0,paid:0,payDate:''};
+    debitors[r.client].shipped+=r.withVat||0;
+    debitors[r.client].paid+=r.paidAmt||0;
+    if(r.payDate&&(!debitors[r.client].payDate||r.payDate<debitors[r.client].payDate))
+      debitors[r.client].payDate=r.payDate;
+  });
+  const dBody=document.getElementById('debitor-tbody');
+  if(dBody){
+    dBody.innerHTML=Object.entries(debitors).map(([cl,d])=>{
+      const debt=d.shipped-d.paid;
+      return `<tr>
+        <td class="b">${cl}</td>
+        <td class="r">${fmtMoney(d.shipped)}</td>
+        <td class="g">${fmtMoney(d.paid)}</td>
+        <td class="${debt>0?'am':'zero'}">${fmtMoney(Math.max(0,debt))}</td>
+        <td class="m">${d.payDate?fmtDate(d.payDate):'—'}</td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет задолженностей</td></tr>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ФИНАНСЫ
+// ═══════════════════════════════════════════════════════
+let modalPaymentType = 'in';
+let modalCallback    = null;
+
+function openAddPayment(type) {
+  modalPaymentType = type;
+  const titles = {in:'Ожидаемое поступление',out:'Предстоящий платёж',fact:'Фактический платёж'};
+  openModal(titles[type]||'Платёж', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="mp-date" value="${today()}"></div>
+      <div class="modal-field"><div class="field-lbl">Сумма ₽</div><input class="field-inp" id="mp-amount" placeholder="0"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">Контрагент/описание</div><input class="field-inp" id="mp-desc" placeholder="Описание"></div>
+    </div>
+    ${type==='in'||type==='out'?`<div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">Ссылка (на счёт/договор)</div><input class="field-inp" id="mp-ref" placeholder="необязательно"></div>
+    </div>`:''}
+    ${type==='fact'?`<div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Тип</div><select class="field-inp" id="mp-dir">
+        <option value="in">Поступление</option><option value="out">Расход</option>
+      </select></div>
+    </div>`:''}
+  `, () => {
+    const date   = document.getElementById('mp-date')?.value||today();
+    const amount = parseFloat(document.getElementById('mp-amount')?.value)||0;
+    const desc   = document.getElementById('mp-desc')?.value||'';
+    const dir    = type==='fact'?(document.getElementById('mp-dir')?.value||'in'):type;
+    if(!amount){toast('Укажите сумму','err');return false;}
+    DB.payments.push({id:uid(),date,type:dir,planned:type!=='fact',desc,amount});
+    renderFin();
+    syncNow();
+    toast('Добавлено ✓');
+  });
+}
+
+function openModal(title, bodyHtml, onOk) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML    = bodyHtml;
+  document.getElementById('modal').classList.add('open');
+  modalCallback = onOk;
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function modalOk(){ if(modalCallback && modalCallback()!==false) closeModal(); }
+
+function deletePayment(id){
+  DB.payments=DB.payments.filter(p=>p.id!==id);
+  renderFin();syncNow();
+}
+
+function renderFin() {
+  const period = document.getElementById('fin-period')?.value||'month';
+  const now    = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  // KPI
+  const gpStock  = calcGpStock();
+  const rawStock = calcRawStock();
+  let gpVal=0; Object.values(gpStock).forEach(s=>gpVal+=s.totalCost||0);
+  let rawVal=0; Object.values(rawStock).forEach(m=>Object.values(m).forEach(s=>rawVal+=s.val||0));
+
+  // Дебиторка
+  let debit=0;
+  DB.sales.forEach(r=>{ debit+=Math.max(0,(r.withVat||0)-(r.paidAmt||0)); });
+
+  // Кредиторка
+  let credit=0;
+  DB.receipts.forEach(r=>{ credit+=Math.max(0,(r.total||0)-(r.paidAmt||0)); });
+
+  // Деньги на счёте
+  let cash=0;
+  DB.payments.filter(p=>!p.planned).forEach(p=>{
+    cash += p.type==='in' ? (p.amount||0) : -(p.amount||0);
+  });
+
+  const result = cash + debit + gpVal - credit;
+  document.getElementById('kv-fin-cash').textContent   = fmtMoney(cash);
+  document.getElementById('kv-fin-debit').textContent  = fmtMoney(debit);
+  document.getElementById('kv-fin-credit').textContent = fmtMoney(credit);
+  document.getElementById('kv-fin-stock').textContent  = fmtMoney(gpVal);
+  document.getElementById('kv-fin-result').textContent = fmtMoney(result);
+  const rc = document.getElementById('kcard-fin-result');
+  if(rc) rc.className = `kcard ${result>=0?'ok':'bad'}`;
+  const rv = document.getElementById('kv-fin-result');
+  if(rv) rv.className = `kv ${result>=0?'g':'r'}`;
+
+  // P&L
+  const filterSales = period==='month' ? DB.sales.filter(r=>r.date&&r.date.startsWith(monthStr)) : DB.sales;
+  let revMonth=0,costMonth=0;
+  filterSales.forEach(r=>{ revMonth+=r.price*(r.qty||0); costMonth+=(r.costUnit||0)*(r.qty||0); });
+  const grossProfit = revMonth - costMonth;
+  const pnlEl = document.getElementById('pnl-body');
+  if(pnlEl) pnlEl.innerHTML = `
+    <div class="fin-row"><div class="fin-key">Выручка (б/НДС)</div><div class="fin-val" style="color:var(--green)">${fmtMoney(revMonth)}</div></div>
+    <div class="fin-row"><div class="fin-key">Себестоимость</div><div class="fin-val" style="color:var(--red)">−${fmtMoney(costMonth)}</div></div>
+    <div class="fin-row" style="background:rgba(74,222,128,.04)"><div class="fin-key" style="font-weight:700">Валовая прибыль</div><div class="fin-val ${grossProfit>=0?'':''}  " style="font-weight:700;color:${grossProfit>=0?'var(--green)':'var(--red)'}">${fmtMoney(grossProfit)}</div></div>
+    <div class="fin-row"><div class="fin-key">Маржинальность</div><div class="fin-val" style="color:var(--amber)">${revMonth>0?fmtDec(grossProfit/revMonth*100,1):'0,00'}%</div></div>
+    <div class="fin-row"><div class="fin-key">Остаток сырья (по с/с)</div><div class="fin-val" style="color:var(--teal)">${fmtMoney(rawVal)}</div></div>
+    <div class="fin-row"><div class="fin-key">Остаток ГП (по с/с)</div><div class="fin-val" style="color:var(--teal)">${fmtMoney(gpVal)}</div></div>
+  `;
+
+  // ДДС ожидаемые поступления
+  const planned_in = DB.payments.filter(p=>p.planned&&p.type==='in').sort((a,b)=>a.date>b.date?1:-1);
+  const incEl = document.getElementById('income-body');
+  let incTotal=0;
+  if(incEl) incEl.innerHTML = planned_in.map(p=>{incTotal+=p.amount||0;return `
+    <div class="fin-row">
+      <div><div class="fin-key">${p.desc||'Поступление'}</div><div class="fin-meta">${fmtDate(p.date)}</div></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="fin-val" style="color:var(--green)">${fmtMoney(p.amount)}</div>
+        <button class="btn del sm" onclick="deletePayment('${p.id}')">✕</button>
+      </div>
+    </div>`}).join('')||'<div style="padding:12px;color:var(--text3);font-size:11px;text-align:center">Нет ожидаемых поступлений</div>';
+  const itEl=document.getElementById('income-total');
+  if(itEl){itEl.innerHTML=`<span>Итого ожидается</span><span style="color:var(--green)">${fmtMoney(incTotal)}</span>`;}
+
+  // ДДС предстоящие платежи
+  const planned_out = DB.payments.filter(p=>p.planned&&p.type==='out').sort((a,b)=>a.date>b.date?1:-1);
+  const expEl = document.getElementById('expense-body');
+  let expTotal=0;
+  if(expEl) expEl.innerHTML = planned_out.map(p=>{expTotal+=p.amount||0;return `
+    <div class="fin-row">
+      <div><div class="fin-key">${p.desc||'Платёж'}</div><div class="fin-meta">${fmtDate(p.date)}</div></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="fin-val" style="color:var(--red)">${fmtMoney(p.amount)}</div>
+        <button class="btn del sm" onclick="deletePayment('${p.id}')">✕</button>
+      </div>
+    </div>`}).join('')||'<div style="padding:12px;color:var(--text3);font-size:11px;text-align:center">Нет предстоящих платежей</div>';
+  const etEl=document.getElementById('expense-total');
+  if(etEl){etEl.innerHTML=`<span>Итого к оплате</span><span style="color:var(--red)">${fmtMoney(expTotal)}</span>`;}
+
+  // Кассовые операции (фактические)
+  const facts = DB.payments.filter(p=>!p.planned).sort((a,b)=>b.date>a.date?1:-1);
+  let running=0;
+  const factsSorted=[...facts].sort((a,b)=>a.date>b.date?1:-1);
+  const balances={};
+  factsSorted.forEach(p=>{
+    running += p.type==='in'?(p.amount||0):-(p.amount||0);
+    balances[p.id]=running;
+  });
+  const cfEl=document.getElementById('cashflow-tbody');
+  if(cfEl) cfEl.innerHTML=[...facts].map(p=>`<tr>
+    <td class="m">${fmtDate(p.date)}</td>
+    <td><span class="badge ${p.type==='in'?'ok':'bad'}">${p.type==='in'?'ПРИХОД':'РАСХОД'}</span></td>
+    <td>${p.desc||'—'}</td>
+    <td class="${p.type==='in'?'g':'zero'}">${p.type==='in'?fmtMoney(p.amount):'—'}</td>
+    <td class="${p.type==='out'?'red':'zero'}">${p.type==='out'?fmtMoney(p.amount):'—'}</td>
+    <td class="${(balances[p.id]||0)>=0?'bl':'red'}">${fmtMoney(balances[p.id]||0)}</td>
+    <td><button class="btn del sm" onclick="deletePayment('${p.id}')">✕</button></td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:16px">Нет операций</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  ПЛАНИРОВЩИК (сокращённая версия, полная логика из v3)
+// ═══════════════════════════════════════════════════════
+const TH=[
+  {t:'5',dot:'#4ade80',capS:'s5',capF:'ff5',capTF:'tf5'},
+  {t:'8',dot:'#60a5fa',capS:'s8',capF:'ff8',capTF:'tf8'},
+  {t:'10',dot:'#a78bfa',capS:'s10',capF:'ff8',capTF:'tf8'},
+  {t:'13',dot:'#fbbf24',capS:'s10',capF:'ff8',capTF:'tf8'},
+  {t:'16',dot:'#f472b6',capS:'s10',capF:'ff8',capTF:'tf8'},
+];
+const INV_PLAN=['5f','8f','10f','13f','16f','5tf','8tf','10tf','13tf','16tf','5p','8p','10p','13p','16p','5nf','8nf','10nf','13nf','16nf','x5','x8','x10','x13','x16','glue'];
+const ART_MAP_P={'BSALT-5Ф':'5f','BSALT-8Ф':'8f','BSALT-10Ф':'10f','BSALT-13Ф':'13f','BSALT-16Ф':'16f','BSALT-5ТФ':'5tf','BSALT-8ТФ':'8tf','BSALT-10ТФ':'10tf','BSALT-13ТФ':'13tf','BSALT-16ТФ':'16tf','Клей FP':'glue'};
+const ART_PF_P={'5f':'5p','8f':'8p','10f':'10p','13f':'13p','16f':'16p','5tf':'5nf','8tf':'8nf','10tf':'10nf','13tf':'13nf','16tf':'16nf'};
+const ART_HX_P={'5f':'x5','8f':'x8','10f':'x10','13f':'x13','16f':'x16','5tf':'x5','8tf':'x8','10tf':'x10','13tf':'x13','16tf':'x16'};
+
+const DAYS_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+let planActiveDay=0;
+let planInvInit={};
+
+function addDaysFn(d,n){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().split('T')[0];}
+function fmtDateShort(d){if(!d)return'—';const dt=new Date(d);return`${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`;}
+function getDow(d){return DAYS_RU[new Date(d).getDay()];}
+function isWE(d){const dw=new Date(d).getDay();return dw===0||dw===6;}
+const capP=id=>parseFloat(document.getElementById('cap-'+id)?.value)||0;
+const getSups=()=>[0,1,2,3,4].map(i=>document.getElementById(`sup${i}`)?.value||`Поставщик ${i+1}`);
+
+function emptyPlanDay(){
+  return{bstv:[],shipments:[],s5p:0,s5nf:0,s8p:0,s8nf:0,s10p:0,s10nf:0,s13p:0,s13nf:0,s16p:0,s16nf:0,f5f:0,f5tf:0,f8f:0,f8tf:0,f10f:0,f10tf:0,f13f:0,f13tf:0,f16f:0,f16tf:0,glue:0};
+}
+
+// Синхронизируем начальные остатки из вкладки Производство
+function syncStockFromProd(){
+  const gp=calcGpStock();
+  const inv={};
+  INV_PLAN.forEach(k=>inv[k]=0);
+  // ГП
+  Object.entries(ART_MAP_P).forEach(([artName,k])=>{
+    if(gp[artName]) inv[k]=gp[artName].qty||0;
+  });
+  // Пф из производства (прошитые но незафольгированные)
+  // Холст из остатков приёмки
+  const rs=calcRawStock();
+  ['5','8','10','13','16'].forEach(t=>{
+    const mat='Х'+t;
+    if(rs[mat]){inv['x'+t]=Object.values(rs[mat]).reduce((s,v)=>s+v.qty,0);}
+  });
+  if(rs['Клей FP']){inv.glue=Object.values(rs['Клей FP']).reduce((s,v)=>s+v.qty,0);}
+  planInvInit={...inv};
+  toast('Остатки синхронизированы из Производства ✓');
+  planRecalc();
+}
+
+function rebuildPlanDays(){
+  const startEl=document.getElementById('plan-start');
+  if(!startEl.value){const n=new Date();startEl.value=n.toISOString().split('T')[0];}
+  const nDays=parseInt(document.getElementById('plan-days').value)||10;
+  const ex={};
+  DB.planDays.forEach(d=>ex[d.date]=d.data);
+  DB.planDays=[];
+  let cur=startEl.value,wd=0;
+  while(wd<nDays){
+    if(!isWE(cur)){DB.planDays.push({date:cur,data:ex[cur]||emptyPlanDay()});wd++;}
+    cur=addDaysFn(cur,1);
+  }
+  if(planActiveDay>=DB.planDays.length)planActiveDay=0;
+  planRecalc();
+  syncNow();
+}
+
+function savePlanDayInputs(di){
+  const day=DB.planDays[di];if(!day)return;
+  const d=day.data;
+  TH.forEach(th=>{
+    ['p','nf'].forEach(tp=>{const k=`s${th.t}${tp}`;const el=document.getElementById(`oi-${k}`);if(el)d[k]=parseFloat(el.value)||0;});
+    ['f','tf'].forEach(tp=>{const k=`f${th.t}${tp}`;const el=document.getElementById(`oi-${k}`);if(el)d[k]=parseFloat(el.value)||0;});
+  });
+  const gel=document.getElementById('oi-glue');if(gel)d.glue=parseFloat(gel.value)||0;
+}
+
+function planCalcInv(){
+  let inv={...planInvInit};
+  const starts=[],ends=[],alerts=[];
+  DB.planDays.forEach((day)=>{
+    starts.push({...inv});
+    const d=day.data,al=[];
+    (d.bstv||[]).forEach(b=>{const k='x'+b.thick;if(inv[k]!==undefined)inv[k]+=(parseFloat(b.qty)||0);});
+    TH.forEach(th=>{const sp=d[`s${th.t}p`]||0,snf=d[`s${th.t}nf`]||0,tot=sp+snf;const xk='x'+th.t;inv[xk]-=tot;if(inv[xk]<0)al.push({t:'e',msg:`Нехватка Х${th.t}мм: дефицит ${fmtNum(Math.abs(inv[xk]))} м²`});inv[th.t+'p']+=sp;inv[th.t+'nf']+=snf;});
+    TH.forEach(th=>{const ff=d[`f${th.t}f`]||0,ftf=d[`f${th.t}tf`]||0;inv[th.t+'p']-=ff;inv[th.t+'nf']-=ftf;if(inv[th.t+'p']<0)al.push({t:'e',msg:`Нехватка ${th.t}П: ${fmtNum(Math.abs(inv[th.t+'p']))} м²`});if(inv[th.t+'nf']<0)al.push({t:'e',msg:`Нехватка ${th.t}НФ: ${fmtNum(Math.abs(inv[th.t+'nf']))} м²`});inv[th.t+'f']+=ff;inv[th.t+'tf']+=ftf;});
+    inv.glue+=(d.glue||0);
+    (d.shipments||[]).forEach(s=>{const qty=parseFloat(s.qty)||0;const k=ART_MAP_P[s.article];if(k&&inv[k]!==undefined){inv[k]-=qty;if(inv[k]<0)al.push({t:'e',msg:`Нехватка ${s.article}: дефицит ${fmtNum(Math.abs(inv[k]))} (${s.client||'?'})`});}});
+    ends.push({...inv});alerts.push(al);
+  });
+  return{starts,ends,alerts};
+}
+
+let planGC={starts:[],ends:[],alerts:[]};
+
+function planRecalc(){
+  savePlanDayInputs(planActiveDay);
+  planGC=planCalcInv();
+  renderPlanTabs();
+  renderPlanDay(planActiveDay);
+}
+
+function renderPlanTabs(){
+  const c=document.getElementById('plan-tabs');if(!c)return;
+  c.innerHTML='';
+  DB.planDays.forEach((day,i)=>{
+    const al=planGC.alerts[i]||[];
+    const bad=al.some(a=>a.t==='e');
+    const div=document.createElement('div');
+    div.className='dtab'+(i===planActiveDay?' active':'');
+    div.innerHTML=`<div class="dd">${fmtDateShort(day.date)}</div><div class="dw">${getDow(day.date)}</div><div class="da ${bad?'show':''}" style="background:var(--red)"></div>`;
+    div.onclick=()=>{savePlanDayInputs(planActiveDay);planActiveDay=i;renderPlanTabs();renderPlanDay(i);};
+    c.appendChild(div);
+  });
+}
+
+function renderPlanDay(di){
+  const day=DB.planDays[di];
+  const cont=document.getElementById('plan-day');if(!cont)return;
+  if(!day){cont.innerHTML='<div class="alert info"><span>ℹ</span><span>Настройте период планирования.</span></div>';return;}
+  const d=day.data;
+  const invS=planGC.starts[di]||{},invE=planGC.ends[di]||{};
+  const al=planGC.alerts[di]||[];
+
+  // NEED
+  function calcNeed(){
+    const xWA={};TH.forEach(th=>{xWA['x'+th.t]=(invS['x'+th.t]||0);});
+    (d.bstv||[]).forEach(b=>{const k='x'+b.thick;if(xWA[k]!==undefined)xWA[k]+=(parseFloat(b.qty)||0);});
+    const pfWS={};TH.forEach(th=>{pfWS[th.t+'p']=(invS[th.t+'p']||0)+(d['s'+th.t+'p']||0);pfWS[th.t+'nf']=(invS[th.t+'nf']||0)+(d['s'+th.t+'nf']||0);});
+    const gpWF={};TH.forEach(th=>{gpWF[th.t+'f']=(invS[th.t+'f']||0)+(d['f'+th.t+'f']||0);gpWF[th.t+'tf']=(invS[th.t+'tf']||0)+(d['f'+th.t+'tf']||0);});
+    const glueWP=(invS.glue||0)+(d.glue||0);
+    const shipByArt={};
+    (d.shipments||[]).forEach(s=>{const k=ART_MAP_P[s.article];if(!k)return;shipByArt[k]=(shipByArt[k]||0)+(parseFloat(s.qty)||0);});
+    const need={};
+    Object.entries(shipByArt).forEach(([k,qty])=>{
+      if(k==='glue'){need.glue_prod=Math.max(0,qty-glueWP);return;}
+      const gpStock=gpWF[k]||0,needGP=Math.max(0,qty-gpStock);
+      const pfk=ART_PF_P[k],pfStock=pfWS[pfk]||0,needPF=Math.max(0,needGP-pfStock);
+      const xk=ART_HX_P[k],xStock=xWA[xk]||0,needX=Math.max(0,needPF-xStock);
+      need[k]={qty,gpStock,needGP,pfStock,needPF,xStock,needX,pfk,xk};
+    });
+    return need;
+  }
+  const need=calcNeed();
+  const hasShip=(d.shipments||[]).length>0;
+
+  function needBlock(){
+    if(!hasShip)return'';
+    const artRows=Object.entries(need).filter(([k])=>k!=='glue_prod').map(([k,n])=>{
+      const artName=Object.keys(ART_MAP_P).find(a=>ART_MAP_P[a]===k)||k;
+      const folVal=n.needGP>0?`<span style="color:var(--amber)">+${fmtNum(n.needGP)} м²</span>`:`<span style="color:var(--green)">—</span>`;
+      const sewVal=n.needPF>0?`<span style="color:var(--amber)">+${fmtNum(n.needPF)} м²</span>`:`<span style="color:var(--green)">—</span>`;
+      const xVal=n.needX>0?`<span style="color:var(--red)">+${fmtNum(n.needX)} м²</span>`:`<span style="color:var(--green)">—</span>`;
+      return`<tr><td style="font-size:11px;font-weight:600;padding:4px 10px">${artName}</td><td style="font-family:var(--mono);font-size:11px;text-align:right;padding:4px 8px">${folVal}</td><td style="font-family:var(--mono);font-size:11px;text-align:right;padding:4px 8px">${sewVal}</td><td style="font-family:var(--mono);font-size:11px;text-align:right;padding:4px 10px">${xVal}</td></tr>`;
+    }).join('');
+    const glueNeed=need.glue_prod||0;
+    return`<div class="need-block"><div class="need-hdr"><div class="need-title">📋 Что нужно для отгрузок</div><div style="margin-left:auto;font-size:9px;color:var(--text3)">жёлтый = нужно · красный = нет холста</div></div>
+    <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;text-align:left">Артикул</th>
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 8px;text-align:right">Зафольгировать</th>
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 8px;text-align:right">Прошить</th>
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;text-align:right">Нужен холст</th>
+    </tr></thead><tbody>${artRows}${glueNeed>0?`<tr><td style="font-size:11px;font-weight:600;padding:4px 10px">Клей FP</td><td colspan="2" style="text-align:right;font-family:var(--mono);font-size:11px;padding:4px 8px"><span style="color:var(--amber)">произвести +${fmtNum(glueNeed)} кг</span></td><td style="padding:4px 10px;color:var(--green);font-family:var(--mono);font-size:11px;text-align:right">—</td></tr>`:''}</tbody></table></div>`;
+  }
+
+  function thCard(th){
+    function row(key,name,type,cls){
+      const s=invS[key]||0,e=invE[key]||0,diff=e-s;
+      const sCls=s<0?'neg':s===0?'zero':'';
+      const eCls=e<0?'neg':e===0?'zero':e<s?'warn':'pos';
+      const dCls=diff>0?'pos':diff<0?'neg':'zero';
+      return`<div class="trow ${cls}"><div class="tr-lbl"><div class="tr-name">${name}</div><div class="tr-type">${type}</div></div><div class="num ${sCls}">${s===0?'—':fmtNum(s)}</div><div class="num ${dCls}" style="min-width:38px">${diff>0?'+'+fmtNum(diff):diff<0?fmtNum(diff):'—'}</div><div class="num ${eCls}">${e===0?'—':fmtNum(e)}</div></div>`;
+    }
+    return`<div class="tcard"><div class="tcard-hdr"><div class="tcard-dot" style="background:${th.dot}"></div><div class="tcard-name" style="color:${th.dot}">${th.t} мм</div><div style="margin-left:auto;font-size:8px;color:var(--text3)">нач·±·кон</div></div><div class="tcard-body">
+      ${row(th.t+'f','BSALT-'+th.t+'Ф','ГП·Ф','row-gp')}
+      ${row(th.t+'tf','BSALT-'+th.t+'ТФ','ГП·ТФ','row-gp')}
+      ${row(th.t+'p',th.t+'П','Пф·с плёнкой','row-pf')}
+      ${row(th.t+'nf',th.t+'НФ','Пф·без плёнки','row-nf')}
+      ${row('x'+th.t,'Х'+th.t,'Холст БСТВ','row-hx')}
+    </div></div>`;
+  }
+
+  function opRow(id,label,val,capId,unit,cls=''){
+    const cap=capP(capId);const pct=cap>0?Math.min(100,Math.round(val/cap*100)):0;
+    const oc=pct>100?'var(--red)':pct>80?'var(--amber)':'var(--text2)';
+    const fc=pct>100?'var(--red)':pct>80?'var(--amber)':cls==='fol'?'var(--green)':'var(--purple)';
+    return`<div class="op-row"><div class="op-lbl">${label}</div><input class="op-inp ${cls}" id="oi-${id}" value="${val||''}" placeholder="0" onchange="planRecalc()"><div class="op-cap">${fmtNum(cap)} ${unit}</div><div class="op-pct" style="color:${oc}">${pct}%</div></div><div class="op-bar"><div class="op-bar-fill" style="width:${pct}%;background:${fc}"></div></div>`;
+  }
+
+  const sups=getSups();
+  const bstvRows=(d.bstv||[]).map((b,i)=>`<div class="list-row">
+    <select class="sel" style="flex:1" onchange="DB.planDays[planActiveDay].data.bstv[${i}].sup=this.value;planRecalc()">
+      ${sups.map((s,j)=>`<option value="${j}" ${b.sup==j?'selected':''}>${s}</option>`).join('')}
+    </select>
+    <select class="sel" onchange="DB.planDays[planActiveDay].data.bstv[${i}].thick=this.value;planRecalc()">
+      ${['5','8','10','13','16'].map(t=>`<option value="${t}" ${b.thick===t?'selected':''}>Х${t}</option>`).join('')}
+    </select>
+    <input class="ci r" value="${b.qty||''}" placeholder="0" style="width:60px" onchange="DB.planDays[planActiveDay].data.bstv[${i}].qty=parseFloat(this.value)||0;planRecalc()">
+    <span style="font-size:9px;color:var(--text3)">м²</span>
+    <button class="del-btn" onclick="DB.planDays[planActiveDay].data.bstv.splice(${i},1);planRecalc()">✕</button>
+  </div>`).join('');
+
+  const ARTS_SHIP=['BSALT-5Ф','BSALT-8Ф','BSALT-10Ф','BSALT-13Ф','BSALT-16Ф','BSALT-5ТФ','BSALT-8ТФ','BSALT-10ТФ','BSALT-13ТФ','BSALT-16ТФ','Клей FP'];
+  const shipRows=(d.shipments||[]).map((s,i)=>{
+    const unit=s.article==='Клей FP'?'кг':'м²';
+    return`<div class="list-row">
+      <input class="ci" value="${s.client||''}" placeholder="Контрагент" style="flex:1;border:1px solid var(--border);border-radius:3px;padding:2px 5px" onchange="DB.planDays[planActiveDay].data.shipments[${i}].client=this.value">
+      <select class="sel" onchange="DB.planDays[planActiveDay].data.shipments[${i}].article=this.value;planRecalc()">
+        ${ARTS_SHIP.map(a=>`<option ${s.article===a?'selected':''}>${a}</option>`).join('')}
+      </select>
+      <input class="ci r" value="${s.qty||''}" placeholder="0" style="width:58px" onchange="DB.planDays[planActiveDay].data.shipments[${i}].qty=parseFloat(this.value)||0;planRecalc()">
+      <span style="font-size:9px;color:var(--text3);width:14px">${unit}</span>
+      <button class="del-btn" onclick="DB.planDays[planActiveDay].data.shipments.splice(${i},1);planRecalc()">✕</button>
+    </div>`;
+  }).join('');
+
+  const hasBad=al.some(a=>a.t==='e');
+  const totalShipM2=(d.shipments||[]).filter(s=>s.article!=='Клей FP').reduce((s,x)=>s+(parseFloat(x.qty)||0),0);
+  const totalShipKg=(d.shipments||[]).filter(s=>s.article==='Клей FP').reduce((s,x)=>s+(parseFloat(x.qty)||0),0);
+
+  cont.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:17px;font-weight:800;font-family:var(--mono)">${fmtDateShort(day.date)}</div>
+      <div style="font-size:11px;color:var(--text2)">${getDow(day.date)}, ${day.date}</div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        ${hasBad?'<span class="badge bad">ДЕФИЦИТ</span>':'<span class="badge ok">OK</span>'}
+        ${(d.bstv||[]).length?'<span class="badge teal">↓ БСТВ</span>':''}
+        ${totalShipM2>0?`<span class="badge info">→ ${fmtNum(totalShipM2)} м²</span>`:''}
+        ${totalShipKg>0?`<span class="badge info">→ ${fmtNum(totalShipKg)} кг</span>`:''}
+      </div>
+    </div>
+    ${al.length?`<div style="margin-bottom:8px">${al.map(a=>`<div class="alert ${a.t==='e'?'err':'warn'}"><span>${a.t==='e'?'✕':'⚠'}</span><span>${a.msg}</span></div>`).join('')}</div>`:''}
+    ${needBlock()}
+    <div class="two-col" style="margin-bottom:8px">
+      <div class="list-card">
+        <div class="list-hdr" style="color:var(--teal)">⇓ Приход БСТВ</div>
+        <div>${bstvRows}<button class="add-btn teal" onclick="DB.planDays[planActiveDay].data.bstv.push({sup:'0',thick:'5',qty:0});planRecalc()">+ Добавить партию</button></div>
+      </div>
+      <div class="list-card">
+        <div class="list-hdr" style="color:var(--blue)">→ Отгрузки</div>
+        <div>${shipRows}<button class="add-btn" onclick="DB.planDays[planActiveDay].data.shipments.push({client:'',article:'BSALT-5Ф',qty:0});planRecalc()">+ Добавить отгрузку</button></div>
+      </div>
+    </div>
+    <div class="thick-grid">${TH.map(th=>thCard(th)).join('')}</div>
+    <div class="ops-grid">
+      <div class="op-card"><details open><summary class="op-hdr"><span style="color:var(--purple)">▣</span> Прошивной станок <span style="margin-left:auto;font-size:9px;color:var(--text3)">▾</span></summary>
+        <div class="op-body">${TH.map(th=>`<div class="op-thick">${th.t} мм</div>${opRow('s'+th.t+'p',th.t+'П',d['s'+th.t+'p']||0,th.capS,'м²')}${opRow('s'+th.t+'nf',th.t+'НФ',d['s'+th.t+'nf']||0,th.capS,'м²')}`).join('')}</div>
+      </details></div>
+      <div class="op-card"><details open><summary class="op-hdr"><span style="color:var(--green)">◈</span> Фольгировщик <span style="margin-left:auto;font-size:9px;color:var(--text3)">▾</span></summary>
+        <div class="op-body">${TH.map(th=>`<div class="op-thick">${th.t} мм</div>${opRow('f'+th.t+'f',th.t+'Ф',d['f'+th.t+'f']||0,th.capF,'м²','fol')}${opRow('f'+th.t+'tf',th.t+'ТФ',d['f'+th.t+'tf']||0,th.capTF,'м²','fol')}`).join('')}<div class="op-thick">Клей FP</div>${opRow('glue','Клей FP',d.glue||0,'g2','кг','fol')}</div>
+      </details></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ИНИЦИАЛИЗАЦИЯ
+// ═══════════════════════════════════════════════════════
+function init(){
+  // Даты по умолчанию
+  const n=new Date();
+  document.getElementById('recv-date').value  = today();
+  document.getElementById('prod-date').value  = today();
+  document.getElementById('sale-date').value  = today();
+  const m=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('recv-filter-month').value=m;
+  document.getElementById('prod-filter-month').value=m;
+  document.getElementById('sale-filter-month').value=m;
+  // Планировщик — начало со следующего понедельника
+  const dow=n.getDay();const toMon=dow===1?0:dow===0?1:(8-dow)%7;
+  const mon=new Date(n);mon.setDate(mon.getDate()+toMon);
+  document.getElementById('plan-start').value=mon.toISOString().split('T')[0];
+  updateProdArtList();
+  renderRef();
+  populateSupplierSelect();
+  setSyncStatus('loading');
+  loadAll();
+}
+
+init();
+</script>
+</body>
+</html>
