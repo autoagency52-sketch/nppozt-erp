@@ -1012,7 +1012,9 @@ async function saveTable(name, arr) {
     return v === undefined || v === null ? '' : JSON.stringify(v);
   }))];
   // Разбиваем на чанки по 50 строк (URL лимит)
-  const CHUNK = 50;
+  // Размер чанка зависит от размера данных: для planDays (большой JSON) — маленький чанк
+  const rowSize = rows.length > 1 ? JSON.stringify(rows[1]).length : 100;
+  const CHUNK = rowSize > 500 ? 2 : 50;
   const header   = rows[0];
   const dataRows = rows.slice(1);
   if (dataRows.length === 0) {
@@ -1061,7 +1063,8 @@ async function syncNow() {
     await saveTable('production',       DB.production);
     await saveTable('sales',            DB.sales);
     await saveTable('payments',         DB.payments);
-    await saveTable('planDays',         DB.planDays.map(d=>({date:d.date, data:JSON.stringify(d.data)})));
+    // planDays — сохраняем по 2 дня за раз (URL лимит)
+    await saveTable('planDays', DB.planDays.map(d=>({date:d.date, data:JSON.stringify(d.data)})));
     await saveTable('settings', [{data: JSON.stringify(DB.settings||{})}]);
     await saveTable('ref_counterparty', DB.ref.counterparty);
     await saveTable('ref_product',      DB.ref.product);
@@ -3455,7 +3458,7 @@ function init(){
   document.getElementById('recv-date').value  = today();
   document.getElementById('prod-date').value  = today();
   document.getElementById('sale-date').value  = today();
-  document.getElementById('sal-date').value   = today();
+  // sal-date убран (нет такого поля в новой вкладке зарплаты)
   const m=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('recv-filter-month').value=m;
   document.getElementById('prod-filter-month').value=m;
