@@ -1143,7 +1143,17 @@ async function loadAll() {
   setSyncStatus('loading');
   try {
     // Загружаем последовательно чтобы не перегружать Apps Script
-    const safe = async (name) => { try { return await loadTable(name); } catch(e) { console.warn('loadTable failed:', name, e.message); return []; } };
+    const safe = async (name) => {
+      try {
+        console.log('Loading:', name);
+        const r = await loadTable(name);
+        console.log('Loaded:', name, r.length, 'rows');
+        return r;
+      } catch(e) {
+        console.error('LOAD FAILED:', name, e.message);
+        return [];
+      }
+    };
     const recv    = await safe('receipts');
     const prod    = await safe('production');
     const sales   = await safe('sales');
@@ -1187,6 +1197,7 @@ async function loadAll() {
     }
     if (!DB.salPremiums) DB.salPremiums = {};
     } // end safe block
+    console.log('All tables loaded OK');
     setSyncStatus('ok');
     toast('Данные загружены из Google Sheets ✓');
     loadPlanInv();
