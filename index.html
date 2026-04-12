@@ -2419,11 +2419,21 @@ function renderSalDay(dateStr) {
             `<button class="btn sm" style="font-size:9px;padding:2px 6px;${abs===k?'background:var(--amber);color:#000;border-color:transparent':''}"
               onclick="toggleAbsence('${dateStr}','${e.id}','${k}')">${v}</button>`
           ).join('');
-          return `<div style="background:var(--bg3);border-radius:6px;padding:6px 10px;min-width:160px;border:1px solid ${abs?'var(--amber)':inBrigade?'var(--green)':'var(--border)'}">
-            <div style="font-size:11px;font-weight:700;margin-bottom:4px">${e.name}</div>
+          // Разбиваем начисленное: прошив и бригада
+          const indivGross = (dd.indiv||[]).filter(r=>r.empId===e.id).reduce((s,r)=>s+(r.gross||0),0);
+          const brigadeShare = inBrigade && brigadeGrossTotal > 0 && brigadeMembers.size > 0
+            ? brigadeGrossTotal / brigadeMembers.size : 0;
+          return `<div style="background:var(--bg3);border-radius:6px;padding:6px 10px;min-width:170px;border:1px solid ${abs?'var(--amber)':inBrigade?'var(--green)':gross>0?'var(--purple)':'var(--border)'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:2px">${e.name}</div>
             <div style="font-size:9px;color:var(--text3);margin-bottom:4px">${e.position||''}</div>
             ${abs ? `<div style="font-size:10px;color:var(--amber);margin-bottom:4px">📋 ${ABSENCE_TYPES[abs]}</div>` : ''}
-            ${gross>0&&!abs ? `<div style="font-size:10px;color:var(--green);margin-bottom:4px">✓ Начислено: ${fmtMoney(gross)}</div>` : ''}
+            ${!abs && (indivGross>0 || brigadeShare>0) ? `
+              <div style="font-size:10px;margin-bottom:2px">
+                ${indivGross>0 ? `<span style="color:var(--purple)">🔨 ${fmtMoney(indivGross)}</span>` : ''}
+                ${brigadeShare>0 ? `<span style="color:var(--green);margin-left:4px">◈ ${fmtMoney(brigadeShare)}</span>` : ''}
+              </div>
+              ${gross>0 ? `<div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">= ${fmtMoney(gross)}</div>` : ''}
+            ` : (!abs ? `<div style="font-size:10px;color:var(--text3);margin-bottom:4px">Нет начислений</div>` : '')}
             <div style="display:flex;gap:3px;flex-wrap:wrap">${absBtns}
               ${abs ? `<button class="btn sm" style="font-size:9px;padding:2px 6px;color:var(--text3)" onclick="toggleAbsence('${dateStr}','${e.id}','')">Убрать</button>` : ''}
             </div>
@@ -2701,20 +2711,19 @@ function renderSalPeriodSummary() {
   const ins1Rate  = parseFloat(document.getElementById('sal-ins1')?.value)||30.2;
   const ins2Rate  = parseFloat(document.getElementById('sal-ins2')?.value)||7.6;
   const threshold = parseFloat(document.getElementById('sal-threshold')?.value)||33660;
+  const period    = salPeriodFilter;
+  const payLabel  = period==='1' ? '→ Выплата 25-го' : '→ Выплата 10-го следующего месяца';
 
-  // Собираем начисления по сотрудникам за весь период
-  const byEmp = {}; // empId -> {gross, days:{date->gross}}
-  DB.employees.forEach(e => { byEmp[e.id] = {emp:e, gross:0, premium:DB.salPremiums?.[monthStr+salPeriodFilter]?.[e.id]||0}; });
-
+  // Собираем начисления производственных за период
+  const byEmp = {};
+  DB.employees.forEach(e => { byEmp[e.id] = {emp:e, gross:0, premium:DB.salPremiums?.[monthStr+period]?.[e.id]||0}; });
   days.forEach(date => {
     const dd = getDayData(date);
     if (!dd) return;
-    // Индивидуальный прошив
     (dd.indiv||[]).forEach(r => {
       if (byEmp[r.empId] === undefined) return;
       byEmp[r.empId].gross += r.gross||0;
     });
-    // Бригадный котёл — используем dd.brigadeMembers (единый состав дня)
     const members = dd.brigadeMembers || [];
     const brigadeTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
     const per = members.length > 0 ? brigadeTotal / members.length : 0;
@@ -2724,43 +2733,35 @@ function renderSalPeriodSummary() {
     });
   });
 
-  let totGross=0,totNdfl=0,totNet=0,totIns=0,totCost=0,totPremium=0;
+  function calcTax(gross) {
+    const ndfl = gross * ndflRate/100;
+    const net  = gross - ndfl;
+    const ins  = Math.min(gross,threshold)*ins1Rate/100 + Math.max(0,gross-threshold)*ins2Rate/100;
+    return {ndfl, net, ins, cost: gross+ins};
+  }
 
-  const payDate = getSalPayDate(salPeriodFilter==='1'
-    ? monthStr+'-08'   // любая дата 1-15
-    : monthStr+'-20'); // любая дата 16-31
+  // ── ПРОИЗВОДСТВЕННЫЕ ──
+  const prodEmps = DB.employees.filter(e=>e.empType!=='office');
+  let pTotGross=0,pTotNdfl=0,pTotNet=0,pTotIns=0,pTotCost=0,pTotPrem=0;
 
-  const rows = DB.employees.map(e => {
+  const prodRows = prodEmps.map(e => {
     const d = byEmp[e.id];
-    const isOffice = e.empType === 'office';
-    // Для офисных — оклад (за полмесяца), для производственных — сдельная
-    const baseGross = isOffice
-      ? (e.salaryBase||0) / 2   // половина оклада на период
-      : (d?.gross||0);
-    const premium = d?.premium||0;
-    const grossWithPremium = baseGross + premium;
-    if (grossWithPremium === 0) return '';
-
-    const ndfl = grossWithPremium * ndflRate/100;
-    const net  = grossWithPremium - ndfl;
-    const base1= Math.min(grossWithPremium, threshold);
-    const base2= Math.max(0, grossWithPremium - threshold);
-    const ins  = base1*ins1Rate/100 + base2*ins2Rate/100;
-    const cost = grossWithPremium + ins;
-
-    totGross+=grossWithPremium; totNdfl+=ndfl; totNet+=net;
-    totIns+=ins; totCost+=cost; totPremium+=premium;
-
+    const sdelGross = d?.gross||0;
+    const premium   = d?.premium||0;
+    const gross     = sdelGross + premium;
+    if (gross === 0) return '';
+    const {ndfl,net,ins,cost} = calcTax(gross);
+    pTotGross+=gross; pTotNdfl+=ndfl; pTotNet+=net; pTotIns+=ins; pTotCost+=cost; pTotPrem+=premium;
     return `<tr>
-      <td class="b">${e.name}${isOffice?` <span class="badge info" style="font-size:8px">Оклад</span>`:''}</td>
+      <td class="b">${e.name}</td>
       <td class="m">${e.position||'—'}</td>
-      <td class="r">${fmtMoney(baseGross)}</td>
+      <td class="r">${fmtMoney(sdelGross)}</td>
       <td class="r">
         <input class="ci r" style="width:80px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
           value="${premium||''}" placeholder="0"
-          oninput="setSalPremium('${e.id}','${monthStr}','${salPeriodFilter}',parseFloat(this.value)||0)">
+          oninput="setSalPremium('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
       </td>
-      <td class="r" style="font-weight:700">${fmtMoney(grossWithPremium)}</td>
+      <td class="r" style="font-weight:700">${fmtMoney(gross)}</td>
       <td class="am">${fmtMoney(ndfl)}</td>
       <td class="g">${fmtMoney(net)}</td>
       <td class="bl">${fmtMoney(ins)}</td>
@@ -2768,26 +2769,52 @@ function renderSalPeriodSummary() {
     </tr>`;
   }).join('');
 
-  const period = salPeriodFilter;
-  const payLabel = period==='1'
-    ? '→ Выплата 25-го'
-    : '→ Выплата 10-го следующего месяца';
+  // ── ОФИСНЫЕ ──
+  const officeEmps = DB.employees.filter(e=>e.empType==='office');
+  let oTotOklad=0,oTotPrem=0,oTotGross=0,oTotNdfl=0,oTotNet=0,oTotIns=0,oTotCost=0;
+
+  const officeRows = officeEmps.map(e => {
+    const oklad   = (e.salaryBase||0) / 2; // за полпериода
+    const premium = byEmp[e.id]?.premium||0;
+    const gross   = oklad + premium;
+    const {ndfl,net,ins,cost} = calcTax(gross);
+    oTotOklad+=oklad; oTotPrem+=premium; oTotGross+=gross;
+    oTotNdfl+=ndfl; oTotNet+=net; oTotIns+=ins; oTotCost+=cost;
+    return `<tr>
+      <td class="b">${e.name}</td>
+      <td class="m">${e.position||'—'}</td>
+      <td class="r">${fmtMoney(oklad)}</td>
+      <td class="r">
+        <input class="ci r" style="width:80px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+          value="${premium||''}" placeholder="0"
+          oninput="setSalPremium('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(gross)}</td>
+      <td class="am">${fmtMoney(ndfl)}</td>
+      <td class="g">${fmtMoney(net)}</td>
+      <td class="bl">${fmtMoney(ins)}</td>
+      <td class="r" style="font-weight:700">${fmtMoney(cost)}</td>
+    </tr>`;
+  }).join('');
+
+  const totGross = pTotGross + oTotGross;
+  const totNet   = pTotNet   + oTotNet;
+  const totIns   = pTotIns   + oTotIns;
+  const totCost  = pTotCost  + oTotCost;
+  const totNdfl  = pTotNdfl  + oTotNdfl;
 
   cont.innerHTML = `
     <div class="kpi-grid c4" style="margin-bottom:10px">
-      <div class="kcard ok"><div class="kl">Начислено (сдельная)</div><div class="kv g">${fmtMoney(totGross-totPremium)}</div></div>
-      <div class="kcard amb"><div class="kl">Премии</div><div class="kv a">${fmtMoney(totPremium)}</div></div>
-      <div class="kcard info"><div class="kl">НДФЛ</div><div class="kv b">${fmtMoney(totNdfl)}</div></div>
+      <div class="kcard ok"><div class="kl">Итого начислено</div><div class="kv g">${fmtMoney(totGross)}</div></div>
+      <div class="kcard amb"><div class="kl">НДФЛ</div><div class="kv a">${fmtMoney(totNdfl)}</div></div>
       <div class="kcard teal"><div class="kl">К выплате на руки</div><div class="kv t">${fmtMoney(totNet)}</div></div>
+      <div class="kcard info"><div class="kl">Страх. взносы + затраты</div><div class="kv b">${fmtMoney(totCost)}</div><div class="ks">${payLabel}</div></div>
     </div>
-    <div class="kpi-grid c3" style="margin-bottom:10px">
-      <div class="kcard"><div class="kl">Страховые взносы</div><div class="kv">${fmtMoney(totIns)}</div></div>
-      <div class="kcard amb"><div class="kl">Итого затрат на оплату труда</div><div class="kv a">${fmtMoney(totCost)}</div></div>
-      <div class="kcard info"><div class="kl">${payLabel}</div><div class="kv b">${fmtMoney(totNet)}</div></div>
-    </div>
-    <div class="card">
+
+    <!-- Производственные -->
+    <div class="card" style="margin-bottom:10px">
       <div class="card-hdr">
-        <div class="card-title">Расчётная ведомость — Период ${period} ${monthStr}</div>
+        <div class="card-title" style="color:var(--purple)">🔨 Производственный персонал — Период ${period} ${monthStr}</div>
         <div style="margin-left:auto;font-size:10px;color:var(--text3)">${payLabel}</div>
       </div>
       <div style="overflow-x:auto">
@@ -2796,23 +2823,51 @@ function renderSalPeriodSummary() {
             <th>Сотрудник</th><th>Должность</th>
             <th class="r">Сдельная</th><th class="r">Премия</th>
             <th class="r">Итого нач.</th><th class="r">НДФЛ</th>
-            <th class="r">На руки</th><th class="r">Взносы</th>
-            <th class="r">Затраты</th>
+            <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
           </tr></thead>
-          <tbody>${rows||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:16px">Нет данных за период</td></tr>'}</tbody>
-          <tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
+          <tbody>${prodRows||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:12px">Нет производственных сотрудников</td></tr>'}</tbody>
+          ${pTotGross>0?`<tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
             <td colspan="2" style="padding:5px 10px">Итого</td>
-            <td class="r">${fmtMoney(totGross-totPremium)}</td>
-            <td class="r">${fmtMoney(totPremium)}</td>
-            <td class="r">${fmtMoney(totGross)}</td>
-            <td class="am">${fmtMoney(totNdfl)}</td>
-            <td class="g">${fmtMoney(totNet)}</td>
-            <td class="bl">${fmtMoney(totIns)}</td>
-            <td class="r">${fmtMoney(totCost)}</td>
-          </tr></tfoot>
+            <td class="r">${fmtMoney(pTotGross-pTotPrem)}</td>
+            <td class="r">${fmtMoney(pTotPrem)}</td>
+            <td class="r">${fmtMoney(pTotGross)}</td>
+            <td class="am">${fmtMoney(pTotNdfl)}</td>
+            <td class="g">${fmtMoney(pTotNet)}</td>
+            <td class="bl">${fmtMoney(pTotIns)}</td>
+            <td class="r">${fmtMoney(pTotCost)}</td>
+          </tr></tfoot>`:''}
         </table>
       </div>
     </div>
+
+    <!-- Офисные -->
+    ${officeEmps.length ? `<div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--blue)">💼 Офисный персонал — Период ${period} ${monthStr}</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)">${payLabel}</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Сотрудник</th><th>Должность</th>
+            <th class="r">Оклад (½ мес.)</th><th class="r">Премия</th>
+            <th class="r">Итого нач.</th><th class="r">НДФЛ</th>
+            <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
+          </tr></thead>
+          <tbody>${officeRows}</tbody>
+          ${oTotGross>0?`<tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
+            <td colspan="2" style="padding:5px 10px">Итого</td>
+            <td class="r">${fmtMoney(oTotOklad)}</td>
+            <td class="r">${fmtMoney(oTotPrem)}</td>
+            <td class="r">${fmtMoney(oTotGross)}</td>
+            <td class="am">${fmtMoney(oTotNdfl)}</td>
+            <td class="g">${fmtMoney(oTotNet)}</td>
+            <td class="bl">${fmtMoney(oTotIns)}</td>
+            <td class="r">${fmtMoney(oTotCost)}</td>
+          </tr></tfoot>`:''}
+        </table>
+      </div>
+    </div>` : ''}
   `;
 }
 
