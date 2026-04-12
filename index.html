@@ -461,14 +461,64 @@ function renderDayView() {
 
   // KPI
   if (totalDay > 0) {
-    html += `<div class="kpi">
-      <div class="kcard"><div class="lbl">Начислено за день</div><div class="val g">${fmt(totalDay)} ₽</div></div>
-      <div class="kcard"><div class="lbl">В бригаде</div><div class="val">${(day.brigade?.members||[]).length} чел.</div></div>
-      <div class="kcard"><div class="lbl">Отсутствуют</div><div class="val a">${Object.keys(day.absences||{}).length} чел.</div></div>
-    </div>`;
-  }
+  
+  // KPI блок
+  let kpiHtml = '<div class="kpi">';
+  kpiHtml += '<div class="kcard"><div class="lbl">Итого начислено</div><div class="val g">' + fmt(pGross+oGross) + ' ₽</div></div>';
+  kpiHtml += '<div class="kcard"><div class="lbl">НДФЛ</div><div class="val r">' + fmt(pNdfl+oNdfl) + ' ₽</div></div>';
+  kpiHtml += '<div class="kcard"><div class="lbl">На руки</div><div class="val">' + fmt(pNet+oNet) + ' ₽</div></div>';
+  kpiHtml += '<div class="kcard"><div class="lbl">Взносы</div><div class="val b">' + fmt(pIns+oIns) + ' ₽</div></div>';
+  kpiHtml += '<div class="kcard"><div class="lbl">Итого затрат</div><div class="val a">' + fmt(totCostAll) + ' ₽</div></div>';
+  kpiHtml += '</div>';
+  html += kpiHtml;
 
-  // Явка производственных
+  // Блок производства за период
+  let volHtml = '<div class="card" style="margin-bottom:12px">';
+  volHtml += '<div class="card-head"><span class="card-title">📦 Производство за период ' + curPeriod + '</span></div>';
+  volHtml += '<div class="card-body"><div style="display:flex;flex-wrap:wrap;gap:16px">';
+
+  // Прошив
+  volHtml += '<div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">🔨 Прошив (ПФ)</div>';
+  const sewEntries = Object.entries(volSew).filter(([,v])=>v>0);
+  if (sewEntries.length) sewEntries.forEach(([a,v]) => { volHtml += '<div style="font-size:11px">' + a + ': <b>' + fmtNum(v) + ' м²</b></div>'; });
+  else volHtml += '<div style="color:var(--text3);font-size:11px">—</div>';
+  volHtml += '<div style="margin-top:4px;font-size:11px;font-weight:700">Итого: ' + fmtNum(totSew) + ' м²</div></div>';
+
+  // Фольгирование
+  volHtml += '<div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">◈ Фольгирование (ГП)</div>';
+  const folEntries = Object.entries(volFol).filter(([,v])=>v>0);
+  if (folEntries.length) folEntries.forEach(([a,v]) => { volHtml += '<div style="font-size:11px">' + a + ': <b>' + fmtNum(v) + ' м²</b></div>'; });
+  else volHtml += '<div style="color:var(--text3);font-size:11px">—</div>';
+  volHtml += '<div style="margin-top:4px;font-size:11px;font-weight:700">Итого: ' + fmtNum(totFol) + ' м²</div></div>';
+
+  // Клей
+  volHtml += '<div><div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">🧴 Клей FP</div>';
+  volHtml += '<div style="font-size:14px;font-weight:700">' + fmtNum(volGlue) + ' кг</div></div>';
+  volHtml += '</div>';
+
+  // Затраты на единицу
+  if (totCostAll > 0) {
+    volHtml += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">';
+    volHtml += '<div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Затраты на персонал на единицу продукции</div>';
+    volHtml += '<div style="display:flex;flex-wrap:wrap;gap:12px">';
+    if ((totFol+totSew) > 0) {
+      volHtml += '<div style="background:var(--bg3);border-radius:6px;padding:8px 12px">';
+      volHtml += '<div style="font-size:10px;color:var(--text3)">Прошив + Фольгирование (1 м²)</div>';
+      volHtml += '<div style="font-size:16px;font-weight:700;color:var(--amber)">' + fmt(costPerM2) + ' ₽</div>';
+      volHtml += '<div style="font-size:9px;color:var(--text3)">(' + fmt(folSewCost) + ' ₽ / ' + fmtNum(totFol+totSew) + ' м²)</div></div>';
+    }
+    if (volGlue > 0) {
+      volHtml += '<div style="background:var(--bg3);border-radius:6px;padding:8px 12px">';
+      volHtml += '<div style="font-size:10px;color:var(--text3)">Клей FP (1 кг)</div>';
+      volHtml += '<div style="font-size:16px;font-weight:700;color:var(--amber)">' + fmt(costPerKg) + ' ₽</div>';
+      volHtml += '<div style="font-size:9px;color:var(--text3)">(' + fmt(glueCost) + ' ₽ / ' + fmtNum(volGlue) + ' кг)</div></div>';
+    }
+    volHtml += '</div></div>';
+  }
+  volHtml += '</div></div>';
+  html += volHtml;
+
+
   if (prodEmps.length) {
     html += `<div class="card">
       <div class="card-head"><span class="card-title" style="color:var(--amber)">👥 Явка производственных</span></div>
@@ -662,13 +712,43 @@ function renderPeriodView() {
   const periodKey = month + curPeriod;
   const payLabel = curPeriod===1 ? 'Выплата 25-го' : 'Выплата 10-го следующего месяца';
 
-  // Собираем начисления
+  // Собираем начисления и объёмы
   const byEmp = {};
   DB.employees.forEach(e => { byEmp[e.id] = {emp:e, gross:0}; });
+  const volSew = {}, volFol = {};
+  let volGlue = 0;
+
   days.forEach(date => {
     const t = calcDayTotals(date);
     Object.entries(t).forEach(([id,g]) => { if(byEmp[id]) byEmp[id].gross += g; });
+    const d = DB.days[date]; if(!d) return;
+    // Объёмы прошива
+    (d.indiv||[]).forEach(r => {
+      const art = SEW_OPS[r.op]||r.op||'';
+      if(art) volSew[art]=(volSew[art]||0)+(r.qty||0);
+    });
+    // Объёмы фольгирования
+    (d.brigade&&d.brigade.ops||[]).forEach(b => {
+      const art = FOL_OPS[b.op]||b.op||'';
+      if(art==='Клей FP') volGlue+=(b.qty||0);
+      else if(art) volFol[art]=(volFol[art]||0)+(b.qty||0);
+    });
+    // После смены
+    (d.after||[]).forEach(r => {
+      const qty = r.qty||0;
+      if(r.isBrigade) {
+        const art = FOL_OPS[r.op]||r.op||'';
+        if(art==='Клей FP') volGlue+=qty;
+        else if(art) volFol[art]=(volFol[art]||0)+qty;
+      } else {
+        const art = SEW_OPS[r.op]||r.op||'';
+        if(art) volSew[art]=(volSew[art]||0)+qty;
+      }
+    });
   });
+
+  const totSew = Object.values(volSew).reduce((s,v)=>s+v,0);
+  const totFol = Object.values(volFol).reduce((s,v)=>s+v,0);
 
   function calcTax(offBase) {
     const n = offBase * ndfl/100;
@@ -676,182 +756,123 @@ function renderPeriodView() {
     const ins = Math.min(offBase,thresh)*ins1/100 + Math.max(0,offBase-thresh)*ins2/100;
     return {ndfl:n, net, ins};
   }
-
   function getPrem(empId) {
-    return DB.premiums[`${periodKey}_${empId}`] || {premium:0,cash:0};
+    return DB.premiums[periodKey+'_'+empId] || {premium:0,cash:0};
   }
 
   const prodEmps = DB.employees.filter(e=>e.type!=='office');
-  const offEmps = DB.employees.filter(e=>e.type==='office');
-
+  const offEmps  = DB.employees.filter(e=>e.type==='office');
   let pGross=0,pNdfl=0,pNet=0,pIns=0,pCost=0;
   let oGross=0,oNdfl=0,oNet=0,oIns=0,oCost=0;
 
-  const prodRows = prodEmps.map(e => {
-    const g = byEmp[e.id]?.gross||0;
+  const thead = '<thead><tr>' +
+    '<th>Сотрудник</th><th>Должность</th>' +
+    '<th class="r">Сдельная/Оклад</th><th class="r">Премия</th>' +
+    '<th class="r">Начислено</th><th class="r" style="color:var(--amber)">Наличка</th>' +
+    '<th class="r">Офиц.база</th><th class="r">НДФЛ</th>' +
+    '<th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>' +
+    '</tr></thead>';
+
+  function makeRow(e, base) {
+    const g = base;
     const {premium,cash} = getPrem(e.id);
-    const total = g + premium;
-    if (total===0 && !premium && !cash) return '';
+    const total   = g + premium;
     const offBase = Math.max(0, total - cash);
     const {ndfl:n,net,ins} = calcTax(offBase);
-    const cost = offBase + ins + cash;
-    pGross+=total; pNdfl+=n; pNet+=net; pIns+=ins; pCost+=cost;
-    return `<tr>
-      <td>${e.name}</td><td style="color:var(--text3)">${e.pos||''}</td>
-      <td class="num">${fmt(g)}</td>
-      <td><input class="ci r" style="width:75px" value="${premium||''}" placeholder="0"
-        onchange="setPrem('${e.id}','${periodKey}','premium',parseFloat(this.value)||0)"></td>
-      <td class="num" style="font-weight:600">${fmt(total)}</td>
-      <td><input class="ci r" style="width:75px" value="${cash||''}" placeholder="0"
-        onchange="setPrem('${e.id}','${periodKey}','cash',parseFloat(this.value)||0)"></td>
-      <td class="num">${fmt(offBase)}</td>
-      <td class="num" style="color:var(--red)">${fmt(n)}</td>
-      <td class="num g" style="font-weight:600">${fmt(net)}</td>
-      <td class="num" style="color:var(--blue)">${fmt(ins)}</td>
-      <td class="num" style="font-weight:700">${fmt(cost)}</td>
-    </tr>`;
-  }).join('');
-
-  const offRows = offEmps.map(e => {
-    const oklad = (e.salary||0)/2;
-    const {premium,cash} = getPrem(e.id);
-    const total = oklad + premium;
-    const offBase = Math.max(0, total - cash);
-    const {ndfl:n,net,ins} = calcTax(offBase);
-    const cost = offBase + ins + cash;
-    oGross+=total; oNdfl+=n; oNet+=net; oIns+=ins; oCost+=cost;
-    return `<tr>
-      <td>${e.name}</td><td style="color:var(--text3)">${e.pos||''}</td>
-      <td class="num">${fmt(oklad)}</td>
-      <td><input class="ci r" style="width:75px" value="${premium||''}" placeholder="0"
-        onchange="setPrem('${e.id}','${periodKey}','premium',parseFloat(this.value)||0)"></td>
-      <td class="num" style="font-weight:600">${fmt(total)}</td>
-      <td><input class="ci r" style="width:75px" value="${cash||''}" placeholder="0"
-        onchange="setPrem('${e.id}','${periodKey}','cash',parseFloat(this.value)||0)"></td>
-      <td class="num">${fmt(offBase)}</td>
-      <td class="num" style="color:var(--red)">${fmt(n)}</td>
-      <td class="num g" style="font-weight:600">${fmt(net)}</td>
-      <td class="num" style="color:var(--blue)">${fmt(ins)}</td>
-      <td class="num" style="font-weight:700">${fmt(cost)}</td>
-    </tr>`;
-  }).join('');
-
-  const thead = `<thead><tr>
-    <th>Сотрудник</th><th>Должность</th>
-    <th class="r">Сдельная/Оклад</th><th class="r">Премия</th>
-    <th class="r">Начислено</th><th class="r" style="color:var(--amber)">Наличка</th>
-    <th class="r">Офиц.база</th><th class="r">НДФЛ</th>
-    <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
-  </tr></thead>`;
-
-  const tfoot = (tot,n,net,ins,cost) => `<tfoot><tr style="font-weight:700;border-top:2px solid var(--border2)">
-    <td colspan="4" style="padding:6px 8px">Итого</td>
-    <td class="num">${fmt(tot)}</td><td></td>
-    <td></td><td class="num r">${fmt(n)}</td>
-    <td class="num g">${fmt(net)}</td><td class="num b">${fmt(ins)}</td>
-    <td class="num">${fmt(cost)}</td>
-  </tr></tfoot>`;
-
-  let html = `<div style="margin-bottom:12px">
-    <b>Расчётная ведомость — Период ${curPeriod} · ${month}</b>
-    <span style="color:var(--text3);margin-left:12px;font-size:11px">${payLabel}</span>
-  </div>`;
-
-  // ── Объёмы производства за период ──
-  const volSew = {}; // art -> m2
-  const volFol = {}; // art -> m2
-  let volGlue = 0;
-
-  days.forEach(date => {
-    const d = DB.days[date]; if(!d) return;
-    // Прошив (indiv)
-    (d.indiv||[]).forEach(r => {
-      const art = SEW_OPS[r.op] || r.op || r.art;
-      volSew[art] = (volSew[art]||0) + (r.qty||0);
-    });
-    // Фольгирование (brigade ops)
-    (d.brigade?.ops||[]).forEach(b => {
-      const art = FOL_OPS[b.op] || b.op || b.art;
-      if (art === 'Клей FP') volGlue += (b.qty||0);
-      else volFol[art] = (volFol[art]||0) + (b.qty||0);
-    });
-    // После смены
-    (d.after||[]).forEach(r => {
-      const art = ALL_OPS[r.op] || r.op || r.art;
-      const qty = r.qty||0;
-      if (SEW_OPS[r.op]||Object.values(SEW_OPS).includes(art)) volSew[art]=(volSew[art]||0)+qty;
-      else if (art==='Клей FP') volGlue+=qty;
-      else volFol[art]=(volFol[art]||0)+qty;
-    });
-  });
-
-  const totSew  = Object.values(volSew).reduce((s,v)=>s+v,0);
-  const totFol  = Object.values(volFol).reduce((s,v)=>s+v,0);
-  const totCostAll = pCost + oCost;
-
-  // Распределение затрат на ед. продукции
-  // Пропорционально: (прошив+фольгирование) vs клей
-  const folSewCost  = totFol + totSew > 0 ? totCostAll * (totFol+totSew) / (totFol+totSew+volGlue||1) : 0;
-  const glueCost    = volGlue > 0 ? totCostAll * volGlue / (totFol+totSew+volGlue||1) : 0;
-  const costPerM2   = (totFol+totSew) > 0 ? folSewCost/(totFol+totSew) : 0;
-  const costPerKg   = volGlue > 0 ? glueCost/volGlue : 0;
-
-  html += \`<div class="kpi">
-    <div class="kcard"><div class="lbl">Итого начислено</div><div class="val g">\${fmt(pGross+oGross)} ₽</div></div>
-    <div class="kcard"><div class="lbl">НДФЛ</div><div class="val r">\${fmt(pNdfl+oNdfl)} ₽</div></div>
-    <div class="kcard"><div class="lbl">На руки</div><div class="val">\${fmt(pNet+oNet)} ₽</div></div>
-    <div class="kcard"><div class="lbl">Взносы</div><div class="val b">\${fmt(pIns+oIns)} ₽</div></div>
-    <div class="kcard"><div class="lbl">Итого затрат</div><div class="val a">\${fmt(totCostAll)} ₽</div></div>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-head"><span class="card-title">📦 Производство за период \${curPeriod}</span></div>
-    <div class="card-body">
-      <div style="display:flex;flex-wrap:wrap;gap:16px">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">🔨 Прошив (ПФ)</div>
-          \${Object.entries(volSew).filter(([,v])=>v>0).map(([a,v])=>\`<div style="font-size:11px">\${a}: <b>\${fmtNum(v)} м²</b></div>\`).join('')||'<div style="color:var(--text3);font-size:11px">—</div>'}
-          <div style="margin-top:4px;font-size:11px;font-weight:700">Итого: \${fmtNum(totSew)} м²</div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">◈ Фольгирование (ГП)</div>
-          \${Object.entries(volFol).filter(([,v])=>v>0).map(([a,v])=>\`<div style="font-size:11px">\${a}: <b>\${fmtNum(v)} м²</b></div>\`).join('')||'<div style="color:var(--text3);font-size:11px">—</div>'}
-          <div style="margin-top:4px;font-size:11px;font-weight:700">Итого: \${fmtNum(totFol)} м²</div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">🧴 Клей FP</div>
-          <div style="font-size:14px;font-weight:700">\${fmtNum(volGlue)} кг</div>
-        </div>
-      </div>
-      \${totCostAll>0?(\`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Затраты на персонал на единицу продукции</div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px">
-          \${(totFol+totSew)>0?\`<div style="background:var(--bg3);border-radius:6px;padding:8px 12px">
-            <div style="font-size:10px;color:var(--text3)">Прошив + Фольгирование (1 м²)</div>
-            <div style="font-size:16px;font-weight:700;color:var(--amber)">\${fmt(costPerM2)} ₽</div>
-            <div style="font-size:9px;color:var(--text3)">(\${fmt(folSewCost)} ₽ / \${fmtNum(totFol+totSew)} м²)</div>
-          </div>\`:''}
-          \${volGlue>0?\`<div style="background:var(--bg3);border-radius:6px;padding:8px 12px">
-            <div style="font-size:10px;color:var(--text3)">Клей FP (1 кг)</div>
-            <div style="font-size:16px;font-weight:700;color:var(--amber)">\${fmt(costPerKg)} ₽</div>
-            <div style="font-size:9px;color:var(--text3)">(\${fmt(glueCost)} ₽ / \${fmtNum(volGlue)} кг)</div>
-          </div>\`:''}
-        </div>
-      </div>\`):''}
-    </div>
-  </div>\`;
-
-  if (prodEmps.length) {
-    html += `<div class="card" style="margin-bottom:12px">
-      <div class="card-head"><span class="card-title" style="color:var(--purple)">🔨 Производственный персонал</span></div>
-      <div style="overflow-x:auto"><table>${thead}<tbody>${prodRows||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Нет данных</td></tr>'}</tbody>${pGross?tfoot(pGross,pNdfl,pNet,pIns,pCost):''}</table></div>
-    </div>`;
+    const cost    = offBase + ins + cash;
+    return {e, g, premium, cash, total, offBase, n, net, ins, cost};
   }
 
+  function rowHtml(row, periodKey) {
+    const {e,g,premium,cash,total,offBase,n,net,ins,cost} = row;
+    return '<tr>' +
+      '<td>' + e.name + '</td>' +
+      '<td style="color:var(--text3)">' + (e.pos||'') + '</td>' +
+      '<td class="num">' + fmt(g) + '</td>' +
+      '<td><input class="ci r" style="width:70px" value="' + (premium||'') + '" placeholder="0" onchange="setPrem(\'' + e.id + '\',\'' + periodKey + '\',\'premium\',parseFloat(this.value)||0)"></td>' +
+      '<td class="num" style="font-weight:600">' + fmt(total) + '</td>' +
+      '<td><input class="ci r" style="width:70px" value="' + (cash||'') + '" placeholder="0" onchange="setPrem(\'' + e.id + '\',\'' + periodKey + '\',\'cash\',parseFloat(this.value)||0)"></td>' +
+      '<td class="num">' + fmt(offBase) + '</td>' +
+      '<td class="num" style="color:var(--red)">' + fmt(n) + '</td>' +
+      '<td class="num g" style="font-weight:600">' + fmt(net) + '</td>' +
+      '<td class="num" style="color:var(--blue)">' + fmt(ins) + '</td>' +
+      '<td class="num" style="font-weight:700">' + fmt(cost) + '</td>' +
+      '</tr>';
+  }
+
+  const prodData = prodEmps.map(e => makeRow(e, byEmp[e.id]?.gross||0)).filter(r=>r.total>0||r.cash>0);
+  const offData  = offEmps.map(e => makeRow(e, (e.salary||0)/2));
+  prodData.forEach(r=>{ pGross+=r.total;pNdfl+=r.n;pNet+=r.net;pIns+=r.ins;pCost+=r.cost; });
+  offData.forEach(r=>{  oGross+=r.total;oNdfl+=r.n;oNet+=r.net;oIns+=r.ins;oCost+=r.cost; });
+
+  const totCostAll = pCost + oCost;
+  const totProdVol = totFol + totSew;
+  const totVol = totProdVol + volGlue;
+  const folSewCost = totVol>0 ? totCostAll * totProdVol / totVol : 0;
+  const glueCost   = totVol>0 ? totCostAll * volGlue / totVol : 0;
+  const costPerM2  = totProdVol>0 ? folSewCost/totProdVol : 0;
+  const costPerKg  = volGlue>0 ? glueCost/volGlue : 0;
+
+  function tfoot(tot,n,net,ins,cost) {
+    return '<tfoot><tr style="font-weight:700;border-top:2px solid var(--border2)">' +
+      '<td colspan="4" style="padding:6px 8px">Итого</td>' +
+      '<td class="num">' + fmt(tot) + '</td><td></td><td></td>' +
+      '<td class="num r">' + fmt(n) + '</td>' +
+      '<td class="num g">' + fmt(net) + '</td>' +
+      '<td class="num b">' + fmt(ins) + '</td>' +
+      '<td class="num">' + fmt(cost) + '</td></tr></tfoot>';
+  }
+
+  let html = '<div style="margin-bottom:12px"><b>Расчётная ведомость — Период ' + curPeriod + ' · ' + month + '</b>' +
+    '<span style="color:var(--text3);margin-left:12px;font-size:11px">' + payLabel + '</span></div>';
+
+  // KPI
+  html += '<div class="kpi">' +
+    '<div class="kcard"><div class="lbl">Итого начислено</div><div class="val g">' + fmt(pGross+oGross) + ' ₽</div></div>' +
+    '<div class="kcard"><div class="lbl">НДФЛ</div><div class="val r">' + fmt(pNdfl+oNdfl) + ' ₽</div></div>' +
+    '<div class="kcard"><div class="lbl">На руки</div><div class="val">' + fmt(pNet+oNet) + ' ₽</div></div>' +
+    '<div class="kcard"><div class="lbl">Взносы</div><div class="val b">' + fmt(pIns+oIns) + ' ₽</div></div>' +
+    '<div class="kcard"><div class="lbl">Итого затрат</div><div class="val a">' + fmt(totCostAll) + ' ₽</div></div>' +
+    '</div>';
+
+  // Производство за период
+  let vHtml = '<div class="card" style="margin-bottom:12px"><div class="card-head"><span class="card-title">📦 Производство за период ' + curPeriod + '</span></div><div class="card-body">';
+  vHtml += '<div style="display:flex;flex-wrap:wrap;gap:16px">';
+  vHtml += '<div><div style="font-size:10px;color:var(--text3);margin-bottom:5px">🔨 ПРОШИВ</div>';
+  Object.entries(volSew).filter(([,v])=>v>0).forEach(([a,v])=>{ vHtml+='<div style="font-size:11px">'+a+': <b>'+fmtNum(v)+' м²</b></div>'; });
+  if(!Object.values(volSew).some(v=>v>0)) vHtml+='<div style="color:var(--text3)">—</div>';
+  vHtml += '<b>Итого: '+fmtNum(totSew)+' м²</b></div>';
+  vHtml += '<div><div style="font-size:10px;color:var(--text3);margin-bottom:5px">◈ ФОЛЬГИРОВАНИЕ</div>';
+  Object.entries(volFol).filter(([,v])=>v>0).forEach(([a,v])=>{ vHtml+='<div style="font-size:11px">'+a+': <b>'+fmtNum(v)+' м²</b></div>'; });
+  if(!Object.values(volFol).some(v=>v>0)) vHtml+='<div style="color:var(--text3)">—</div>';
+  vHtml += '<b>Итого: '+fmtNum(totFol)+' м²</b></div>';
+  vHtml += '<div><div style="font-size:10px;color:var(--text3);margin-bottom:5px">🧴 КЛЕЙ FP</div><div style="font-size:18px;font-weight:700">'+fmtNum(volGlue)+' кг</div></div>';
+  vHtml += '</div>';
+  if (totCostAll > 0) {
+    vHtml += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+    vHtml += '<div style="font-size:10px;color:var(--text3);margin-bottom:6px">ЗАТРАТЫ НА ПЕРСОНАЛ / ЕД. ПРОДУКЦИИ</div>';
+    vHtml += '<div style="display:flex;gap:10px;flex-wrap:wrap">';
+    if (totProdVol>0) vHtml += '<div style="background:var(--bg3);border-radius:6px;padding:8px 12px"><div style="font-size:10px;color:var(--text3)">Прошив + Фольгирование (1 м²)</div><div style="font-size:18px;font-weight:700;color:var(--amber)">'+fmt(costPerM2)+' ₽</div></div>';
+    if (volGlue>0) vHtml += '<div style="background:var(--bg3);border-radius:6px;padding:8px 12px"><div style="font-size:10px;color:var(--text3)">Клей FP (1 кг)</div><div style="font-size:18px;font-weight:700;color:var(--amber)">'+fmt(costPerKg)+' ₽</div></div>';
+    vHtml += '</div></div>';
+  }
+  vHtml += '</div></div>';
+  html += vHtml;
+
+  // Производственные
+  if (prodEmps.length) {
+    html += '<div class="card" style="margin-bottom:12px"><div class="card-head"><span class="card-title" style="color:var(--purple)">🔨 Производственный персонал</span></div>';
+    html += '<div style="overflow-x:auto"><table>' + thead + '<tbody>';
+    html += prodData.length ? prodData.map(r=>rowHtml(r,periodKey)).join('') : '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Нет данных</td></tr>';
+    html += '</tbody>' + (pGross?tfoot(pGross,pNdfl,pNet,pIns,pCost):'') + '</table></div></div>';
+  }
+
+  // Офисные
   if (offEmps.length) {
-    html += `<div class="card">
-      <div class="card-head"><span class="card-title" style="color:var(--blue)">💼 Офисный персонал</span></div>
-      <div style="overflow-x:auto"><table>${thead}<tbody>${offRows}</tbody>${oGross?tfoot(oGross,oNdfl,oNet,oIns,oCost):''}</table></div>
-    </div>`;
+    html += '<div class="card"><div class="card-head"><span class="card-title" style="color:var(--blue)">💼 Офисный персонал</span></div>';
+    html += '<div style="overflow-x:auto"><table>' + thead + '<tbody>';
+    html += offData.map(r=>rowHtml(r,periodKey)).join('');
+    html += '</tbody>' + (oGross?tfoot(oGross,oNdfl,oNet,oIns,oCost):'') + '</table></div></div>';
   }
 
   document.getElementById('content').innerHTML = html;
@@ -1011,6 +1032,7 @@ function deleteEmp(id) {
   scheduleSave(); renderSidebar(); renderContent();
 }
 
+}
 // ── ИНИЦИАЛИЗАЦИЯ ──
 function init() {
   const now = new Date();
