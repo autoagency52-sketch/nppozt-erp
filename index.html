@@ -1,0 +1,3860 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>НПП ОЗТ — Управление производством</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:    #0c0e14;
+  --bg2:   #12141c;
+  --bg3:   #1a1d27;
+  --bg4:   #22263a;
+  --bg5:   #2a2f45;
+  --border: rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.12);
+  --text:  #e8e6df;
+  --text2: #9a98a0;
+  --text3: #55545c;
+  --green: #4ade80;
+  --green2:#16a34a;
+  --blue:  #60a5fa;
+  --blue2: #2563eb;
+  --amber: #fbbf24;
+  --red:   #f87171;
+  --teal:  #2dd4bf;
+  --purple:#a78bfa;
+  --pink:  #f472b6;
+  --mono:  'JetBrains Mono', monospace;
+  --sans:  'Manrope', sans-serif;
+  --radius:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px}
+input,select,textarea,button{font-family:var(--sans)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ═══ HEADER ═══ */
+.hdr{
+  height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:12px;position:relative;z-index:100;
+  box-shadow:0 1px 0 var(--border);
+}
+.logo{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);
+  letter-spacing:.15em;text-transform:uppercase;flex-shrink:0;
+}
+.hdr-sep{width:1px;height:20px;background:var(--border2)}
+.nav{display:flex;gap:2px;background:var(--bg3);border-radius:7px;padding:3px}
+.nav-btn{
+  padding:5px 14px;border-radius:5px;border:none;background:transparent;
+  color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;
+  transition:.15s all;letter-spacing:.02em;white-space:nowrap;
+}
+.nav-btn:hover{color:var(--text2)}
+.nav-btn.active{background:var(--bg5);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sync-status{font-size:10px;font-family:var(--mono);color:var(--text3);display:flex;align-items:center;gap:4px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.ok{background:var(--green);animation:pulse 2s infinite}
+.sync-dot.err{background:var(--red)}
+.sync-dot.saving{background:var(--amber);animation:blink .6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-btn{
+  padding:5px 11px;border-radius:6px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;
+  font-weight:600;transition:.12s all;
+}
+.hdr-btn:hover{background:var(--bg4);color:var(--text)}
+.hdr-btn.primary{background:var(--green2);color:#000;border-color:transparent}
+.hdr-btn.primary:hover{background:var(--green)}
+
+/* ═══ LAYOUT ═══ */
+.app{height:calc(100vh - 52px);display:flex;overflow:hidden}
+.page{display:none;flex:1;overflow:hidden}
+.page.active{display:flex}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
+  overflow-y:auto;padding:12px;
+}
+.main-area{flex:1;overflow-y:auto;padding:14px}
+
+/* ═══ SHARED FORM ELEMENTS ═══ */
+.sec{margin-bottom:16px}
+.sec-hdr{
+  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border);
+}
+.form-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.form-lbl{font-size:11px;color:var(--text2);flex:1;min-width:0}
+.inp{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:4px 7px;color:var(--text);font-size:12px;font-family:var(--mono);
+  transition:.12s border-color;
+}
+.inp:focus{outline:none;border-color:var(--blue)}
+.inp.w60{width:60px;text-align:right}
+.inp.w80{width:80px;text-align:right}
+.inp.w100{width:100px;text-align:right}
+.inp.w120{width:120px}
+.inp.w150{width:150px}
+.inp.w-full{width:100%}
+.sel{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:4px 6px;color:var(--text);font-size:12px;cursor:pointer;
+}
+.sel:focus{outline:none;border-color:var(--blue)}
+.unit{font-size:9px;color:var(--text3);font-family:var(--mono);flex-shrink:0}
+.subsec{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:7px 0 4px}
+
+/* ═══ CARDS / KPI ═══ */
+.kpi-grid{display:grid;gap:8px;margin-bottom:12px}
+.kpi-grid.c2{grid-template-columns:1fr 1fr}
+.kpi-grid.c3{grid-template-columns:1fr 1fr 1fr}
+.kpi-grid.c4{grid-template-columns:repeat(4,1fr)}
+.kpi-grid.c5{grid-template-columns:repeat(5,1fr)}
+.kcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px}
+.kcard.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.04)}
+.kcard.bad{border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.04)}
+.kcard.info{border-color:rgba(96,165,250,.25)}
+.kcard.amb{border-color:rgba(251,191,36,.25)}
+.kcard.teal{border-color:rgba(45,212,191,.25)}
+.kl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.kv{font-size:18px;font-weight:700;font-family:var(--mono)}
+.kv.g{color:var(--green)}.kv.r{color:var(--red)}.kv.b{color:var(--blue)}
+.kv.a{color:var(--amber)}.kv.t{color:var(--teal)}
+.ks{font-size:10px;color:var(--text2);margin-top:3px}
+
+/* ═══ TABLES ═══ */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+.card-hdr{
+  padding:8px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.card-title{font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+.card-actions{margin-left:auto;display:flex;gap:5px}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{
+  font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.06em;padding:5px 10px;border-bottom:1px solid var(--border);text-align:left;
+}
+.tbl th.r{text-align:right}
+.tbl td{padding:5px 10px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl td.r{text-align:right;font-family:var(--mono);font-size:11px}
+.tbl td.b{font-weight:600}
+.tbl td.m{color:var(--text2)}
+.tbl td.g{color:var(--green);font-weight:600;text-align:right;font-family:var(--mono)}
+.tbl td.red{color:var(--red);font-weight:600;text-align:right;font-family:var(--mono)}
+.tbl td.am{color:var(--amber);text-align:right;font-family:var(--mono)}
+.tbl td.bl{color:var(--blue);text-align:right;font-family:var(--mono)}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  padding:5px 11px;border-radius:6px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;
+  font-weight:600;transition:.12s all;
+}
+.btn:hover{background:var(--bg4);color:var(--text)}
+.btn.g{background:var(--green2);color:#000;border-color:transparent}
+.btn.g:hover{background:var(--green)}
+.btn.sm{padding:3px 8px;font-size:10px}
+.btn.del{color:var(--text3);border-color:transparent;background:transparent}
+.btn.del:hover{color:var(--red);background:rgba(248,113,113,.1)}
+.add-row-btn{
+  width:100%;padding:5px;border:1px dashed var(--border2);background:transparent;
+  color:var(--text3);font-size:10px;cursor:pointer;text-align:center;
+}
+.add-row-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ═══ INLINE INPUTS in tables ═══ */
+.ci{
+  background:transparent;border:1px solid transparent;border-radius:3px;
+  padding:2px 5px;color:var(--text);font-family:var(--mono);font-size:11px;
+  transition:.1s;
+}
+.ci:hover{border-color:var(--border2)}
+.ci:focus{outline:none;border-color:var(--blue);background:var(--bg3)}
+.ci.r{text-align:right}
+
+/* ═══ BADGES ═══ */
+.badge{padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:.04em;font-family:var(--mono)}
+.badge.ok{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge.bad{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.badge.amb{background:rgba(251,191,36,.12);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
+.badge.info{background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.badge.teal{background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.2)}
+
+/* ═══ ALERTS ═══ */
+.alert{border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:12px;line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.alert.info{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);color:var(--blue)}
+.alert.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber)}
+.alert.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--red)}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;
+  align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  padding:20px;min-width:360px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;
+  box-shadow:var(--shadow);
+}
+.modal-title{font-size:14px;font-weight:800;margin-bottom:14px;color:var(--text)}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.modal-field{display:flex;flex-direction:column;gap:3px}
+.modal-field.full{grid-column:1/-1}
+.field-lbl{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.field-inp{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:6px 9px;color:var(--text);font-size:12px;width:100%;
+}
+.field-inp:focus{outline:none;border-color:var(--blue)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ═══ TOAST ═══ */
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 16px;font-size:12px;z-index:2000;
+  transform:translateY(80px);opacity:0;transition:.3s all;box-shadow:var(--shadow);
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(74,222,128,.3);color:var(--green)}
+.toast.err{border-color:rgba(248,113,113,.3);color:var(--red)}
+
+/* ═══ PLANNING PAGE ═══ */
+.day-tabs-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 10px;display:flex;overflow-x:auto;flex-shrink:0}
+.day-tabs-wrap::-webkit-scrollbar{height:3px}
+.dtab{
+  padding:8px 11px;font-size:10px;font-weight:800;color:var(--text3);cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;display:flex;flex-direction:column;
+  align-items:center;gap:1px;font-family:var(--mono);transition:.1s;flex-shrink:0;
+}
+.dtab:hover{color:var(--text2)}.dtab.active{color:var(--green);border-bottom-color:var(--green)}
+.dtab .dd{font-size:12px;font-weight:800}
+.dtab .dw{font-size:9px}
+.dtab .da{width:5px;height:5px;border-radius:50%;margin:1px auto 0;display:none}
+.dtab .da.show{display:block}
+.plan-layout{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.plan-day{flex:1;overflow-y:auto;padding:12px}
+
+/* thick cards */
+.thick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+.tcard{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.tcard-hdr{padding:5px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px}
+.tcard-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tcard-name{font-size:11px;font-weight:800}
+.tcard-body{padding:3px 0}
+.trow{display:flex;align-items:center;padding:3px 9px;border-bottom:.5px solid var(--border);gap:5px}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:rgba(255,255,255,.015)}
+.tr-lbl{flex:1;min-width:0}
+.tr-name{font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-type{font-size:8px;color:var(--text3);font-family:var(--mono)}
+.num{font-family:var(--mono);font-size:10px;text-align:right;min-width:44px}
+.pos{color:var(--green)}.neg{color:var(--red)}.warn{color:var(--amber)}.zero{color:var(--text3)}
+.row-gp .tr-name{color:var(--text)}
+.row-pf .tr-name{color:var(--purple)}
+.row-nf .tr-name{color:var(--teal)}
+.row-hx .tr-name{color:var(--amber)}
+
+/* need block */
+.need-block{background:var(--bg2);border:1px solid rgba(45,212,191,.2);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.need-hdr{padding:6px 10px;border-bottom:1px solid var(--border);background:rgba(45,212,191,.04);display:flex;align-items:center;gap:6px}
+.need-title{font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:.07em}
+
+/* ops */
+.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.op-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.op-hdr{
+  padding:5px 9px;border-bottom:1px solid var(--border);font-size:9px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--text2);display:flex;align-items:center;gap:5px;
+  cursor:pointer;user-select:none;list-style:none;
+}
+.op-body{padding:6px 8px}
+.op-thick{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px}
+.op-row{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.op-lbl{font-size:10px;color:var(--text2);flex:1}
+.op-inp{
+  width:64px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  padding:2px 4px;color:var(--purple);font-family:var(--mono);font-size:11px;text-align:right;
+}
+.op-inp:focus{outline:none;border-color:var(--purple)}
+.op-inp.fol{color:var(--green)}.op-inp.fol:focus{border-color:var(--green)}
+.op-cap{font-size:8px;color:var(--text3);font-family:var(--mono);min-width:40px;text-align:right}
+.op-pct{font-size:9px;font-family:var(--mono);min-width:28px;text-align:right}
+.op-bar{height:2px;background:var(--bg4);border-radius:1px;margin-bottom:3px}
+.op-bar-fill{height:100%;border-radius:1px;transition:width .3s}
+
+/* list cards (bstv/shipments) */
+.list-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.list-hdr{padding:5px 9px;border-bottom:1px solid var(--border);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:5px}
+.list-row{display:flex;align-items:center;gap:5px;padding:4px 9px;border-bottom:.5px solid var(--border)}
+.list-row:last-child{border-bottom:none}
+.add-btn{width:100%;padding:4px;border:1px dashed var(--border2);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;text-align:center}
+.add-btn:hover{border-color:var(--blue);color:var(--blue)}
+.add-btn.teal:hover{border-color:var(--teal);color:var(--teal)}
+.del-btn{
+  width:18px;height:18px;border-radius:3px;border:1px solid var(--border2);
+  background:transparent;color:var(--text3);cursor:pointer;font-size:10px;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.del-btn:hover{background:rgba(248,113,113,.12);color:var(--red);border-color:var(--red)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+
+/* ═══ FINANCE ═══ */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:100%}
+.fin-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.fin-panel-hdr{padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px}
+.fin-panel-body{flex:1;overflow-y:auto;padding:8px 0}
+.fin-row{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;border-bottom:.5px solid var(--border)}
+.fin-row:last-child{border-bottom:none}
+.fin-row:hover{background:rgba(255,255,255,.02)}
+.fin-key{font-size:11px;color:var(--text)}
+.fin-val{font-family:var(--mono);font-size:11px}
+.fin-meta{font-size:9px;color:var(--text3);margin-top:1px}
+.fin-total{padding:8px 12px;border-top:1px solid var(--border2);display:flex;justify-content:space-between;font-weight:700;font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ MODAL (универсальный) ═══ -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">—</div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Отмена</button>
+      <button class="btn g" id="modal-ok" onclick="modalOk()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="logo">НПП ОЗТ</div>
+  <div class="hdr-sep"></div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchTab('plan')">📋 Планировщик</button>
+    <button class="nav-btn" onclick="switchTab('ref')">📚 Справочник</button>
+    <button class="nav-btn" onclick="switchTab('recv')">📥 Приёмка</button>
+    <button class="nav-btn" onclick="switchTab('sales')">📦 Продажи</button>
+    <button class="nav-btn" onclick="switchTab('salary')">👷 Зарплата</button>
+    <button class="nav-btn" onclick="switchTab('fin')">💰 Финансы</button>
+  </div>
+  <div class="hdr-sep"></div>
+  <div class="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label">—</span>
+  </div>
+  <div class="hdr-right">
+    <button class="hdr-btn" onclick="syncNow()">☁ Синхронизировать</button>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div class="app">
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 1: ПЛАНИРОВЩИК
+════════════════════════════════════════ -->
+<div class="page active" id="page-plan">
+  <div class="sidebar" id="plan-sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Период</div>
+      <div class="form-row"><div class="form-lbl">Начало</div><input type="date" class="inp w120" id="plan-start" onchange="rebuildPlanDays()"></div>
+      <div class="form-row"><div class="form-lbl">Раб. дней</div><input type="number" class="inp w60" id="plan-days" value="10" min="5" max="14" onchange="rebuildPlanDays()"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hdr">Поставщики БСТВ</div>
+      <div class="form-row"><div class="form-lbl">1</div><input class="inp w120" id="sup0" value="Нытва"></div>
+      <div class="form-row"><div class="form-lbl">2</div><input class="inp w120" id="sup1" value="Власов"></div>
+      <div class="form-row"><div class="form-lbl">3</div><input class="inp w120" id="sup2" value="ЧСЗ"></div>
+      <div class="form-row"><div class="form-lbl">4</div><input class="inp w120" id="sup3" value="Дятьково"></div>
+      <div class="form-row"><div class="form-lbl">5</div><input class="inp w120" id="sup4" value="Другой"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hdr">Начальные остатки</div>
+      <div class="subsec" style="color:var(--text3);font-size:9px">← берутся из вкладки Производство</div>
+      <button class="btn sm" style="width:100%;margin-top:4px" onclick="syncStockFromProd()">↻ Обновить остатки</button>
+    </div>
+  </div>
+  <div class="plan-layout">
+    <div class="day-tabs-wrap" id="plan-tabs"></div>
+    <div class="plan-day" id="plan-day">
+      <div class="alert info"><span>ℹ</span><span>Настройте период и нажмите «↻ Обновить остатки» для синхронизации с реальным складом.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА: СПРАВОЧНИК
+════════════════════════════════════════ -->
+<div class="page" id="page-ref">
+  <div class="main-area" style="max-width:100%">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+      <!-- КОНТРАГЕНТЫ -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr">
+          <div class="card-title">Контрагенты</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openRefModal('counterparty')">+ Добавить</button></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Наименование</th><th>ИНН</th><th>Тип</th><th>Телефон</th><th>Email</th><th></th></tr></thead>
+            <tbody id="ref-counterparty-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ГОТОВАЯ ПРОДУКЦИЯ -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr">
+          <div class="card-title">Готовая продукция</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openRefModal('product')">+ Добавить</button></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Артикул</th><th>Наименование</th><th>Ед.</th><th>НДС%</th><th></th></tr></thead>
+            <tbody id="ref-product-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ПОЛУФАБРИКАТЫ И СЫРЬЁ -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr">
+          <div class="card-title">Полуфабрикаты и сырьё</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openRefModal('material')">+ Добавить</button></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Код</th><th>Наименование</th><th>Ед.</th><th>Тип</th><th></th></tr></thead>
+            <tbody id="ref-material-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 2: ПРИЁМКА
+════════════════════════════════════════ -->
+<div class="page" id="page-recv">
+  <div class="sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Добавить приход</div>
+      <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="recv-date"></div>
+
+      <div class="form-row"><div class="form-lbl">Поставщик</div>
+        <select class="sel" id="recv-sup" style="width:140px" onchange="updateRecvSupInn()"></select>
+      </div>
+      <div class="form-row"><div class="form-lbl" style="color:var(--text3)">ИНН</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="recv-sup-inn">—</div>
+      </div>
+
+      <div class="form-row"><div class="form-lbl">Материал</div>
+        <select class="sel" id="recv-mat" style="width:140px" onchange="updateRecvUnit();calcRecvTotals()">
+          <option value="Х5">Холст Х5</option>
+          <option value="Х8">Холст Х8</option>
+          <option value="Х10">Холст Х10</option>
+          <option value="Х13">Холст Х13</option>
+          <option value="Х16">Холст Х16</option>
+          <option value="Плёнка">Плёнка</option>
+          <option value="Фольга Ф">Фольга Ф (тонкая)</option>
+          <option value="Фольга ТФ">Фольга ТФ (толстая)</option>
+          <option value="Нить">Нить</option>
+          <option value="Клей-сырьё">Сырьё для клея</option>
+          <option value="Прочее">Прочее</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Кол-во</div>
+        <input class="inp w80" id="recv-qty" placeholder="0" oninput="calcRecvTotals()">
+        <span class="unit" id="recv-unit">м²</span>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin:6px 0;font-size:11px">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Цена товара</div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Цена с НДС</div>
+          <input class="inp w80" id="recv-price-vat" placeholder="0" oninput="calcRecvTotals()">
+          <span class="unit">₽</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Ставка НДС</div>
+          <input class="inp w50" id="recv-vat" placeholder="22" value="22" oninput="calcRecvTotals()" style="width:50px">
+          <span class="unit">%</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text3)">Цена без НДС</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="recv-price-no-vat">—</div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-lbl" style="color:var(--text3)">Сумма без НДС</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="recv-sum-no-vat">—</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin:6px 0;font-size:11px">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Накладные расходы</div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Сумма с НДС</div>
+          <input class="inp w80" id="recv-extra-vat" placeholder="0" oninput="calcRecvTotals()">
+          <span class="unit">₽</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text2)">Ставка НДС</div>
+          <input class="inp" id="recv-extra-vat-rate" placeholder="22" value="22" oninput="calcRecvTotals()" style="width:50px">
+          <span class="unit">%</span>
+        </div>
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-lbl" style="color:var(--text3)">Сумма НДС</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="recv-extra-vat-sum">—</div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-lbl" style="color:var(--text3)">Без НДС / на ед.</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--amber)" id="recv-extra-per-unit">—</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:6px;padding:8px;margin:6px 0;font-size:11px">
+        <div class="form-row" style="margin-bottom:3px">
+          <div class="form-lbl" style="color:var(--text2)">Итого с НДС</div>
+          <div style="font-family:var(--mono);color:var(--blue)" id="recv-with-vat">—</div>
+        </div>
+        <div class="form-row" style="margin-bottom:3px">
+          <div class="form-lbl" style="color:var(--text2)">Учётная цена/ед</div>
+          <div style="font-family:var(--mono);color:var(--amber);font-weight:700" id="recv-unit-price">—</div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-lbl" style="color:var(--text2)">Учётная сумма</div>
+          <div style="font-family:var(--mono);color:var(--green);font-weight:700" id="recv-total">—</div>
+        </div>
+      </div>
+
+      <div class="form-row"><div class="form-lbl">Номер накл./УПД</div><input class="inp w120" id="recv-invoice" placeholder="УПД №"></div>
+      <div class="form-row"><div class="form-lbl">Оплачено</div>
+        <select class="sel" id="recv-paid" style="width:120px">
+          <option value="no">Нет</option><option value="yes">Да</option><option value="partial">Частично</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Сумма оплаты</div><input class="inp w80" id="recv-paid-amt" placeholder="0"> <span class="unit">₽</span></div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addReceipt()">+ Добавить приход</button>
+    </div>
+  </div>
+  <div class="main-area">
+    <div class="kpi-grid c4" id="recv-kpi">
+      <div class="kcard info"><div class="kl">Поступило за период</div><div class="kv b" id="kv-recv-total">—</div></div>
+      <div class="kcard amb"><div class="kl">Кредиторская задолженность</div><div class="kv a" id="kv-recv-debt">—</div></div>
+      <div class="kcard"><div class="kl">Оплачено поставщикам</div><div class="kv" id="kv-recv-paid">—</div></div>
+      <div class="kcard teal"><div class="kl">Учётная ст-ть склада сырья</div><div class="kv t" id="kv-recv-stock">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Журнал приёмки</div>
+        <div class="card-actions">
+          <input type="month" class="inp" id="recv-filter-month" onchange="renderRecv()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Поставщик</th><th>Материал</th>
+            <th class="r">Кол-во</th><th class="r">Цена с НДС</th>
+            <th class="r">Цена б/НДС</th><th class="r">Итого с НДС</th>
+            <th class="r">Накл. расх.</th>
+            <th class="r">Учётная цена</th><th class="r">Учётная сумма</th>
+            <th>Накл.№</th><th>Оплата</th><th></th>
+          </tr></thead>
+          <tbody id="recv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Остатки сырья (по учётным ценам)</div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Материал</th><th class="r">Кол-во</th><th class="r">Ед.</th><th class="r">Ср. учётная цена</th><th class="r">Стоимость</th></tr></thead>
+          <tbody id="raw-stock-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 3: ПРОИЗВОДСТВО
+════════════════════════════════════════ -->
+<div class="page" id="page-prod">
+  <div class="sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Добавить операцию</div>
+      <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="prod-date"></div>
+      <div class="form-row"><div class="form-lbl">Операция</div>
+        <select class="sel" id="prod-op" style="width:120px" onchange="updateProdArtList()">
+          <option value="sew">Прошив</option>
+          <option value="fol">Фольгирование</option>
+          <option value="glue">Изготовление клея</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Артикул/ГП</div>
+        <select class="sel" id="prod-art" style="width:120px"></select>
+      </div>
+      <div class="form-row"><div class="form-lbl">Кол-во</div><input class="inp w80" id="prod-qty" placeholder="0" onchange="calcProdCost()"> <span class="unit" id="prod-unit">м²</span></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:8px;margin-top:6px;font-size:11px">
+        <div class="subsec" style="margin-top:0">Списание сырья (авто)</div>
+        <div id="prod-consumption" style="color:var(--text2)">—</div>
+      </div>
+      <div class="form-row" style="margin-top:8px"><div class="form-lbl">С/с ед. (авто)</div><div style="font-family:var(--mono);color:var(--green)" id="prod-cost-unit">—</div></div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addProdOp()">+ Провести операцию</button>
+    </div>
+    <div class="sec">
+      <div class="sec-hdr">Техкарты (нормы на 1 м²)</div>
+      <div class="subsec">БСТВ (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Все артикулы</div><input class="inp w60" id="tc-bstv" value="1.0" onchange="calcProdCost()"></div>
+      <div class="subsec">Плёнка (м²/м²) — только Ф</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-film" value="1.05" onchange="calcProdCost()"></div>
+      <div class="subsec">Нить (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-thread" value="1.0" onchange="calcProdCost()"></div>
+      <div class="subsec">Фольга Ф (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-foil-f" value="1.05" onchange="calcProdCost()"></div>
+      <div class="subsec">Фольга ТФ (м²/м²)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-foil-tf" value="1.05" onchange="calcProdCost()"></div>
+      <div class="subsec">Клей: сырьё (кг/кг)</div>
+      <div class="form-row"><div class="form-lbl">Норма</div><input class="inp w60" id="tc-glue-raw" value="1.0" onchange="calcProdCost()"></div>
+    </div>
+  </div>
+  <div class="main-area">
+    <div class="kpi-grid c4" id="prod-kpi">
+      <div class="kcard ok"><div class="kl">Произведено за период (м²)</div><div class="kv g" id="kv-prod-m2">—</div></div>
+      <div class="kcard ok"><div class="kl">Произведено клей (кг)</div><div class="kv g" id="kv-prod-kg">—</div></div>
+      <div class="kcard info"><div class="kl">С/с произведённой ГП</div><div class="kv b" id="kv-prod-cost">—</div></div>
+      <div class="kcard teal"><div class="kl">Стоимость склада ГП</div><div class="kv t" id="kv-prod-stock-val">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Журнал производственных операций</div>
+        <div class="card-actions">
+          <input type="month" class="inp" id="prod-filter-month" onchange="renderProd()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Операция</th><th>Артикул/ГП</th>
+            <th class="r">Кол-во</th><th class="r">С/с ед.</th><th class="r">С/с итого</th>
+            <th>Списано сырья</th><th></th>
+          </tr></thead>
+          <tbody id="prod-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="kpi-grid c2">
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title">Склад ГП и полуфабрикатов</div></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Артикул</th><th class="r">Кол-во</th><th class="r">С/с ед.</th><th class="r">Стоимость</th></tr></thead>
+            <tbody id="gp-stock-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title">Движение по артикулам (период)</div></div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Артикул</th><th class="r">Произведено</th><th class="r">Отгружено</th><th class="r">Остаток</th></tr></thead>
+            <tbody id="prod-movement-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 4: ПРОДАЖИ
+════════════════════════════════════════ -->
+<div class="page" id="page-sales">
+  <div class="sidebar">
+    <div class="sec">
+      <div class="sec-hdr">Новая отгрузка</div>
+      <div class="form-row"><div class="form-lbl">Дата</div><input type="date" class="inp w120" id="sale-date"></div>
+
+      <div class="form-row"><div class="form-lbl">Контрагент</div>
+        <select class="sel" id="sale-client-sel" style="width:140px" onchange="document.getElementById('sale-client-inn').textContent=getSaleClientInn(this.value)"></select>
+      </div>
+      <div class="form-row"><div class="form-lbl" style="color:var(--text3)">ИНН</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="sale-client-inn">—</div>
+      </div>
+
+      <div class="form-row"><div class="form-lbl">НДС %</div>
+        <input class="inp" id="sale-vat-global" value="22" placeholder="22" style="width:50px" oninput="renderSaleItems()">
+        <span class="unit">% (для новых строк)</span>
+      </div>
+      <div class="form-row"><div class="form-lbl">№ накл./УПД</div><input class="inp w120" id="sale-invoice" placeholder="УПД №"></div>
+      <div class="form-row"><div class="form-lbl">Ожид. оплата</div><input type="date" class="inp w120" id="sale-pay-date"></div>
+
+      <div class="subsec">Позиции отгрузки</div>
+      <div id="sale-items-list"></div>
+      <button class="add-row-btn" onclick="addSaleItem()" style="margin-bottom:6px">+ Добавить позицию</button>
+
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:6px;padding:8px;font-size:11px;margin-bottom:8px">
+        <div class="form-row" style="margin:0 0 3px"><div class="form-lbl" style="color:var(--text2)">Итого б/НДС</div><div style="font-family:var(--mono);color:var(--text)" id="sale-total-no-vat">—</div></div>
+        <div class="form-row" style="margin:0 0 3px"><div class="form-lbl" style="color:var(--text2)">Итого с НДС</div><div style="font-family:var(--mono);color:var(--blue)" id="sale-total-vat">—</div></div>
+        <div class="form-row" style="margin:0"><div class="form-lbl" style="color:var(--text2)">С/с итого</div><div style="font-family:var(--mono);color:var(--amber)" id="sale-total-cost">—</div></div>
+      </div>
+
+      <div class="subsec">Оплата</div>
+      <div class="form-row"><div class="form-lbl">Статус</div>
+        <select class="sel" id="sale-paid" style="width:140px" onchange="toggleSalePaidAmt()">
+          <option value="no">Не оплачено</option>
+          <option value="yes">Оплачено полностью</option>
+          <option value="partial">Частично</option>
+        </select>
+      </div>
+      <div id="sale-paid-amt-row" style="display:none">
+        <div class="form-row"><div class="form-lbl">Сумма оплаты ₽</div><input class="inp w80" id="sale-paid-amt" placeholder="0"> <span class="unit">₽</span></div>
+      </div>
+      <button class="btn g" style="width:100%;margin-top:8px" onclick="addSale()">+ Сохранить отгрузку</button>
+    </div>
+  </div>
+  <div class="main-area">
+    <div class="kpi-grid c4">
+      <div class="kcard ok"><div class="kl">Выручка б/НДС</div><div class="kv g" id="kv-sale-rev">—</div></div>
+      <div class="kcard info"><div class="kl">Выручка с НДС</div><div class="kv b" id="kv-sale-rev-vat">—</div></div>
+      <div class="kcard amb"><div class="kl">Дебиторская задолженность</div><div class="kv a" id="kv-sale-debt">—</div></div>
+      <div class="kcard teal"><div class="kl">Оплачено клиентами</div><div class="kv t" id="kv-sale-paid">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Журнал отгрузок</div>
+        <div class="card-actions">
+          <input type="month" class="inp" id="sale-filter-month" onchange="renderSales()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Контрагент</th><th>Позиции</th>
+            <th class="r">Сумма б/НДС</th><th class="r">Сумма с НДС</th>
+            <th class="r">С/с</th><th class="r">Маржа</th>
+            <th>Накл.№</th><th>Оплата</th><th>Ожид. дата</th><th></th>
+          </tr></thead>
+          <tbody id="sale-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Дебиторская задолженность по клиентам</div></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Контрагент</th><th class="r">Отгружено</th><th class="r">Оплачено</th><th class="r">Долг</th><th>Ближ. дата оплаты</th></tr></thead>
+          <tbody id="debitor-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА: ЗАРПЛАТА
+════════════════════════════════════════ -->
+<div class="page" id="page-salary">
+  <!-- Две колонки: левая=навигация по дням, правая=ввод -->
+  <div style="display:grid;grid-template-columns:200px 1fr;height:100%;overflow:hidden">
+
+    <!-- Левая панель: список дней периода -->
+    <div style="background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:10px">
+      <div class="sec-hdr">Период</div>
+      <div class="form-row" style="margin-bottom:6px">
+        <div class="form-lbl" style="font-size:10px">Месяц</div>
+        <input type="month" class="inp" id="sal-month" style="width:110px" onchange="renderSalary()">
+      </div>
+      <div style="display:flex;gap:4px;margin-bottom:8px">
+        <button class="btn sm" id="sal-p1-btn" onclick="setSalPeriodFilter('1')" style="flex:1">П1 (1-15)</button>
+        <button class="btn sm" id="sal-p2-btn" onclick="setSalPeriodFilter('2')" style="flex:1">П2 (16-кон.)</button>
+      </div>
+      <div id="sal-day-list" style="display:flex;flex-direction:column;gap:3px"></div>
+
+      <div style="margin-top:12px">
+        <div class="sec-hdr">Параметры налогов</div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">НДФЛ %</div><input class="inp w60" id="sal-ndfl" value="13" oninput="renderSalPeriodSummary()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Взносы до порога %</div><input class="inp w60" id="sal-ins1" value="30.2" oninput="renderSalPeriodSummary()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Взносы сверх %</div><input class="inp w60" id="sal-ins2" value="7.6" oninput="renderSalPeriodSummary()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Порог МСП (₽)</div><input class="inp w80" id="sal-threshold" value="40639.5" oninput="renderSalPeriodSummary()"></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="sec-hdr">Тарифы бригады (₽)</div>
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">Фольгирование и клей</div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">5Ф</div><input class="inp w60" id="br-rate-fol_5f" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">5ТФ</div><input class="inp w60" id="br-rate-fol_5tf" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">8Ф</div><input class="inp w60" id="br-rate-fol_8f" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">8ТФ</div><input class="inp w60" id="br-rate-fol_8tf" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">10Ф</div><input class="inp w60" id="br-rate-fol_10f" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">10ТФ</div><input class="inp w60" id="br-rate-fol_10tf" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">13Ф</div><input class="inp w60" id="br-rate-fol_13f" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">13ТФ</div><input class="inp w60" id="br-rate-fol_13tf" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">16Ф</div><input class="inp w60" id="br-rate-fol_16f" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">16ТФ</div><input class="inp w60" id="br-rate-fol_16tf" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+        <div class="form-row"><div class="form-lbl" style="font-size:10px">Клей FP</div><input class="inp w60" id="br-rate-glue" value="" placeholder="0.00" oninput="saveBrigadeRates()"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="sec-hdr">Сотрудники</div>
+        <button class="btn sm g" style="width:100%;margin-bottom:6px" onclick="openEmpModal()">+ Добавить</button>
+        <div id="sal-emp-list"></div>
+      </div>
+    </div>
+
+    <!-- Правая часть: вкладки День / Итог периода -->
+    <div style="display:flex;flex-direction:column;overflow:hidden">
+      <div class="day-tabs-wrap" id="sal-view-tabs" style="border-bottom:1px solid var(--border)">
+        <div class="dtab active" id="sal-tab-day" onclick="switchSalView('day')">
+          <div class="dd">📅 День</div><div class="dw" id="sal-active-date-lbl">—</div>
+        </div>
+        <div class="dtab" id="sal-tab-period" onclick="switchSalView('period')">
+          <div class="dd">📊 Итог периода</div><div class="dw">сводная</div>
+        </div>
+      </div>
+
+      <!-- ВИД: ДЕНЬ -->
+      <div id="sal-view-day" style="flex:1;overflow-y:auto;padding:12px">
+        <div class="alert info"><span>ℹ</span><span>Выберите день в левой панели для ввода данных.</span></div>
+      </div>
+
+      <!-- ВИД: ИТОГ ПЕРИОДА -->
+      <div id="sal-view-period" style="flex:1;overflow-y:auto;padding:12px;display:none">
+        <div id="sal-period-summary"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ВКЛАДКА 5: ФИНАНСЫ
+════════════════════════════════════════ -->
+<div class="page" id="page-fin">
+  <div class="main-area" style="max-width:100%">
+    <div class="kpi-grid c5" style="margin-bottom:12px">
+      <div class="kcard ok"><div class="kl">Деньги на счёте</div><div class="kv g" id="kv-fin-cash">—</div><div class="ks">фактический остаток</div></div>
+      <div class="kcard info"><div class="kl">Дебиторка (нам должны)</div><div class="kv b" id="kv-fin-debit">—</div><div class="ks">ожидаемые поступления</div></div>
+      <div class="kcard amb"><div class="kl">Кредиторка (мы должны)</div><div class="kv a" id="kv-fin-credit">—</div><div class="ks">обязательства перед поставщиками</div></div>
+      <div class="kcard teal"><div class="kl">Склад ГП (по с/с)</div><div class="kv t" id="kv-fin-stock">—</div><div class="ks">замороженные средства</div></div>
+      <div class="kcard" id="kcard-fin-result"><div class="kl">Финансовый результат</div><div class="kv" id="kv-fin-result">—</div><div class="ks">деньги + дебит + склад − кредит</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <!-- P&L -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title">P&L — Прибыли и убытки</div>
+          <div class="card-actions"><select class="sel" id="fin-period" onchange="renderFin()" style="font-size:10px">
+            <option value="month">Текущий месяц</option>
+            <option value="all">Всё время</option>
+          </select></div>
+        </div>
+        <div class="fin-panel-body" id="pnl-body" style="padding:0"></div>
+      </div>
+      <!-- Поступления ДДС -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title" style="color:var(--green)">↓ Ожидаемые поступления</div>
+          <div class="card-actions"><button class="btn sm g" onclick="openAddPayment('in')">+ Добавить</button></div>
+        </div>
+        <div class="fin-panel-body" id="income-body" style="padding:0"></div>
+        <div class="fin-total" id="income-total">—</div>
+      </div>
+      <!-- Платежи ДДС -->
+      <div class="card" style="margin:0">
+        <div class="card-hdr"><div class="card-title" style="color:var(--red)">↑ Предстоящие платежи</div>
+          <div class="card-actions"><button class="btn sm" style="color:var(--red);border-color:rgba(248,113,113,.3)" onclick="openAddPayment('out')">+ Добавить</button></div>
+        </div>
+        <div class="fin-panel-body" id="expense-body" style="padding:0"></div>
+        <div class="fin-total" id="expense-total">—</div>
+      </div>
+    </div>
+
+    <!-- Баланс счёта -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Движение денег — расчётный счёт</div>
+        <div class="card-actions">
+          <button class="btn sm g" onclick="openAddPayment('fact')">+ Фактический платёж</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Дата</th><th>Тип</th><th>Контрагент/описание</th>
+            <th class="r">Приход</th><th class="r">Расход</th><th class="r">Остаток</th><th></th>
+          </tr></thead>
+          <tbody id="cashflow-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+console.log("APP START v12.04.2026 14:19");
+// ═══════════════════════════════════════════════════════
+//  КОНФИГУРАЦИЯ
+// ═══════════════════════════════════════════════════════
+const GS_URL = 'https://script.google.com/macros/s/AKfycbzC0vd34pjqKioZyiy_f7P9zTbrmmlZO6Xacw1XZSVvv1vSfsq2dJwi4vK1bhrzRZUwkQ/exec';
+
+// ═══════════════════════════════════════════════════════
+//  БАЗА ДАННЫХ (в памяти)
+// ═══════════════════════════════════════════════════════
+let DB = {
+  receipts:   [],   // [{id,date,sup,mat,qty,...}]
+  production: [],   // [{id,date,op,art,qty,costUnit,consumption:[{mat,qty}]}]
+  sales:      [],   // [{id,date,client,art,qty,price,vat,invoice,paid,paidAmt,payDate}]
+  payments:   [],   // [{id,date,type:'in'|'out'|'fact',desc,amount,counterparty,done}]
+  planDays:   [],   // [{date, data:{bstv,shipments,sew...,fol...}}]
+  settings:   {},
+  ref: {
+    counterparty: [], // [{id,name,inn,type:'supplier'|'buyer'|'both',phone,email}]
+    product:      [], // [{id,code,name,unit,vatRate}]
+    material:     [], // [{id,code,name,unit,type:'pf'|'raw'}]
+  },
+  employees: [],   // [{id,name,position,type:'piece'|'salary',salaryBase,guarantee,
+                   //    rates:{sew5f:3,sew5nf:3,sew8f:4,...,fol_f5:2.5,...,glue:1.75,skladSmena:2800},
+                   //    ytdGross:0}] — ytdGross сбрасывается 1 янв
+  salaryLogs: []   // [{id,date,empId,op,art,qty,rate,gross,period:'1'|'2'}]
+};
+
+let currentTab = 'plan';
+let isSyncing  = false;
+
+// ═══════════════════════════════════════════════════════
+//  УТИЛИТЫ
+// ═══════════════════════════════════════════════════════
+const fmtMoney = n => Math.round(n||0).toLocaleString('ru-RU') + ' ₽';
+const fmtNum   = n => Math.round(n||0).toLocaleString('ru-RU');
+const fmtDec   = (n,d=2) => (n||0).toFixed(d).replace('.',',');
+const fmtDate  = d => { if(!d) return '—'; const dt=new Date(d); return `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`; };
+const today    = () => new Date().toISOString().split('T')[0];
+const uid      = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+function toast(msg, type='ok', dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.className = 'toast', dur);
+}
+
+function setSyncStatus(state) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  const states = {
+    idle:   ['', 'Синхронизировано'],
+    saving: ['saving', 'Сохраняю...'],
+    ok:     ['ok', 'Сохранено'],
+    err:    ['err', 'Ошибка синхронизации'],
+    loading:['saving', 'Загрузка...']
+  };
+  const [cls, text] = states[state] || ['','—'];
+  dot.className = `sync-dot ${cls}`;
+  lbl.textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════════════════
+// Все запросы через GET + URLSearchParams — работает с https://
+async function gsCall(params) {
+  // Если данные большие — используем POST через form, иначе GET
+  const qs = new URLSearchParams(params).toString();
+  try {
+    let res;
+    if (qs.length > 3000) {
+      // POST через no-cors не даёт ответ — используем GET с укороченными данными
+      // Для больших данных разбивка делается снаружи (по 1 строке)
+      res = await fetch(GS_URL + '?' + qs, {method:'GET'});
+    } else {
+      res = await fetch(GS_URL + '?' + qs);
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' (url len=' + qs.length + ')');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'GS error');
+    return data;
+  } catch(e) {
+    console.error('gsCall failed:', params.action, params.table, 'urlLen:', qs.length, e.message);
+    throw e;
+  }
+}
+
+// Специальная функция для сохранения одной строки (для planDays/salaryLogs)
+async function gsCallRow(table, rowObj, isFirst) {
+  const keys = Object.keys(rowObj);
+  const vals = keys.map(k => {
+    const v = rowObj[k];
+    return v === undefined || v === null ? '' : String(v);
+  });
+  // Если первый — шапка + строка, иначе только строка
+  const rows = isFirst ? [keys, vals] : [vals];
+  const params = {action:'save', table, rows:JSON.stringify(rows), clear: isFirst?'1':'0'};
+  const qs = new URLSearchParams(params).toString();
+  // Проверяем длину
+  if (qs.length > 7000) {
+    // Данные слишком большие — сжимаем data
+    console.warn('gsCallRow: row too large for', table, 'len=', qs.length);
+  }
+  const res = await fetch(GS_URL + '?' + qs);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error||'GS error');
+  return data;
+}
+
+// Сохранить таблицу в GS
+async function saveTable(name, arr) {
+  // Пустой массив — просто очищаем лист, не пишем данные
+  if (!arr || arr.length === 0) {
+    await gsCall({action:'clear', table:name});
+    return;
+  }
+  const keys = Object.keys(arr[0]);
+  // Если объект пустой (нет ключей) — пропускаем
+  if (keys.length === 0) return;
+  const rows = [keys, ...arr.map(r => keys.map(k => {
+    const v = r[k];
+    return v === undefined || v === null ? '' : JSON.stringify(v);
+  }))];
+  // Разбиваем на чанки по 50 строк (URL лимит)
+  // Размер чанка зависит от размера данных: для planDays (большой JSON) — маленький чанк
+  const rowSize = rows.length > 1 ? JSON.stringify(rows[1]).length : 100;
+  const CHUNK = rowSize > 500 ? 2 : 50;
+  const header   = rows[0];
+  const dataRows = rows.slice(1);
+  if (dataRows.length === 0) {
+    // Только заголовок
+    await gsCall({action:'save', table:name, rows:JSON.stringify([header]), chunk:0, total:1, clear:'1'});
+    return;
+  }
+  const chunks = [];
+  for (let i=0; i<dataRows.length; i+=CHUNK) chunks.push(dataRows.slice(i,i+CHUNK));
+  for (let ci=0; ci<chunks.length; ci++) {
+    const chunkRows = ci===0 ? [header,...chunks[ci]] : chunks[ci];
+    await gsCall({
+      action: 'save',
+      table:  name,
+      rows:   JSON.stringify(chunkRows),
+      chunk:  ci,
+      total:  chunks.length,
+      clear:  ci===0 ? '1' : '0'
+    });
+  }
+}
+
+// Загрузить таблицу из GS
+async function loadTable(name) {
+  try {
+    const json = await gsCall({action:'load', table:name});
+    const rows = json.rows || [];
+    if (!rows || rows.length < 2) return [];
+    const keys = rows[0];
+    return rows.slice(1).map(row => {
+      const obj = {};
+      keys.forEach((k,i) => {
+        try { obj[k] = JSON.parse(row[i]); } catch { obj[k] = row[i]; }
+      });
+      return obj;
+    });
+  } catch(e) { console.error('loadTable error:', e); return []; }
+}
+
+async function syncNow() {
+  if (isSyncing) return;
+  isSyncing = true;
+  setSyncStatus('saving');
+  try {
+    await saveTable('receipts',         DB.receipts);
+    await saveTable('production',       DB.production);
+    await saveTable('sales',            DB.sales);
+    await saveTable('payments',         DB.payments);
+    await saveTable('settings', [{data: JSON.stringify(DB.settings||{})}]);
+    await saveTable('ref_counterparty', DB.ref.counterparty);
+    await saveTable('ref_product',      DB.ref.product);
+    await saveTable('ref_material',     DB.ref.material);
+    await saveTable('employees',        DB.employees);
+    await saveTable('salPremiums', [{data: JSON.stringify(DB.salPremiums||{})}]);
+    // planDays — каждый день отдельным запросом
+    const compressPlanDay = (d) => {
+      const out = {};
+      if (d.bstv?.length)      out.bstv = d.bstv;
+      if (d.shipments?.length) out.shipments = d.shipments;
+      // Только ненулевые значения производства
+      Object.keys(d).forEach(k => { if (!['bstv','shipments'].includes(k) && d[k]) out[k] = d[k]; });
+      return out;
+    };
+    for (let _pi=0; _pi<DB.planDays.length; _pi++) {
+      const _d=DB.planDays[_pi];
+      await gsCallRow('planDays', {date:_d.date, data:JSON.stringify(compressPlanDay(_d.data))}, _pi===0);
+    }
+    // salaryLogs — каждый день отдельным запросом
+    // Сжимаем: убираем пустые массивы и нулевые значения
+    const compressDay = (d) => {
+      const out = {date: d.date};
+      if (d.indiv?.length)         out.indiv         = d.indiv;
+      if (d.brigade?.length)       out.brigade        = d.brigade;
+      if (d.brigadeMembers?.length)out.brigadeMembers = d.brigadeMembers;
+      if (d.afterShift?.length)    out.afterShift     = d.afterShift;
+      if (Object.keys(d.absences||{}).length) out.absences = d.absences;
+      return out;
+    };
+    for (let _si=0; _si<DB.salaryLogs.length; _si++) {
+      const _d=DB.salaryLogs[_si];
+      const _compact = compressDay(_d);
+      await gsCallRow('salaryLogs', {date:_d.date, data:JSON.stringify(_compact)}, _si===0);
+    }
+    setSyncStatus('ok');
+    toast('Данные сохранены в Google Sheets ✓');
+    setTimeout(() => setSyncStatus('idle'), 3000);
+  } catch(e) {
+    setSyncStatus('err');
+    toast('Ошибка сохранения: ' + e.message, 'err');
+  }
+  isSyncing = false;
+}
+
+async function loadAll() {
+  setSyncStatus('loading');
+  try {
+    // Загружаем последовательно чтобы не перегружать Apps Script
+    const safe = async (name) => {
+      try {
+        console.log('Loading:', name);
+        const r = await loadTable(name);
+        console.log('Loaded:', name, r.length, 'rows');
+        return r;
+      } catch(e) {
+        console.error('LOAD FAILED:', name, e.message);
+        return [];
+      }
+    };
+    const recv    = await safe('receipts');
+    const prod    = await safe('production');
+    const sales   = await safe('sales');
+    const payments= await safe('payments');
+    const planRaw = await safe('planDays');
+    const settings= await safe('settings');
+    const refCP   = await safe('ref_counterparty');
+    const refProd = await safe('ref_product');
+    const refMat  = await safe('ref_material');
+    const emps    = await safe('employees');
+    const salLogs = await safe('salaryLogs');
+    const salPrem = await safe('salPremiums');
+    {
+    if (recv.length)     DB.receipts   = recv;
+    if (prod.length)     DB.production = prod;
+    if (sales.length)    DB.sales      = sales;
+    if (payments.length) DB.payments   = payments;
+    if (planRaw.length)  DB.planDays = planRaw.map(r=>{
+      let data = {};
+      try { data = typeof r.data==='string' ? JSON.parse(r.data) : (r.data||{}); } catch(e){}
+      return {date:r.date, data:{...emptyPlanDay(), ...data}};
+    });
+    if (settings.length && settings[0]?.data) {
+      try { DB.settings = JSON.parse(settings[0].data); } catch(e) { DB.settings = {}; }
+    }
+    if (refCP.length)    DB.ref.counterparty = refCP;
+    if (refProd.length)  DB.ref.product      = refProd;
+    if (refMat.length)   DB.ref.material     = refMat;
+    if (emps.length)     DB.employees        = emps;
+    if (salLogs.length) {
+      DB.salaryLogs = salLogs.map(r => {
+        let d = {};
+        if (r.data) { try { d = JSON.parse(r.data); } catch(e) { d = r; } } else { d = r; }
+        // Восстанавливаем пропущенные поля
+        return {date: d.date||r.date, indiv:d.indiv||[], brigade:d.brigade||[],
+                brigadeMembers:d.brigadeMembers||[], absences:d.absences||{}, afterShift:d.afterShift||[]};
+      });
+    }
+    if (salPrem?.length && salPrem[0]?.data) {
+      try { DB.salPremiums = JSON.parse(salPrem[0].data); } catch(e) { DB.salPremiums = {}; }
+    }
+    if (!DB.salPremiums) DB.salPremiums = {};
+    } // end safe block
+    console.log('All tables loaded OK');
+    setSyncStatus('ok');
+    toast('Данные загружены из Google Sheets ✓');
+    loadPlanInv();
+    renderAll();
+    setTimeout(() => setSyncStatus('idle'), 3000);
+  } catch(e) {
+    setSyncStatus('err');
+    toast('Ошибка загрузки. Работаем офлайн.', 'err', 4000);
+  }
+}
+
+// Автосохранение каждые 60 сек
+setInterval(() => { if(!isSyncing) syncNow(); }, 60000);
+
+// ═══════════════════════════════════════════════════════
+//  НАВИГАЦИЯ
+// ═══════════════════════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  if (tab==='ref')   { renderRef(); populateSupplierSelect(); }
+  if (tab==='recv')  { renderRecv(); }
+  if (tab==='prod')  { renderProd(); }
+  if (tab==='sales')  { populateBuyerSelect(); renderSaleItems(); renderSales(); }
+  if (tab==='salary') { renderSalary(); }
+  if (tab==='fin')   { renderFin(); }
+  if (tab==='plan')  { renderPlanTabs(); }
+}
+
+function renderAll() {
+  renderRef();
+  populateSupplierSelect();
+  populateBuyerSelect();
+  renderSaleItems();
+  renderSalary();
+  populateEmpSelects();
+  renderPlanTabs();
+  renderRecv();
+  renderProd();
+  renderSales();
+  renderFin();
+}
+
+// ═══════════════════════════════════════════════════════
+//  СПРАВОЧНИК
+// ═══════════════════════════════════════════════════════
+const TYPE_LABELS = {supplier:'Поставщик', buyer:'Покупатель', both:'Оба'};
+const MAT_TYPE_LABELS = {raw:'Сырьё', pf:'Полуфабрикат'};
+
+let refModalType = '';
+// editId !== null → режим редактирования существующей записи
+function openRefModal(type, editId=null) {
+  refModalType = type;
+  const isEdit = editId !== null;
+
+  // Находим существующую запись если редактируем
+  const existing = isEdit ? DB.ref[type].find(r=>r.id===editId) : null;
+
+  const titles = {
+    counterparty: isEdit ? 'Редактировать контрагента' : 'Новый контрагент',
+    product:      isEdit ? 'Редактировать ГП'          : 'Новая ГП',
+    material:     isEdit ? 'Редактировать материал/ПФ' : 'Новый материал/ПФ'
+  };
+
+  const V = (key, def='') => existing?.[key] ?? def; // значение поля с fallback
+
+  const bodies = {
+    counterparty: `
+      <div class="modal-row">
+        <div class="modal-field full"><div class="field-lbl">Наименование</div>
+          <input class="field-inp" id="ref-name" placeholder="ООО Пример" value="${V('name')}">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">ИНН</div>
+          <input class="field-inp" id="ref-inn" placeholder="1234567890" value="${V('inn')}">
+        </div>
+        <div class="modal-field"><div class="field-lbl">Тип</div>
+          <select class="field-inp" id="ref-type">
+            <option value="supplier" ${V('type')==='supplier'?'selected':''}>Поставщик</option>
+            <option value="buyer"    ${V('type')==='buyer'   ?'selected':''}>Покупатель</option>
+            <option value="both"     ${V('type')==='both'    ?'selected':''}>Оба</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Телефон</div>
+          <input class="field-inp" id="ref-phone" placeholder="+7..." value="${V('phone')}">
+        </div>
+        <div class="modal-field"><div class="field-lbl">Email</div>
+          <input class="field-inp" id="ref-email" placeholder="@" value="${V('email')}">
+        </div>
+      </div>`,
+    product: `
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Артикул/Код</div>
+          <input class="field-inp" id="ref-code" placeholder="BSALT-5Ф" value="${V('code')}">
+        </div>
+        <div class="modal-field"><div class="field-lbl">Ед. изм.</div>
+          <select class="field-inp" id="ref-unit">
+            <option ${V('unit')==='м²'?'selected':''}>м²</option>
+            <option ${V('unit')==='кг'?'selected':''}>кг</option>
+            <option ${V('unit')==='шт'?'selected':''}>шт</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field full"><div class="field-lbl">Наименование</div>
+          <input class="field-inp" id="ref-name" placeholder="Базальтовый материал BSALT-5Ф" value="${V('name')}">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Ставка НДС %</div>
+          <input class="field-inp" id="ref-vat" placeholder="22" value="${V('vatRate',22)}">
+        </div>
+      </div>`,
+    material: `
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Код</div>
+          <input class="field-inp" id="ref-code" placeholder="Х5" value="${V('code')}">
+        </div>
+        <div class="modal-field"><div class="field-lbl">Ед. изм.</div>
+          <select class="field-inp" id="ref-unit">
+            <option ${V('unit')==='м²'?'selected':''}>м²</option>
+            <option ${V('unit')==='кг'?'selected':''}>кг</option>
+            <option ${V('unit')==='шт'?'selected':''}>шт</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field full"><div class="field-lbl">Наименование</div>
+          <input class="field-inp" id="ref-name" placeholder="Холст БСТВ 5мм" value="${V('name')}">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Тип</div>
+          <select class="field-inp" id="ref-mat-type">
+            <option value="raw" ${V('matType')==='raw'?'selected':''}>Сырьё</option>
+            <option value="pf"  ${V('matType')==='pf' ?'selected':''}>Полуфабрикат</option>
+          </select>
+        </div>
+      </div>`
+  };
+
+  openModal(titles[type], bodies[type], () => {
+    const name = document.getElementById('ref-name')?.value?.trim();
+    if (!name) { toast('Введите наименование','err'); return false; }
+
+    if (type === 'counterparty') {
+      const record = {
+        id:    isEdit ? editId : uid(),
+        name,
+        inn:   document.getElementById('ref-inn')?.value?.trim()||'',
+        type:  document.getElementById('ref-type')?.value||'supplier',
+        phone: document.getElementById('ref-phone')?.value?.trim()||'',
+        email: document.getElementById('ref-email')?.value?.trim()||''
+      };
+      if (isEdit) DB.ref.counterparty = DB.ref.counterparty.map(r=>r.id===editId?record:r);
+      else        DB.ref.counterparty.push(record);
+
+    } else if (type === 'product') {
+      const record = {
+        id:      isEdit ? editId : uid(),
+        name,
+        code:    document.getElementById('ref-code')?.value?.trim()||'',
+        unit:    document.getElementById('ref-unit')?.value||'м²',
+        vatRate: parseFloat(document.getElementById('ref-vat')?.value)||22
+      };
+      if (isEdit) DB.ref.product = DB.ref.product.map(r=>r.id===editId?record:r);
+      else        DB.ref.product.push(record);
+
+    } else if (type === 'material') {
+      const record = {
+        id:      isEdit ? editId : uid(),
+        name,
+        code:    document.getElementById('ref-code')?.value?.trim()||'',
+        unit:    document.getElementById('ref-unit')?.value||'м²',
+        matType: document.getElementById('ref-mat-type')?.value||'raw'
+      };
+      if (isEdit) DB.ref.material = DB.ref.material.map(r=>r.id===editId?record:r);
+      else        DB.ref.material.push(record);
+    }
+
+    renderRef();
+    populateSupplierSelect();
+    syncNow();
+  });
+}
+
+function deleteRef(type, id) {
+  if (!confirm('Удалить запись?')) return;
+  DB.ref[type] = DB.ref[type].filter(r=>r.id!==id);
+  renderRef();
+  populateSupplierSelect();
+  syncNow();
+}
+
+function renderRef() {
+  const cpBody = document.getElementById('ref-counterparty-tbody');
+  if (cpBody) cpBody.innerHTML = DB.ref.counterparty.map(c=>`<tr>
+    <td class="b">${c.name}</td>
+    <td class="m" style="font-family:var(--mono)">${c.inn||'—'}</td>
+    <td><span class="badge info">${TYPE_LABELS[c.type]||c.type}</span></td>
+    <td class="m">${c.phone||'—'}</td>
+    <td class="m">${c.email||'—'}</td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="openRefModal('counterparty','${c.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteRef('counterparty','${c.id}')">✕</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px">Нет контрагентов. Добавьте через кнопку «+»</td></tr>';
+
+  const prBody = document.getElementById('ref-product-tbody');
+  if (prBody) prBody.innerHTML = DB.ref.product.map(p=>`<tr>
+    <td class="m" style="font-family:var(--mono)">${p.code||'—'}</td>
+    <td class="b">${p.name}</td>
+    <td class="m">${p.unit}</td>
+    <td class="m">${p.vatRate}%</td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="openRefModal('product','${p.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteRef('product','${p.id}')">✕</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет позиций ГП</td></tr>';
+
+  const matBody = document.getElementById('ref-material-tbody');
+  if (matBody) matBody.innerHTML = DB.ref.material.map(m=>`<tr>
+    <td class="m" style="font-family:var(--mono)">${m.code||'—'}</td>
+    <td class="b">${m.name}</td>
+    <td class="m">${m.unit}</td>
+    <td><span class="badge ${m.matType==='raw'?'amb':'teal'}">${MAT_TYPE_LABELS[m.matType]||m.matType}</span></td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="openRefModal('material','${m.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteRef('material','${m.id}')">✕</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет материалов/ПФ</td></tr>';
+}
+
+// Заполняем select поставщиков из справочника
+function populateSupplierSelect() {
+  const sel = document.getElementById('recv-sup');
+  if (!sel) return;
+  const suppliers = DB.ref.counterparty.filter(c=>c.type==='supplier'||c.type==='both');
+  const current = sel.value;
+  sel.innerHTML = suppliers.length
+    ? suppliers.map(c=>`<option value="${c.name}" ${c.name===current?'selected':''}>${c.name}</option>`).join('')
+    : '<option value="">— Добавьте поставщиков в Справочник —</option>';
+  updateRecvSupInn();
+}
+
+// Заполняем select клиентов из справочника (для продаж)
+function populateBuyerSelect() {
+  const sel = document.getElementById('sale-client-sel');
+  if (!sel) return;
+  const buyers = DB.ref.counterparty.filter(c=>c.type==='buyer'||c.type==='both');
+  const cur = sel.value;
+  sel.innerHTML = buyers.length
+    ? buyers.map(c=>`<option value="${c.name}" ${c.name===cur?'selected':''}>${c.name} (${c.inn||'б/ИНН'})</option>`).join('')
+    : '<option value="">— Добавьте покупателей в Справочник —</option>';
+  // Обновляем ИНН
+  const inn = document.getElementById('sale-client-inn');
+  if (inn) inn.textContent = getSaleClientInn(sel.value);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ПРИЁМКА
+// ═══════════════════════════════════════════════════════
+const MAT_UNITS = {'Х5':'м²','Х8':'м²','Х10':'м²','Х13':'м²','Х16':'м²','Плёнка':'м²','Фольга Ф':'м²','Фольга ТФ':'м²','Нить':'м²','Клей-сырьё':'кг','Прочее':'шт'};
+
+function updateRecvUnit() {
+  const mat = document.getElementById('recv-mat').value;
+  document.getElementById('recv-unit').textContent = MAT_UNITS[mat] || 'ед.';
+}
+
+function updateRecvSupInn() {
+  const name = document.getElementById('recv-sup').value;
+  const cp = DB.ref.counterparty.find(c => c.name === name);
+  document.getElementById('recv-sup-inn').textContent = cp?.inn || '—';
+}
+
+// Новая логика: цена ВВОДИТСЯ с НДС, вычисляем без НДС
+function calcRecvTotals() {
+  const qty      = parseFloat(document.getElementById('recv-qty').value)||0;
+  const priceVat = parseFloat(document.getElementById('recv-price-vat').value)||0;
+  const vatRate  = parseFloat(document.getElementById('recv-vat').value)||0;
+  const extraVat = parseFloat(document.getElementById('recv-extra-vat').value)||0;
+  const extraVatRate = parseFloat(document.getElementById('recv-extra-vat-rate').value)||0;
+
+  // Товар
+  const priceNoVat = vatRate > 0 ? priceVat / (1 + vatRate/100) : priceVat;
+  const sumVat     = priceVat * qty;
+  const sumNoVat   = priceNoVat * qty;
+
+  // Накладные
+  const extraNoVat    = extraVatRate > 0 ? extraVat / (1 + extraVatRate/100) : extraVat;
+  const extraVatSum   = extraVat - extraNoVat;
+  const extraPerUnit  = qty > 0 ? extraNoVat / qty : 0;
+
+  // Учётная цена = цена без НДС + накладные без НДС / кол-во
+  const unitPrice  = priceNoVat + extraPerUnit;
+  const totalAcct  = unitPrice * qty;
+  const totalWithVat = sumVat + extraVat;
+
+  const S = id => document.getElementById(id);
+  if(S('recv-price-no-vat'))  S('recv-price-no-vat').textContent  = fmtDec(priceNoVat) + ' ₽';
+  if(S('recv-sum-no-vat'))    S('recv-sum-no-vat').textContent    = fmtMoney(sumNoVat);
+  if(S('recv-extra-vat-sum')) S('recv-extra-vat-sum').textContent = fmtMoney(extraVatSum);
+  if(S('recv-extra-per-unit'))S('recv-extra-per-unit').textContent= fmtDec(extraPerUnit) + ' ₽/ед.';
+  if(S('recv-with-vat'))      S('recv-with-vat').textContent      = fmtMoney(totalWithVat);
+  if(S('recv-unit-price'))    S('recv-unit-price').textContent    = fmtDec(unitPrice) + ' ₽/ед.';
+  if(S('recv-total'))         S('recv-total').textContent         = fmtMoney(totalAcct);
+}
+
+function addReceipt() {
+  const date        = document.getElementById('recv-date').value || today();
+  const sup         = document.getElementById('recv-sup').value;
+  const mat         = document.getElementById('recv-mat').value;
+  const qty         = parseFloat(document.getElementById('recv-qty').value)||0;
+  const priceVat    = parseFloat(document.getElementById('recv-price-vat').value)||0;
+  const vatRate     = parseFloat(document.getElementById('recv-vat').value)||0;
+  const extraVat    = parseFloat(document.getElementById('recv-extra-vat').value)||0;
+  const extraVatRate= parseFloat(document.getElementById('recv-extra-vat-rate').value)||0;
+  const invoice     = document.getElementById('recv-invoice').value;
+  const paid        = document.getElementById('recv-paid').value;
+  const paidAmt     = parseFloat(document.getElementById('recv-paid-amt').value)||0;
+  if (!qty || !priceVat) { toast('Укажите количество и цену с НДС', 'err'); return; }
+
+  const priceNoVat  = vatRate > 0 ? priceVat / (1 + vatRate/100) : priceVat;
+  const extraNoVat  = extraVatRate > 0 ? extraVat / (1 + extraVatRate/100) : extraVat;
+  const extraPerUnit= qty > 0 ? extraNoVat / qty : 0;
+  const unitPrice   = priceNoVat + extraPerUnit;
+  const withVat     = priceVat * qty + extraVat;
+  const total       = unitPrice * qty; // учётная сумма (без НДС + накладные без НДС)
+
+  DB.receipts.push({
+    id:uid(), date, sup, mat, qty,
+    priceVat, vatRate, priceNoVat,
+    extraVat, extraVatRate, extraNoVat,
+    unitPrice, withVat, total,
+    invoice, paid, paidAmt
+  });
+  renderRecv();
+  syncNow();
+  toast('Приход добавлен ✓');
+}
+
+function editReceipt(id) {
+  const r = DB.receipts.find(x=>x.id===id);
+  if (!r) return;
+  openModal('Редактировать приход', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="er-date" value="${r.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Материал</div><input class="field-inp" id="er-mat" value="${r.mat||''}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Поставщик</div><input class="field-inp" id="er-sup" value="${r.sup||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Кол-во</div><input class="field-inp" id="er-qty" value="${r.qty||0}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Цена с НДС</div><input class="field-inp" id="er-price-vat" value="${r.priceVat||r.price||0}"></div>
+      <div class="modal-field"><div class="field-lbl">НДС %</div><input class="field-inp" id="er-vat" value="${r.vatRate||r.vat||22}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Накл. расходы с НДС</div><input class="field-inp" id="er-extra-vat" value="${r.extraVat||0}"></div>
+      <div class="modal-field"><div class="field-lbl">НДС накл. %</div><input class="field-inp" id="er-extra-vat-rate" value="${r.extraVatRate||22}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Накл.№/УПД</div><input class="field-inp" id="er-invoice" value="${r.invoice||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Оплата</div>
+        <select class="field-inp" id="er-paid">
+          <option value="no"      ${r.paid==='no'     ?'selected':''}>Нет</option>
+          <option value="yes"     ${r.paid==='yes'    ?'selected':''}>Да</option>
+          <option value="partial" ${r.paid==='partial'?'selected':''}>Частично</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Сумма оплаты</div><input class="field-inp" id="er-paid-amt" value="${r.paidAmt||0}"></div>
+    </div>
+  `, () => {
+    const qty         = parseFloat(document.getElementById('er-qty').value)||0;
+    const priceVat    = parseFloat(document.getElementById('er-price-vat').value)||0;
+    const vatRate     = parseFloat(document.getElementById('er-vat').value)||0;
+    const extraVat    = parseFloat(document.getElementById('er-extra-vat').value)||0;
+    const extraVatRate= parseFloat(document.getElementById('er-extra-vat-rate').value)||0;
+    const priceNoVat  = vatRate > 0 ? priceVat/(1+vatRate/100) : priceVat;
+    const extraNoVat  = extraVatRate > 0 ? extraVat/(1+extraVatRate/100) : extraVat;
+    const extraPerUnit= qty > 0 ? extraNoVat/qty : 0;
+    const unitPrice   = priceNoVat + extraPerUnit;
+    const withVat     = priceVat*qty + extraVat;
+    const total       = unitPrice*qty;
+    const updated = {
+      ...r,
+      date:     document.getElementById('er-date').value,
+      sup:      document.getElementById('er-sup').value,
+      mat:      document.getElementById('er-mat').value,
+      qty, priceVat, vatRate, priceNoVat,
+      extraVat, extraVatRate, extraNoVat,
+      unitPrice, withVat, total,
+      invoice:  document.getElementById('er-invoice').value,
+      paid:     document.getElementById('er-paid').value,
+      paidAmt:  parseFloat(document.getElementById('er-paid-amt').value)||0,
+    };
+    DB.receipts = DB.receipts.map(x=>x.id===id?updated:x);
+    renderRecv();
+    syncNow();
+    toast('Запись обновлена ✓');
+  });
+}
+
+function deleteReceipt(id) {
+  if (!confirm('Удалить запись прихода?')) return;
+  DB.receipts = DB.receipts.filter(r=>r.id!==id);
+  renderRecv();
+  syncNow();
+}
+
+function renderRecv() {
+  const filterMonth = document.getElementById('recv-filter-month')?.value || '';
+  const rows = filterMonth
+    ? DB.receipts.filter(r => r.date && r.date.startsWith(filterMonth))
+    : DB.receipts;
+
+  const sorted = [...rows].sort((a,b) => b.date > a.date ? 1 : -1);
+
+  let totalCost = 0, totalDebt = 0, totalPaid = 0;
+  DB.receipts.forEach(r => {
+    const sumWithVat = r.withVat || 0; // платим поставщику с НДС
+    totalCost += sumWithVat;
+    if (r.paid === 'yes') {
+      // Полностью оплачено — берём всю сумму с НДС
+      totalPaid += sumWithVat;
+    } else if (r.paid === 'partial') {
+      // Частично — берём фактически оплаченное
+      totalPaid += r.paidAmt || 0;
+    }
+    // paid === 'no' — ничего не оплачено
+  });
+  totalDebt = Math.max(0, totalCost - totalPaid);
+
+  document.getElementById('kv-recv-total').textContent = fmtMoney(totalCost);
+  document.getElementById('kv-recv-debt').textContent  = fmtMoney(totalDebt);
+  document.getElementById('kv-recv-paid').textContent  = fmtMoney(totalPaid);
+
+  // Остатки сырья
+  const rawStock = calcRawStock();
+  let stockVal = 0;
+  Object.values(rawStock).forEach(m => { Object.values(m).forEach(s => { stockVal += s.val||0; }); });
+  document.getElementById('kv-recv-stock').textContent = fmtMoney(stockVal);
+
+  const tbody = document.getElementById('recv-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.map(r => {
+    const paidCls = r.paid==='yes'?'ok':r.paid==='partial'?'amb':'bad';
+    return `<tr>
+      <td class="m">${fmtDate(r.date)}</td>
+      <td>${r.sup||'—'}</td>
+      <td class="b">${r.mat||'—'}</td>
+      <td class="r">${fmtDec(r.qty,1)} ${MAT_UNITS[r.mat]||''}</td>
+      <td class="r">${fmtDec(r.priceVat||r.price||0)} (${r.vatRate||r.vat||0}%)</td>
+      <td class="r">${fmtDec(r.priceNoVat||0)}</td>
+      <td class="bl">${fmtMoney(r.withVat)}</td>
+      <td class="r">${r.extraVat?fmtMoney(r.extraVat):'—'}</td>
+      <td class="am">${fmtDec(r.unitPrice)}</td>
+      <td class="g">${fmtMoney(r.total)}</td>
+      <td class="m">${r.invoice||'—'}</td>
+      <td><span class="badge ${paidCls}">${r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?'ЧАСТИЧНО':'НЕ ОПЛ.'}</span></td>
+      <td style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn sm" onclick="editReceipt('${r.id}')" title="Редактировать">✏</button>
+        <button class="btn del sm" onclick="deleteReceipt('${r.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Остатки сырья
+  const rsBody = document.getElementById('raw-stock-tbody');
+  if (!rsBody) return;
+  rsBody.innerHTML = Object.entries(rawStock).map(([mat, sups]) => {
+    const totQty = Object.values(sups).reduce((s,v)=>s+v.qty,0);
+    const totVal = Object.values(sups).reduce((s,v)=>s+v.val,0);
+    const avgP   = totQty > 0 ? totVal/totQty : 0;
+    return `<tr>
+      <td class="b">${mat}</td>
+      <td class="r">${fmtDec(totQty,1)}</td>
+      <td class="m">${MAT_UNITS[mat]||'ед.'}</td>
+      <td class="am">${fmtDec(avgP)} ₽</td>
+      <td class="g">${fmtMoney(totVal)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:16px">Нет данных</td></tr>';
+}
+
+// Остатки сырья = приход − списание в производство
+function calcRawStock() {
+  const stock = {};
+  DB.receipts.forEach(r => {
+    if (!stock[r.mat]) stock[r.mat] = {};
+    if (!stock[r.mat][r.sup]) stock[r.mat][r.sup] = {qty:0, val:0};
+    stock[r.mat][r.sup].qty += r.qty||0;
+    stock[r.mat][r.sup].val += r.total||0;
+  });
+  DB.production.forEach(op => {
+    (op.consumption||[]).forEach(c => {
+      if (stock[c.mat]) {
+        // Списываем пропорционально из доступных остатков
+        let need = c.qty||0;
+        Object.values(stock[c.mat]).forEach(s => {
+          if (need <= 0) return;
+          const take = Math.min(need, s.qty);
+          const valPer = s.qty > 0 ? s.val/s.qty : 0;
+          s.qty -= take;
+          s.val -= take * valPer;
+          need  -= take;
+        });
+      }
+    });
+  });
+  // Убираем нулевые/отрицательные
+  Object.keys(stock).forEach(mat => {
+    Object.keys(stock[mat]).forEach(sup => {
+      if (stock[mat][sup].qty <= 0.001) delete stock[mat][sup];
+    });
+    if (!Object.keys(stock[mat]).length) delete stock[mat];
+  });
+  return stock;
+}
+
+// Средняя учётная цена материала
+function avgRawPrice(mat) {
+  const stock = calcRawStock();
+  if (!stock[mat]) return 0;
+  const total = Object.values(stock[mat]).reduce((s,v)=>s+v.val,0);
+  const qty   = Object.values(stock[mat]).reduce((s,v)=>s+v.qty,0);
+  return qty > 0 ? total/qty : 0;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ПРОИЗВОДСТВО
+// ═══════════════════════════════════════════════════════
+const ARTS_MATERIAL = [
+  'BSALT-5Ф','BSALT-8Ф','BSALT-10Ф','BSALT-13Ф','BSALT-16Ф',
+  'BSALT-5ТФ','BSALT-8ТФ','BSALT-10ТФ','BSALT-13ТФ','BSALT-16ТФ'
+];
+const ARTS_PF = ['5П','8П','10П','13П','16П','5НФ','8НФ','10НФ','13НФ','16НФ'];
+const ARTS_ALL = [...ARTS_MATERIAL, 'Клей FP', ...ARTS_PF];
+
+function updateProdArtList() {
+  const op  = document.getElementById('prod-op').value;
+  const sel = document.getElementById('prod-art');
+  const opts = op==='sew' ? ARTS_PF :
+               op==='fol' ? ARTS_MATERIAL :
+               ['Клей FP'];
+  sel.innerHTML = opts.map(a=>`<option>${a}</option>`).join('');
+  document.getElementById('prod-unit').textContent = op==='glue'?'кг':'м²';
+  calcProdCost();
+}
+
+function tc(id) { return parseFloat(document.getElementById(id)?.value)||0; }
+
+function getConsumption(op, art, qty) {
+  const cons = [];
+  if (op === 'sew') {
+    // Прошив: расход БСТВ + нить
+    const thk = art.replace(/[ПНФ]/g,'');
+    const xMat = 'Х'+thk;
+    cons.push({mat:xMat, qty:qty*tc('tc-bstv'), unit:'м²'});
+    cons.push({mat:'Нить', qty:qty*tc('tc-thread'), unit:'м²'});
+    if (art.endsWith('П')) {
+      // С плёнкой
+      cons.push({mat:'Плёнка', qty:qty*tc('tc-film'), unit:'м²'});
+    }
+  } else if (op === 'fol') {
+    // Фольгирование: расход пф + фольга
+    const thk   = art.replace(/BSALT-/,'').replace(/[ФТ]/g,'');
+    const isTF  = art.includes('ТФ');
+    const pfKey = isTF ? thk+'НФ' : thk+'П';
+    cons.push({mat:pfKey, qty, unit:'м²', isPf:true});
+    cons.push({mat: isTF?'Фольга ТФ':'Фольга Ф', qty:qty*(isTF?tc('tc-foil-tf'):tc('tc-foil-f')), unit:'м²'});
+  } else if (op === 'glue') {
+    cons.push({mat:'Клей-сырьё', qty:qty*tc('tc-glue-raw'), unit:'кг'});
+  }
+  return cons;
+}
+
+function calcUnitCostByOp(op, art, qty) {
+  const cons = getConsumption(op, art, qty);
+  let cost = 0;
+  cons.forEach(c => {
+    if (c.isPf) {
+      // Пф — берём из остатков производства
+      const pfStock = calcGpStock();
+      const pfEntry = pfStock[c.mat];
+      cost += (pfEntry?.avgCost||0) * c.qty;
+    } else {
+      cost += avgRawPrice(c.mat) * c.qty;
+    }
+  });
+  return qty > 0 ? cost/qty : 0;
+}
+
+function calcProdCost() {
+  const op  = document.getElementById('prod-op')?.value;
+  const art = document.getElementById('prod-art')?.value;
+  const qty = parseFloat(document.getElementById('prod-qty')?.value)||0;
+  if (!op||!art) return;
+  const cons = getConsumption(op, art, qty);
+  const consDiv = document.getElementById('prod-consumption');
+  if (consDiv) consDiv.innerHTML = cons.map(c =>
+    `<div style="display:flex;justify-content:space-between;margin-bottom:2px">
+      <span>${c.mat}</span>
+      <span style="font-family:var(--mono);color:var(--amber)">${fmtDec(c.qty,2)} ${c.unit}</span>
+    </div>`
+  ).join('') || '—';
+  const unitCost = calcUnitCostByOp(op, art, qty);
+  const el = document.getElementById('prod-cost-unit');
+  if (el) el.textContent = fmtDec(unitCost) + ' ₽/ед.';
+}
+
+function addProdOp() {
+  const op  = document.getElementById('prod-op').value;
+  const art = document.getElementById('prod-art').value;
+  const qty = parseFloat(document.getElementById('prod-qty').value)||0;
+  const date= document.getElementById('prod-date').value || today();
+  if (!qty) { toast('Укажите количество', 'err'); return; }
+  const cons     = getConsumption(op, art, qty);
+  const costUnit = calcUnitCostByOp(op, art, qty);
+  DB.production.push({id:uid(), date, op, art, qty, costUnit, consumption:cons});
+  renderProd();
+  document.getElementById('prod-qty').value = '';
+  syncNow();
+  toast('Операция проведена ✓');
+}
+
+function editProdOp(id) {
+  const r = DB.production.find(x=>x.id===id);
+  if (!r) return;
+  const opNames = {sew:'Прошив', fol:'Фольгирование', glue:'Изгот. клея'};
+  openModal('Редактировать операцию', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="ep-date" value="${r.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Операция</div>
+        <select class="field-inp" id="ep-op">
+          <option value="sew"  ${r.op==='sew' ?'selected':''}>Прошив</option>
+          <option value="fol"  ${r.op==='fol' ?'selected':''}>Фольгирование</option>
+          <option value="glue" ${r.op==='glue'?'selected':''}>Изгот. клея</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Артикул/ГП</div><input class="field-inp" id="ep-art" value="${r.art||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Кол-во</div><input class="field-inp" id="ep-qty" value="${r.qty||0}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">С/с на ед. (₽)</div><input class="field-inp" id="ep-cost" value="${fmtDec(r.costUnit||0)}"></div>
+    </div>
+    <div style="padding:8px;background:var(--bg3);border-radius:5px;font-size:10px;color:var(--text3)">
+      Списание сырья пересчитается по техкартам при сохранении
+    </div>
+  `, () => {
+    const qty     = parseFloat(document.getElementById('ep-qty').value)||0;
+    const op      = document.getElementById('ep-op').value;
+    const art     = document.getElementById('ep-art').value;
+    const costUnit= parseFloat(document.getElementById('ep-cost').value.replace(',','.'))||0;
+    const cons    = getConsumption(op, art, qty);
+    const updated = {...r, date:document.getElementById('ep-date').value, op, art, qty, costUnit, consumption:cons};
+    DB.production = DB.production.map(x=>x.id===id?updated:x);
+    renderProd();
+    syncNow();
+    toast('Операция обновлена ✓');
+  });
+}
+
+function deleteProdOp(id) {
+  if (!confirm('Удалить производственную операцию?')) return;
+  DB.production = DB.production.filter(r=>r.id!==id);
+  renderProd();
+  syncNow();
+}
+
+// Склад ГП = производство − продажи (средняя себестоимость)
+function calcGpStock() {
+  const stock = {}; // {art: {qty, totalCost, avgCost}}
+  DB.production.forEach(op => {
+    if (op.op !== 'fol' && op.op !== 'glue' && op.op !== 'sew') return;
+    const art = op.art;
+    if (!stock[art]) stock[art] = {qty:0, totalCost:0, avgCost:0};
+    const cost = (op.costUnit||0) * (op.qty||0);
+    stock[art].qty       += op.qty||0;
+    stock[art].totalCost += cost;
+    stock[art].avgCost    = stock[art].qty > 0 ? stock[art].totalCost/stock[art].qty : 0;
+  });
+  // Списываем продажи
+  DB.sales.forEach(s => {
+    const art = s.art;
+    if (stock[art] && stock[art].qty > 0) {
+      const take    = Math.min(s.qty||0, stock[art].qty);
+      const valPer  = stock[art].avgCost;
+      stock[art].qty       -= take;
+      stock[art].totalCost -= take * valPer;
+    }
+  });
+  return stock;
+}
+
+function renderProd() {
+  const filterMonth = document.getElementById('prod-filter-month')?.value || '';
+  const rows = filterMonth
+    ? DB.production.filter(r => r.date && r.date.startsWith(filterMonth))
+    : DB.production;
+  const sorted = [...rows].sort((a,b) => b.date > a.date ? 1 : -1);
+
+  let totalM2=0, totalKg=0, totalCost=0;
+  rows.forEach(r => {
+    if (r.op==='glue') totalKg += r.qty||0;
+    else totalM2 += r.qty||0;
+    totalCost += (r.costUnit||0)*(r.qty||0);
+  });
+
+  const gpStock = calcGpStock();
+  let stockVal = 0;
+  Object.values(gpStock).forEach(s => { stockVal += s.totalCost||0; });
+
+  document.getElementById('kv-prod-m2').textContent       = fmtNum(totalM2) + ' м²';
+  document.getElementById('kv-prod-kg').textContent       = fmtNum(totalKg) + ' кг';
+  document.getElementById('kv-prod-cost').textContent     = fmtMoney(totalCost);
+  document.getElementById('kv-prod-stock-val').textContent= fmtMoney(stockVal);
+
+  const tbody = document.getElementById('prod-tbody');
+  if (!tbody) return;
+  const opNames = {sew:'Прошив', fol:'Фольгирование', glue:'Изгот. клея'};
+  tbody.innerHTML = sorted.map(r => `<tr>
+    <td class="m">${fmtDate(r.date)}</td>
+    <td><span class="badge ${r.op==='fol'?'ok':r.op==='sew'?'info':'teal'}">${opNames[r.op]||r.op}</span></td>
+    <td class="b">${r.art}</td>
+    <td class="r">${fmtNum(r.qty)} ${r.op==='glue'?'кг':'м²'}</td>
+    <td class="am">${fmtDec(r.costUnit)}</td>
+    <td class="g">${fmtMoney((r.costUnit||0)*(r.qty||0))}</td>
+    <td class="m" style="font-size:10px">${(r.consumption||[]).map(c=>`${c.mat}: ${fmtDec(c.qty,1)}`).join(' | ')}</td>
+    <td style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn sm" onclick="editProdOp('${r.id}')" title="Редактировать">✏</button>
+      <button class="btn del sm" onclick="deleteProdOp('${r.id}')">✕</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:16px">Нет операций</td></tr>';
+
+  // Склад ГП
+  const gpBody = document.getElementById('gp-stock-tbody');
+  if (gpBody) {
+    gpBody.innerHTML = Object.entries(gpStock)
+      .filter(([,s])=>s.qty>0.01)
+      .sort((a,b)=>a[0]>b[0]?1:-1)
+      .map(([art,s])=>`<tr>
+        <td class="b">${art}</td>
+        <td class="r">${fmtNum(s.qty)}</td>
+        <td class="am">${fmtDec(s.avgCost)}</td>
+        <td class="g">${fmtMoney(s.totalCost)}</td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px">Склад пуст</td></tr>';
+  }
+
+  // Движение
+  const mvBody = document.getElementById('prod-movement-tbody');
+  if (mvBody) {
+    const produced = {};
+    DB.production.forEach(r => { produced[r.art]=(produced[r.art]||0)+(r.qty||0); });
+    const shipped  = {};
+    DB.sales.forEach(r => { shipped[r.art]=(shipped[r.art]||0)+(r.qty||0); });
+    const allArts = new Set([...Object.keys(produced),...Object.keys(shipped)]);
+    mvBody.innerHTML = [...allArts].sort().map(art => {
+      const p = produced[art]||0, s = shipped[art]||0, rem = (gpStock[art]?.qty)||0;
+      return `<tr>
+        <td class="b">${art}</td>
+        <td class="r">${fmtNum(p)}</td>
+        <td class="r">${fmtNum(s)}</td>
+        <td class="${rem<0?'red':rem===0?'zero':'pos'}">${fmtNum(rem)}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px">Нет данных</td></tr>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ПРОДАЖИ
+// ═══════════════════════════════════════════════════════
+// Позиции текущей новой отгрузки
+let saleItems = []; // [{art, qty, price, vat}]
+
+function getSaleClientInn(name) {
+  const cp = DB.ref.counterparty.find(c=>c.name===name);
+  return cp?.inn || '—';
+}
+
+function toggleSalePaidAmt() {
+  const v = document.getElementById('sale-paid')?.value;
+  const row = document.getElementById('sale-paid-amt-row');
+  if (row) row.style.display = v==='partial' ? '' : 'none';
+}
+
+const ARTS_SALE = ['5Ф','5ТФ','8Ф','8ТФ','10Ф','10ТФ','13Ф','13ТФ','16Ф','16ТФ','Клей FP'];
+
+function addSaleItem() {
+  const vat = parseFloat(document.getElementById('sale-vat-global')?.value)||22;
+  saleItems.push({art:'5Ф', qty:0, price:0, vat});
+  renderSaleItems();
+}
+
+function removeSaleItem(i) {
+  saleItems.splice(i,1);
+  renderSaleItems();
+}
+
+function calcSaleItemTotals() {
+  // Пересчитываем итоги без перерендера всего списка
+  const gpStock = calcGpStock();
+  const vatGlobal = parseFloat(document.getElementById('sale-vat-global')?.value)||22;
+  let totalNoVat=0, totalVat=0, totalCost=0;
+  saleItems.forEach(it=>{
+    totalNoVat += it.price*(it.qty||0);
+    totalVat   += it.price*(it.qty||0)*(1+(it.vat??vatGlobal)/100);
+    totalCost  += (gpStock[it.art]?.avgCost||0)*(it.qty||0);
+  });
+  const S = id => document.getElementById(id);
+  if(S('sale-total-no-vat')) S('sale-total-no-vat').textContent = fmtMoney(totalNoVat);
+  if(S('sale-total-vat'))    S('sale-total-vat').textContent    = fmtMoney(totalVat);
+  if(S('sale-total-cost'))   S('sale-total-cost').textContent   = fmtMoney(totalCost);
+}
+
+function renderSaleItems() {
+  const gpStock = calcGpStock();
+  const vatGlobal = parseFloat(document.getElementById('sale-vat-global')?.value)||22;
+  const list = document.getElementById('sale-items-list');
+  if (!list) return;
+
+  let totalNoVat=0, totalVat=0, totalCost=0;
+  saleItems.forEach(it=>{
+    const sum = it.price*(it.qty||0);
+    const sumV = sum*(1+(it.vat||vatGlobal)/100);
+    const cu   = gpStock[it.art]?.avgCost||0;
+    totalNoVat += sum;
+    totalVat   += sumV;
+    totalCost  += cu*(it.qty||0);
+  });
+
+  list.innerHTML = saleItems.map((it,i)=>{
+    const cu = gpStock[it.art]?.avgCost||0;
+    const unit = it.art==='Клей FP'?'кг':'м²';
+    return `<div style="background:var(--bg3);border-radius:5px;padding:6px 8px;margin-bottom:5px;font-size:11px">
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+        <select class="sel" style="flex:1;font-size:11px"
+          onchange="saleItems[${i}].art=this.value;renderSaleItems()">
+          ${ARTS_SALE.map(a=>`<option ${it.art===a?'selected':''}>${a}</option>`).join('')}
+        </select>
+        <button class="del-btn" onclick="removeSaleItem(${i})">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Кол-во (${unit})</div>
+          <input class="inp" style="width:100%;font-size:11px" value="${it.qty||''}" placeholder="0"
+            onchange="saleItems[${i}].qty=parseFloat(this.value)||0;calcSaleItemTotals()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Цена б/НДС</div>
+          <input class="inp" style="width:100%;font-size:11px" value="${it.price||''}" placeholder="0"
+            onchange="saleItems[${i}].price=parseFloat(this.value)||0;calcSaleItemTotals()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">НДС %</div>
+          <input class="inp" style="width:100%;font-size:11px" value="${it.vat??vatGlobal}" placeholder="22"
+            onchange="saleItems[${i}].vat=parseFloat(this.value)||0;calcSaleItemTotals()">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;font-family:var(--mono);font-size:10px">
+        <span style="color:var(--text2)">С НДС: <span style="color:var(--blue)">${fmtMoney(it.price*(it.qty||0)*(1+(it.vat??vatGlobal)/100))}</span></span>
+        <span style="color:var(--text3)">С/с: ${fmtDec(cu)} ₽/ед.</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const S = id => document.getElementById(id);
+  if(S('sale-total-no-vat')) S('sale-total-no-vat').textContent = fmtMoney(totalNoVat);
+  if(S('sale-total-vat'))    S('sale-total-vat').textContent    = fmtMoney(totalVat);
+  if(S('sale-total-cost'))   S('sale-total-cost').textContent   = fmtMoney(totalCost);
+}
+
+function addSale() {
+  const date    = document.getElementById('sale-date').value || today();
+  const client  = document.getElementById('sale-client-sel')?.value || '';
+  const invoice = document.getElementById('sale-invoice').value;
+  const paid    = document.getElementById('sale-paid').value;
+  const payDate = document.getElementById('sale-pay-date').value;
+  if (!client) { toast('Выберите контрагента', 'err'); return; }
+  if (saleItems.length === 0) { toast('Добавьте хотя бы одну позицию', 'err'); return; }
+  if (saleItems.some(it=>!it.qty||!it.price)) { toast('Заполните количество и цену во всех позициях','err'); return; }
+
+  // Считаем итого по всем позициям
+  const gpStock = calcGpStock();
+  let totalWithVat = 0, totalNoVat = 0, totalCost = 0;
+  saleItems.forEach(it => {
+    totalNoVat   += it.price * it.qty;
+    totalWithVat += it.price * it.qty * (1 + (it.vat||22)/100);
+    totalCost    += (gpStock[it.art]?.avgCost||0) * it.qty;
+  });
+
+  // Сумма оплаты
+  let paidAmt = 0;
+  if (paid === 'yes')     paidAmt = totalWithVat;
+  else if (paid === 'partial') paidAmt = parseFloat(document.getElementById('sale-paid-amt')?.value)||0;
+
+  DB.sales.push({
+    id: uid(), date, client, invoice, paid, paidAmt, payDate,
+    items: [...saleItems],        // массив позиций
+    withVat: totalWithVat,
+    price: totalNoVat,            // сумма б/НДС (для совместимости)
+    qty: saleItems.reduce((s,it)=>s+it.qty,0),
+    art: saleItems.length===1 ? saleItems[0].art : 'Несколько',
+    costUnit: saleItems.length>0 ? totalCost/saleItems.reduce((s,it)=>s+it.qty,0) : 0,
+  });
+  saleItems = [];
+  renderSaleItems();
+  renderSales();
+  syncNow();
+  toast('Отгрузка добавлена ✓');
+}
+
+function editSale(id) {
+  const r = DB.sales.find(x=>x.id===id);
+  if (!r) return;
+  // Получаем позиции — либо items[], либо старый формат (один артикул)
+  const items = r.items && r.items.length
+    ? r.items
+    : [{art: r.art||'5Ф', qty: r.qty||0, price: r.price||0, vat: r.vat||22}];
+
+  const buyers = DB.ref.counterparty.filter(c=>c.type==='buyer'||c.type==='both');
+  const clientOpts = buyers.map(c=>`<option ${c.name===r.client?'selected':''}>${c.name}</option>`).join('');
+
+  openModal('Редактировать отгрузку', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="es-date" value="${r.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Контрагент</div>
+        <select class="field-inp" id="es-client">
+          ${clientOpts||`<option>${r.client||''}</option>`}
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Накл.№/УПД</div><input class="field-inp" id="es-invoice" value="${r.invoice||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Ожид. оплата</div><input type="date" class="field-inp" id="es-pay-date" value="${r.payDate||''}"></div>
+    </div>
+
+    <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Позиции</div>
+    ${items.map((it,i)=>`
+      <div style="background:var(--bg3);border-radius:5px;padding:6px 8px;margin-bottom:4px;font-size:11px">
+        <select class="field-inp" id="es-art-${i}" style="width:100%;margin-bottom:4px">
+          ${ARTS_SALE.map(a=>`<option ${it.art===a?'selected':''}>${a}</option>`).join('')}
+        </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">Кол-во</div>
+            <input class="field-inp" id="es-qty-${i}" value="${it.qty||0}"></div>
+          <div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">Цена б/НДС</div>
+            <input class="field-inp" id="es-price-${i}" value="${it.price||0}"></div>
+          <div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">НДС %</div>
+            <input class="field-inp" id="es-vat-${i}" value="${it.vat||22}"></div>
+        </div>
+      </div>`).join('')}
+
+    <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Оплата</div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Статус</div>
+        <select class="field-inp" id="es-paid" onchange="document.getElementById('es-paid-amt-wrap').style.display=this.value==='partial'?'':'none'">
+          <option value="no"      ${r.paid==='no'     ?'selected':''}>Не оплачено</option>
+          <option value="yes"     ${r.paid==='yes'    ?'selected':''}>Оплачено полностью</option>
+          <option value="partial" ${r.paid==='partial'?'selected':''}>Частично</option>
+        </select>
+      </div>
+      <div class="modal-field" id="es-paid-amt-wrap" style="display:${r.paid==='partial'?'':'none'}">
+        <div class="field-lbl">Сумма оплаты ₽</div>
+        <input class="field-inp" id="es-paid-amt" value="${r.paidAmt||0}">
+      </div>
+    </div>
+  `, () => {
+    const gpStock = calcGpStock();
+    const newItems = items.map((_,i) => ({
+      art:   document.getElementById(`es-art-${i}`)?.value||'',
+      qty:   parseFloat(document.getElementById(`es-qty-${i}`)?.value)||0,
+      price: parseFloat(document.getElementById(`es-price-${i}`)?.value)||0,
+      vat:   parseFloat(document.getElementById(`es-vat-${i}`)?.value)||22,
+    }));
+
+    let totalWithVat=0, totalNoVat=0, totalCost=0;
+    newItems.forEach(it=>{
+      totalNoVat   += it.price*it.qty;
+      totalWithVat += it.price*it.qty*(1+(it.vat||22)/100);
+      totalCost    += (gpStock[it.art]?.avgCost||0)*it.qty;
+    });
+
+    const paidStatus = document.getElementById('es-paid').value;
+    let paidAmt = 0;
+    if (paidStatus==='yes')     paidAmt = totalWithVat;
+    else if (paidStatus==='partial') paidAmt = parseFloat(document.getElementById('es-paid-amt')?.value)||0;
+
+    const updated = {
+      ...r,
+      date:    document.getElementById('es-date').value,
+      client:  document.getElementById('es-client').value,
+      invoice: document.getElementById('es-invoice').value,
+      payDate: document.getElementById('es-pay-date').value,
+      paid: paidStatus, paidAmt,
+      items: newItems,
+      withVat: totalWithVat,
+      price: totalNoVat,
+      qty: newItems.reduce((s,it)=>s+it.qty,0),
+      art: newItems.length===1 ? newItems[0].art : 'Несколько',
+      costUnit: newItems.length>0 ? totalCost/Math.max(1,newItems.reduce((s,it)=>s+it.qty,0)) : 0,
+    };
+    DB.sales = DB.sales.map(x=>x.id===id?updated:x);
+    renderSales();
+    syncNow();
+    toast('Отгрузка обновлена ✓');
+  });
+}
+
+function deleteSale(id) {
+  if (!confirm('Удалить запись отгрузки?')) return;
+  DB.sales = DB.sales.filter(r=>r.id!==id);
+  renderSales();
+  syncNow();
+}
+
+function renderSales() {
+  const filterMonth = document.getElementById('sale-filter-month')?.value||'';
+  const rows = filterMonth ? DB.sales.filter(r=>r.date&&r.date.startsWith(filterMonth)) : DB.sales;
+  const sorted = [...rows].sort((a,b)=>b.date>a.date?1:-1);
+
+  // KPI — правильная дебиторка
+  let rev=0, revVat=0, debt=0, paid=0;
+  DB.sales.forEach(r=>{
+    const sumNoVat = r.price||0;     // сумма б/НДС
+    const sumVat   = r.withVat||0;
+    rev    += sumNoVat;
+    revVat += sumVat;
+    if (r.paid==='yes')          paid += sumVat;
+    else if (r.paid==='partial') paid += r.paidAmt||0;
+    // paid==='no' → ничего не добавляем к paid
+  });
+  debt = Math.max(0, revVat - paid);
+
+  document.getElementById('kv-sale-rev').textContent    = fmtMoney(rev);
+  document.getElementById('kv-sale-rev-vat').textContent= fmtMoney(revVat);
+  document.getElementById('kv-sale-debt').textContent   = fmtMoney(debt);
+  document.getElementById('kv-sale-paid').textContent   = fmtMoney(paid);
+
+  const tbody = document.getElementById('sale-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.map(r=>{
+    const items    = r.items && r.items.length ? r.items : [{art:r.art, qty:r.qty||0, price:r.price||0, vat:r.vat||22}];
+    const sumNoVat = r.price||0;
+    const sumVat   = r.withVat||0;
+    const totalCost= items.reduce((s,it)=>{
+      const gp = calcGpStock();
+      return s + (gp[it.art]?.avgCost||r.costUnit||0)*(it.qty||0);
+    },0);
+    const margin   = sumNoVat - totalCost;
+    const paidCls  = r.paid==='yes'?'ok':r.paid==='partial'?'amb':'bad';
+    const paidLbl  = r.paid==='yes'?'ОПЛАЧЕНО':r.paid==='partial'?`ЧАСТИЧНО (${fmtMoney(r.paidAmt||0)})`:'НЕ ОПЛ.';
+
+    const artsList = items.length===1
+      ? `${items[0].art} × ${fmtNum(items[0].qty)}`
+      : items.map(it=>`${it.art} × ${fmtNum(it.qty)}`).join(', ');
+
+    return `<tr>
+      <td class="m">${fmtDate(r.date)}</td>
+      <td class="b">${r.client||'—'}</td>
+      <td style="font-size:10px;max-width:200px">${artsList}</td>
+      <td class="r">${fmtMoney(sumNoVat)}</td>
+      <td class="bl">${fmtMoney(sumVat)}</td>
+      <td class="am">${fmtMoney(totalCost)}</td>
+      <td class="${margin>=0?'g':'red'}">${fmtMoney(margin)}</td>
+      <td class="m">${r.invoice||'—'}</td>
+      <td><span class="badge ${paidCls}">${paidLbl}</span></td>
+      <td class="m">${r.payDate?fmtDate(r.payDate):'—'}</td>
+      <td style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn sm" onclick="editSale('${r.id}')" title="Редактировать">✏</button>
+        <button class="btn del sm" onclick="deleteSale('${r.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:16px">Нет отгрузок</td></tr>';
+
+  // Дебиторка по клиентам — правильная логика
+  const debitors={};
+  DB.sales.forEach(r=>{
+    const cl = r.client||'?';
+    if (!debitors[cl]) debitors[cl]={shipped:0, paid:0, payDate:''};
+    debitors[cl].shipped += r.withVat||0;
+    if (r.paid==='yes')          debitors[cl].paid += r.withVat||0;
+    else if (r.paid==='partial') debitors[cl].paid += r.paidAmt||0;
+    if (r.payDate&&(!debitors[cl].payDate||r.payDate<debitors[cl].payDate))
+      debitors[cl].payDate = r.payDate;
+  });
+  const dBody = document.getElementById('debitor-tbody');
+  if (dBody) {
+    dBody.innerHTML = Object.entries(debitors).map(([cl,d])=>{
+      const debt = Math.max(0, d.shipped - d.paid);
+      return `<tr>
+        <td class="b">${cl}</td>
+        <td class="r">${fmtMoney(d.shipped)}</td>
+        <td class="g">${fmtMoney(d.paid)}</td>
+        <td class="${debt>0?'am':'zero'}">${fmtMoney(debt)}</td>
+        <td class="m">${d.payDate?fmtDate(d.payDate):'—'}</td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Нет задолженностей</td></tr>';
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ЗАРПЛАТА
+// ═══════════════════════════════════════════════════════
+
+const SAL_OPS = {
+  // Прошив — полуфабрикаты (индивидуальная сдельщина)
+  sew5f:'5П',   sew5nf:'5НФ',
+  sew8f:'8П',   sew8nf:'8НФ',
+  sew10f:'10П', sew10nf:'10НФ',
+  sew13f:'13П', sew13nf:'13НФ',
+  sew16f:'16П', sew16nf:'16НФ',
+  // Фольгирование — ГП (бригада)
+  fol_5f:'5Ф',   fol_5tf:'5ТФ',
+  fol_8f:'8Ф',   fol_8tf:'8ТФ',
+  fol_10f:'10Ф', fol_10tf:'10ТФ',
+  fol_13f:'13Ф', fol_13tf:'13ТФ',
+  fol_16f:'16Ф', fol_16tf:'16ТФ',
+  glue:'Клей FP',
+};
+const SAL_BRIGADE = new Set(['fol_5f','fol_5tf','fol_8f','fol_8tf','fol_10f','fol_10tf','fol_13f','fol_13tf','fol_16f','fol_16tf','glue']);
+const BRIGADE_RATE_KEYS = ['fol_5f','fol_5tf','fol_8f','fol_8tf','fol_10f','fol_10tf','fol_13f','fol_13tf','fol_16f','fol_16tf','glue'];
+
+function saveBrigadeRates() {
+  if (!DB.settings) DB.settings = {};
+  BRIGADE_RATE_KEYS.forEach(k=>{
+    const el=document.getElementById(`br-rate-${k}`);
+    if(el) DB.settings[`brigadeRate_${k}`]=parseFloat(el.value)||0;
+  });
+  syncNow();
+}
+
+function loadBrigadeRates() {
+  if (!DB.settings) return;
+  BRIGADE_RATE_KEYS.forEach(k=>{
+    const el=document.getElementById(`br-rate-${k}`);
+    if(el && DB.settings[`brigadeRate_${k}`]) el.value=(+DB.settings[`brigadeRate_${k}`]).toFixed(2);
+  });
+}
+
+function getBrigadeRate(op) {
+  if (!DB.settings) return 0;
+  return DB.settings[`brigadeRate_${op}`]||0;
+}
+const SAL_UNITS   = {glue:'кг'};
+
+// activeDay — выбранная дата YYYY-MM-DD
+let salActiveDate = '';
+let salPeriodFilter = '1'; // '1' или '2'
+let salView = 'day';       // 'day' | 'period'
+
+function getSalPeriod(dateStr) {
+  if (!dateStr) return '1';
+  return new Date(dateStr).getDate() <= 15 ? '1' : '2';
+}
+function getSalPayDate(dateStr) {
+  if (!dateStr) return '';
+  const dt = new Date(dateStr);
+  if (getSalPeriod(dateStr) === '1') {
+    return `25.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`;
+  }
+  const next = new Date(dt.getFullYear(), dt.getMonth()+1, 10);
+  return `10.${String(next.getMonth()+1).padStart(2,'0')}.${next.getFullYear()}`;
+}
+
+// Получаем запись дня из salaryLogs (один объект на дату)
+// dayData: {date, indiv:[{empId,op,qty,rate,gross}], brigade:[{op,qty,rate,gross,members:[empId]}]}
+function getDayData(dateStr) {
+  return DB.salaryLogs.find(d => d.date === dateStr) || null;
+}
+function setDayData(dateStr, data) {
+  const idx = DB.salaryLogs.findIndex(d => d.date === dateStr);
+  if (idx >= 0) DB.salaryLogs[idx] = data;
+  else          DB.salaryLogs.push(data);
+}
+function emptyDayData(dateStr) {
+  return { date: dateStr, indiv: [], brigade: [], brigadeMembers: [], absences: {} };
+}
+
+// Все рабочие дни периода
+function getPeriodDays(monthStr, period) {
+  if (!monthStr) return [];
+  const [y, m] = monthStr.split('-').map(Number);
+  const startD = period === '1' ? 1 : 16;
+  const endD   = period === '1' ? 15 : new Date(y, m, 0).getDate();
+  const days = [];
+  for (let d = startD; d <= endD; d++) {
+    days.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  return days;
+}
+
+function setSalPeriodFilter(p) {
+  salPeriodFilter = p;
+  document.getElementById('sal-p1-btn').className = 'btn sm' + (p==='1'?' g':'');
+  document.getElementById('sal-p2-btn').className = 'btn sm' + (p==='2'?' g':'');
+  salActiveDate = '';
+  renderSalary();
+}
+
+function switchSalView(view) {
+  salView = view;
+  document.getElementById('sal-view-day').style.display    = view==='day'    ? '' : 'none';
+  document.getElementById('sal-view-period').style.display = view==='period' ? '' : 'none';
+  document.getElementById('sal-tab-day').className    = 'dtab' + (view==='day'?   ' active':'');
+  document.getElementById('sal-tab-period').className = 'dtab' + (view==='period'?' active':'');
+  if (view === 'period') renderSalPeriodSummary();
+}
+
+function populateEmpSelects() {
+  const listEl = document.getElementById('sal-emp-list');
+  if (listEl) {
+    listEl.innerHTML = DB.employees.map(e => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid var(--border)">
+        <div>
+          <div style="font-size:11px;font-weight:600">${e.name}</div>
+          <div style="font-size:9px;color:var(--text3)">${e.position||''}</div>
+        </div>
+        <div style="display:flex;gap:3px">
+          <button class="btn sm" onclick="openEmpModal('${e.id}')" style="padding:2px 5px">✏</button>
+          <button class="btn del sm" onclick="deleteEmployee('${e.id}')" style="padding:2px 5px">✕</button>
+        </div>
+      </div>`).join('') || '<div style="font-size:10px;color:var(--text3);padding:4px">Нет сотрудников</div>';
+  }
+}
+
+function renderSalary() {
+  const monthStr = document.getElementById('sal-month')?.value || '';
+  const days     = monthStr ? getPeriodDays(monthStr, salPeriodFilter) : [];
+
+  // Устанавливаем активную дату
+  if (!salActiveDate && days.length) salActiveDate = days[0];
+
+  // Список дней
+  const listEl = document.getElementById('sal-day-list');
+  const DAYS_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  if (listEl) {
+    listEl.innerHTML = days.map(d => {
+      const dd   = getDayData(d);
+      const hasData = dd && (dd.indiv?.length || dd.brigade?.length);
+      const dt   = new Date(d);
+      const dow    = dt.getDay();
+      const isWE  = dow===0||dow===6;
+      const label = `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')} ${DAYS_SHORT[dt.getDay()]}`;
+      const isActive = d === salActiveDate;
+      return `<div onclick="selectSalDay('${d}')" style="
+        padding:5px 8px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;
+        display:flex;align-items:center;justify-content:space-between;
+        background:${isActive?'var(--bg5)':isWE?'rgba(248,113,113,.06)':'transparent'};
+        border:1px solid ${isActive?'var(--green)':isWE?'rgba(248,113,113,.15)':'transparent'};
+        color:${isActive?'var(--green)':isWE?'var(--red)':'var(--text2)'};
+      ">
+        <span>${label}</span>
+        ${hasData?'<span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>':''}
+      </div>`;
+    }).join('') || '<div style="font-size:10px;color:var(--text3)">Выберите месяц</div>';
+  }
+
+  // Дата в заголовке
+  const lbl = document.getElementById('sal-active-date-lbl');
+  if (lbl && salActiveDate) {
+    const dt = new Date(salActiveDate);
+    lbl.textContent = `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`;
+  }
+
+  populateEmpSelects();
+  if (salView === 'day') renderSalDay(salActiveDate);
+  else renderSalPeriodSummary();
+}
+
+function selectSalDay(dateStr) {
+  salActiveDate = dateStr;
+  switchSalView('day');
+  renderSalary();
+}
+
+// ─── ДНЕВНОЙ ВИД ───
+function renderSalDay(dateStr) {
+  const cont = document.getElementById('sal-view-day');
+  if (!cont) return;
+  if (!dateStr) { cont.innerHTML = '<div class="alert info"><span>ℹ</span><span>Выберите день.</span></div>'; return; }
+
+  const dd      = getDayData(dateStr) || emptyDayData(dateStr);
+  const period  = getSalPeriod(dateStr);
+  const payDate = getSalPayDate(dateStr);
+  const dt      = new Date(dateStr);
+  const dayLabel= `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')} · Период ${period} · Выплата ${payDate}`;
+  const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+  // Типы отсутствия
+  const ABSENCE_TYPES = {vacation:'Отпуск', sick:'Больничный', admin:'Административный'};
+
+  // Итог дня по сотрудникам (производственные)
+  const prodEmps = new Set(DB.employees.filter(e=>e.empType!=='office').map(e=>e.id));
+  const dayTotals = {};
+  (dd.indiv||[]).forEach(r => { dayTotals[r.empId] = (dayTotals[r.empId]||0) + (r.gross||0); });
+  // После смены (инд. + бригада)
+  (dd.afterShift||[]).forEach(r => {
+    if(r.isBrigade){
+      const per=(r.members||[]).length>0?(r.gross||0)/(r.members||[]).length:0;
+      (r.members||[]).forEach(eid=>{ dayTotals[eid]=(dayTotals[eid]||0)+per; });
+    } else {
+      dayTotals[r.empId]=(dayTotals[r.empId]||0)+(r.gross||0);
+    }
+  });
+  // Бригада: состав из dd.brigadeMembers (единый список на день)
+  const brigadeMembers = new Set(dd.brigadeMembers || []);
+  const brigadeGrossTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
+  brigadeMembers.forEach(empId => {
+    const share = brigadeMembers.size > 0 ? brigadeGrossTotal / brigadeMembers.size : 0;
+    dayTotals[empId] = (dayTotals[empId]||0) + share;
+  });
+  const totalDay = Object.values(dayTotals).reduce((s,v)=>s+v,0);
+
+  // Производственные сотрудники — статусы явки
+  const prodEmployees = DB.employees.filter(e=>e.empType!=='office');
+  const officeEmployees = DB.employees.filter(e=>e.empType==='office');
+  const absences = dd.absences || {}; // {empId: 'vacation'|'sick'|'admin'}
+
+  // Блок явки производственных
+  const attendanceBlock = prodEmployees.length ? `
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><div class="card-title" style="color:var(--amber)">👥 Явка производственных сотрудников</div></div>
+      <div style="padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px">
+        ${prodEmployees.map(e => {
+          const abs = absences[e.id];
+          const inBrigade = brigadeMembers.has(e.id);
+          const gross = dayTotals[e.id] || 0;
+          const absBtns = Object.entries(ABSENCE_TYPES).map(([k,v]) =>
+            `<button class="btn sm" style="font-size:9px;padding:2px 6px;${abs===k?'background:var(--amber);color:#000;border-color:transparent':''}"
+              onclick="toggleAbsence('${dateStr}','${e.id}','${k}')">${v}</button>`
+          ).join('');
+          // Разбиваем начисленное: прошив и бригада
+          const indivGross = (dd.indiv||[]).filter(r=>r.empId===e.id).reduce((s,r)=>s+(r.gross||0),0);
+          const brigadeShare = inBrigade && brigadeGrossTotal > 0 && brigadeMembers.size > 0
+            ? brigadeGrossTotal / brigadeMembers.size : 0;
+          return `<div style="background:var(--bg3);border-radius:6px;padding:6px 10px;min-width:170px;border:1px solid ${abs?'var(--amber)':inBrigade?'var(--green)':gross>0?'var(--purple)':'var(--border)'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:2px">${e.name}</div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px">${e.position||''}</div>
+            ${abs ? `<div style="font-size:10px;color:var(--amber);margin-bottom:4px">📋 ${ABSENCE_TYPES[abs]}</div>` : ''}
+            ${!abs && (indivGross>0 || brigadeShare>0) ? `
+              <div style="font-size:10px;margin-bottom:2px">
+                ${indivGross>0 ? `<span style="color:var(--purple)">🔨 ${fmtMoney(indivGross)}</span>` : ''}
+                ${brigadeShare>0 ? `<span style="color:var(--green);margin-left:4px">◈ ${fmtMoney(brigadeShare)}</span>` : ''}
+              </div>
+              ${gross>0 ? `<div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">= ${fmtMoney(gross)}</div>` : ''}
+            ` : (!abs ? `<div style="font-size:10px;color:var(--text3);margin-bottom:4px">Нет начислений</div>` : '')}
+            <div style="display:flex;gap:3px;flex-wrap:wrap">${absBtns}
+              ${abs ? `<button class="btn sm" style="font-size:9px;padding:2px 6px;color:var(--text3)" onclick="toggleAbsence('${dateStr}','${e.id}','')">Убрать</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  cont.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:800;font-family:var(--mono)">${DAYS_RU[dt.getDay()]}, ${dayLabel}</div>
+    </div>
+    ${totalDay>0||Object.keys(absences).length>0 ? `<div class="kpi-grid c4" style="margin-bottom:10px">
+      <div class="kcard ok"><div class="kl">Начислено за день</div><div class="kv g">${fmtMoney(totalDay)}</div></div>
+      <div class="kcard"><div class="kl">В бригаде</div><div class="kv">${brigadeMembers.size} чел.</div></div>
+      <div class="kcard amb"><div class="kl">Отсутствуют</div><div class="kv a">${Object.keys(absences).length} чел.</div></div>
+      <div class="kcard"><div class="kl">Выплата</div><div class="kv" style="font-size:13px">${payDate}</div></div>
+    </div>` : ''}
+    ${attendanceBlock}
+
+    <!-- ИНДИВИДУАЛЬНЫЙ ПРОШИВ -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--purple)">🔨 Прошив — индивидуальная сдельщина</div>
+        <div class="card-actions"><button class="btn sm" onclick="addIndivRow('${dateStr}')">+ Строка</button></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Сотрудник / состав</th><th>Операция</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Начислено</th><th></th></tr></thead>
+          <tbody>${renderIndivRows(dd, dateStr)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- БРИГАДНЫЙ КОТЁЛ: сначала операции, потом состав -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--green)">◈ Фольгирование и Клей — бригадный котёл</div>
+        <div class="card-actions"><button class="btn sm g" onclick="addBrigadeOp('${dateStr}')">+ Операция</button></div>
+      </div>
+      ${renderBrigadeBlock(dd, dateStr)}
+    </div>
+
+    <!-- ПОСЛЕ СМЕНЫ -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--amber)">🌙 После смены — дополнительная выработка</div>
+        <div class="card-actions"><button class="btn sm" onclick="addAfterShiftRow('${dateStr}')">+ Строка</button><button class="btn sm g" onclick="addAfterShiftBrigade('${dateStr}')" style="margin-left:4px">+ Бригада</button></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Сотрудник / состав</th><th>Операция</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Начислено</th><th></th></tr></thead>
+          <tbody>${renderAfterShiftRows(dd, dateStr)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ОФИСНЫЕ СОТРУДНИКИ -->
+    ${officeEmployees.length ? `<div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><div class="card-title" style="color:var(--blue)">💼 Офисные сотрудники — явка и отсутствие</div></div>
+      <div style="padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px">
+        ${officeEmployees.map(e => {
+          const abs = absences[e.id];
+          const absBtns = Object.entries(ABSENCE_TYPES).map(([k,v])=>
+            `<button class="btn sm" style="font-size:9px;padding:2px 6px;${abs===k?'background:var(--amber);color:#000;border-color:transparent':''}"
+              onclick="toggleAbsence('${dateStr}','${e.id}','${k}')">${v}</button>`).join('');
+          return `<div style="background:var(--bg3);border-radius:6px;padding:6px 10px;min-width:160px;border:1px solid ${abs?'var(--amber)':'var(--border)'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:3px">${e.name}</div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:4px">${e.position||''} · Оклад ${fmtMoney(e.salaryBase||0)}</div>
+            ${abs ? `<div style="font-size:10px;color:var(--amber);margin-bottom:4px">📋 ${ABSENCE_TYPES[abs]}</div>` : '<div style="font-size:10px;color:var(--green);margin-bottom:4px">✓ Рабочий день</div>'}
+            <div style="display:flex;gap:3px;flex-wrap:wrap">${absBtns}
+              ${abs ? `<button class="btn sm" style="font-size:9px;padding:2px 6px" onclick="toggleAbsence('${dateStr}','${e.id}','')">Убрать</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function renderIndivRows(dd, dateStr) {
+  const opOpts = Object.entries(SAL_OPS)
+    .filter(([k])=>!SAL_BRIGADE.has(k))
+    .map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+
+  return (dd.indiv||[]).map((r,i) => {
+    const empOpts = DB.employees.map(e=>`<option value="${e.id}" ${e.id===r.empId?'selected':''}>${e.name}</option>`).join('');
+    const opSelOpts = Object.entries(SAL_OPS).filter(([k])=>!SAL_BRIGADE.has(k))
+      .map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('');
+    return `<tr>
+      <td><select class="sel" style="width:120px" onchange="updateIndivRow('${dateStr}',${i},'empId',this.value)">
+        ${empOpts}</select></td>
+      <td><select class="sel" style="width:140px" onchange="updateIndivRow('${dateStr}',${i},'op',this.value);autoFillRate('${dateStr}',${i})">
+        ${opSelOpts}</select></td>
+      <td><input class="ci r" style="width:70px;border:1px solid var(--border);border-radius:3px;padding:2px 5px" value="${r.qty||''}"
+        onchange="updateIndivRow('${dateStr}',${i},'qty',parseFloat(this.value)||0);calcIndivGross('${dateStr}',${i})"></td>
+      <td><input class="ci r" style="width:70px;border:1px solid var(--border);border-radius:3px;padding:2px 5px" value="${r.rate?(+r.rate).toFixed(2):''}"
+        onchange="updateIndivRow('${dateStr}',${i},'rate',parseFloat(this.value)||0);calcIndivGross('${dateStr}',${i})"></td>
+      <td class="g" id="indiv-gross-${i}">${fmtMoney(r.gross||0)}</td>
+      <td><button class="btn del sm" onclick="removeIndivRow('${dateStr}',${i})">✕</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Нет записей. Нажмите «+ Строка»</td></tr>';
+}
+
+function renderBrigadeBlock(dd, dateStr) {
+  const ops = (dd.brigade||[]);
+  const brigadeMembers = dd.brigadeMembers || []; // единый состав бригады на день
+  const totalGross = ops.reduce((s,b)=>s+(b.gross||0),0);
+  const nMembers = brigadeMembers.length;
+  const perPerson = nMembers > 0 ? totalGross / nMembers : 0;
+
+  // Таблица операций
+  const opsHtml = ops.length ? `
+    <div style="overflow-x:auto;margin-bottom:8px">
+      <table class="tbl">
+        <thead><tr><th>Операция</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Сумма</th><th></th></tr></thead>
+        <tbody>
+          ${ops.map((b,bi) => {
+            const opSelOpts = Object.entries(SAL_OPS).filter(([k])=>SAL_BRIGADE.has(k))
+              .map(([k,v])=>`<option value="${k}" ${k===b.op?'selected':''}>${v}</option>`).join('');
+            const unit = SAL_UNITS[b.op]||'м²';
+            return `<tr>
+              <td><select class="sel" onchange="updateBrigadeOp('${dateStr}',${bi},'op',this.value)">${opSelOpts}</select></td>
+              <td><input class="ci r" style="width:70px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+                value="${b.qty||''}" placeholder="0"
+                onchange="updateBrigadeOp('${dateStr}',${bi},'qty',parseFloat(this.value)||0)">
+                <span style="font-size:9px;color:var(--text3)">${unit}</span></td>
+              <td><input class="ci r" style="width:60px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+                value="${b.rate||''}" placeholder="0"
+                onchange="updateBrigadeOp('${dateStr}',${bi},'rate',parseFloat(this.value)||0)">
+                <span style="font-size:9px;color:var(--text3)">₽/${unit}</span></td>
+              <td class="g">${fmtMoney((b.qty||0)*(b.rate||0))}</td>
+              <td><button class="btn del sm" onclick="removeBrigadeOp('${dateStr}',${bi})">✕</button></td>
+            </tr>`;
+          }).join('')}
+          <tr style="border-top:1px solid var(--border2)">
+            <td colspan="3" style="font-weight:700;padding:5px 10px">ИТОГО КОТЁЛ</td>
+            <td class="g" style="font-weight:700">${fmtMoney(totalGross)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>` : `<div style="text-align:center;color:var(--text3);font-size:11px;padding:12px">
+      Нет операций. Нажмите «+ Операция»</div>`;
+
+  // Состав бригады — единый на день, галочки
+  const prodEmps = DB.employees.filter(e=>e.empType!=='office');
+  const membersHtml = prodEmps.length ? `
+    <div style="border-top:1px solid var(--border);padding:8px 10px">
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+        Состав бригады в этот день (${nMembers} чел.)
+        ${nMembers>0 ? `→ <span style="color:var(--amber);font-family:var(--mono)">${fmtMoney(perPerson)}</span> каждому` : ''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${prodEmps.map(e => {
+          const abs = (dd.absences||{})[e.id];
+          const inBrigade = brigadeMembers.includes(e.id);
+          const disabled = !!abs; // если отсутствует — нельзя добавить в бригаду
+          return `<label style="display:flex;align-items:center;gap:5px;cursor:${disabled?'not-allowed':'pointer'};opacity:${disabled?0.4:1}">
+            <input type="checkbox" ${inBrigade?'checked':''} ${disabled?'disabled':''}
+              onchange="toggleBrigadeMemberDay('${dateStr}','${e.id}',this.checked)">
+            <div>
+              <div style="font-size:11px;font-weight:600">${e.name}</div>
+              ${abs ? `<div style="font-size:9px;color:var(--amber)">${{vacation:'Отпуск',sick:'Больничный',admin:'Административный'}[abs]}</div>` : ''}
+            </div>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  return opsHtml + membersHtml;
+}
+
+// ─── МУТАЦИИ ДАННЫХ ───
+function saveDayAndRefresh(dateStr) {
+  // Ничего не делаем — данные уже в памяти, сохраняем при явном действии
+  renderSalDay(dateStr);
+  renderSalary();
+  syncNow();
+}
+
+function addIndivRow(dateStr) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  const firstEmp = DB.employees[0]?.id || '';
+  dd.indiv = [...(dd.indiv||[]), {empId:firstEmp, op:'sew5f', qty:0, rate:0, gross:0}];
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+function removeIndivRow(dateStr, idx) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  dd.indiv.splice(idx, 1);
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+function updateIndivRow(dateStr, idx, key, val) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.indiv[idx]) return;
+  dd.indiv[idx][key] = val;
+  // Автоподстановка тарифа при смене операции или сотрудника
+  if (key === 'op' || key === 'empId') {
+    const emp = DB.employees.find(e=>e.id===dd.indiv[idx].empId);
+    const rate = emp?.rates?.[dd.indiv[idx].op] || 0;
+    if (rate) dd.indiv[idx].rate = rate;
+  }
+  dd.indiv[idx].gross = (dd.indiv[idx].qty||0) * (dd.indiv[idx].rate||0);
+  setDayData(dateStr, dd);
+}
+
+function autoFillRate(dateStr, idx) {
+  const dd = getDayData(dateStr);
+  if (!dd?.indiv[idx]) return;
+  const emp = DB.employees.find(e=>e.id===dd.indiv[idx].empId);
+  const rate = emp?.rates?.[dd.indiv[idx].op] || 0;
+  if (rate) { dd.indiv[idx].rate = rate; setDayData(dateStr, dd); }
+}
+
+function calcIndivGross(dateStr, idx) {
+  const dd = getDayData(dateStr);
+  if (!dd?.indiv[idx]) return;
+  const g = (dd.indiv[idx].qty||0) * (dd.indiv[idx].rate||0);
+  dd.indiv[idx].gross = g;
+  setDayData(dateStr, dd);
+  const el = document.getElementById(`indiv-gross-${idx}`);
+  if (el) el.textContent = fmtMoney(g);
+}
+
+// Операции котла
+function addBrigadeOp(dateStr) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  const bRate = getBrigadeRate('fol_f5');
+  dd.brigade = [...(dd.brigade||[]), {op:'fol_f5', qty:0, rate:bRate, gross:0}];
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+function removeBrigadeOp(dateStr, idx) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  dd.brigade.splice(idx, 1);
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+function updateBrigadeOp(dateStr, idx, key, val) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.brigade[idx]) return;
+  dd.brigade[idx][key] = val;
+  // Автоподстановка тарифа при смене операции
+  if (key === 'op') {
+    const autoRate = getBrigadeRate(val);
+    if (autoRate) dd.brigade[idx].rate = autoRate;
+  }
+  dd.brigade[idx].gross = (dd.brigade[idx].qty||0) * (dd.brigade[idx].rate||0);
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+// Состав бригады — единый список на весь день
+function toggleBrigadeMemberDay(dateStr, empId, checked) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.brigadeMembers) dd.brigadeMembers = [];
+  if (checked && !dd.brigadeMembers.includes(empId)) dd.brigadeMembers.push(empId);
+  if (!checked) { const i=dd.brigadeMembers.indexOf(empId); if(i>=0) dd.brigadeMembers.splice(i,1); }
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+// Отсутствие сотрудника
+function toggleAbsence(dateStr, empId, type) {
+  const dd = getDayData(dateStr) || emptyDayData(dateStr);
+  if (!dd.absences) dd.absences = {};
+  if (!type) {
+    delete dd.absences[empId];
+  } else {
+    dd.absences[empId] = type;
+    // Если отсутствует — убираем из бригады
+    if (dd.brigadeMembers) {
+      const i = dd.brigadeMembers.indexOf(empId);
+      if (i>=0) dd.brigadeMembers.splice(i,1);
+    }
+  }
+  setDayData(dateStr, dd);
+  saveDayAndRefresh(dateStr);
+}
+
+// ─── ПОСЛЕ СМЕНЫ ───
+function renderAfterShiftRows(dd, dateStr) {
+  const after = dd.afterShift || [];
+  if (!after.length) return '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Нет записей. Нажмите «+ Строка» или «+ Бригада»</td></tr>';
+  return after.map((r,i)=>{
+    const isBrigade = r.isBrigade;
+    const empOpts = DB.employees.filter(e=>e.empType!=='office')
+      .map(e=>`<option value="${e.id}" ${e.id===r.empId?'selected':''}>${e.name}</option>`).join('');
+    const opSelOpts = Object.entries(SAL_OPS).map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('');
+    // Для бригады — чекбоксы участников
+    const memberChecks = isBrigade ? DB.employees.filter(e=>e.empType!=='office').map(e=>`
+      <label style="display:flex;align-items:center;gap:3px;font-size:10px;cursor:pointer">
+        <input type="checkbox" ${(r.members||[]).includes(e.id)?'checked':''}
+          onchange="toggleAfterMember('${dateStr}',${i},'${e.id}',this.checked)">
+        ${e.name}
+      </label>`).join('') : '';
+    const perPerson = isBrigade && (r.members||[]).length > 0 ? (r.gross||0)/(r.members||[]).length : 0;
+    return `<tr>
+      ${isBrigade
+        ? `<td style="font-size:10px;min-width:150px">
+            <div style="font-weight:600;color:var(--green);margin-bottom:3px">◈ Бригада</div>
+            <select class="sel" style="width:100%;margin-bottom:4px;font-size:10px"
+              onchange="updateAfterShift('${dateStr}',${i},'op',this.value);autoFillAfterRate('${dateStr}',${i})">
+              ${Object.entries(SAL_OPS).map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('')}
+            </select>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">${memberChecks}</div>
+            ${perPerson>0?`<div style="color:var(--amber);font-size:9px;margin-top:2px">По ${fmtMoney(perPerson)} каждому</div>`:''}
+           </td>
+           <td></td>`
+        : `<td><select class="sel" style="width:115px" onchange="updateAfterShift('${dateStr}',${i},'empId',this.value)">${empOpts}</select></td>
+           <td><select class="sel" style="width:120px" onchange="updateAfterShift('${dateStr}',${i},'op',this.value);autoFillAfterRate('${dateStr}',${i})">${opSelOpts}</select></td>`
+      }
+      <td><input class="ci r" style="width:65px;border:1px solid var(--border);border-radius:3px;padding:2px 4px" value="${r.qty||''}"
+        onchange="updateAfterShift('${dateStr}',${i},'qty',parseFloat(this.value)||0);calcAfterGross('${dateStr}',${i})"></td>
+      <td><input class="ci r" style="width:60px;border:1px solid var(--border);border-radius:3px;padding:2px 4px" value="${r.rate?(+r.rate).toFixed(2):''}"
+        onchange="updateAfterShift('${dateStr}',${i},'rate',parseFloat(this.value)||0);calcAfterGross('${dateStr}',${i})"></td>
+      <td class="g" id="after-gross-${i}">${fmtMoney(r.gross||0)}</td>
+      <td><button class="btn del sm" onclick="removeAfterShift('${dateStr}',${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+function addAfterShiftRow(dateStr) {
+  const dd = getDayData(dateStr)||emptyDayData(dateStr);
+  if (!dd.afterShift) dd.afterShift=[];
+  dd.afterShift.push({empId:DB.employees[0]?.id||'',op:'sew5f',qty:0,rate:0,gross:0});
+  setDayData(dateStr,dd); saveDayAndRefresh(dateStr);
+}
+function removeAfterShift(dateStr,idx) {
+  const dd=getDayData(dateStr)||emptyDayData(dateStr);
+  (dd.afterShift||[]).splice(idx,1); setDayData(dateStr,dd); saveDayAndRefresh(dateStr);
+}
+function addAfterShiftBrigade(dateStr) {
+  const dd=getDayData(dateStr)||emptyDayData(dateStr);
+  if(!dd.afterShift) dd.afterShift=[];
+  dd.afterShift.push({isBrigade:true,op:'fol_5f',qty:0,rate:getBrigadeRate('fol_5f'),gross:0,members:[]});
+  setDayData(dateStr,dd); saveDayAndRefresh(dateStr);
+}
+function toggleAfterMember(dateStr,idx,empId,checked) {
+  const dd=getDayData(dateStr)||emptyDayData(dateStr);
+  if(!dd.afterShift?.[idx]) return;
+  const m=dd.afterShift[idx].members||[];
+  if(checked&&!m.includes(empId)) m.push(empId);
+  if(!checked){const i=m.indexOf(empId);if(i>=0)m.splice(i,1);}
+  dd.afterShift[idx].members=m;
+  dd.afterShift[idx].gross=(dd.afterShift[idx].qty||0)*(dd.afterShift[idx].rate||0);
+  setDayData(dateStr,dd); saveDayAndRefresh(dateStr);
+}
+function updateAfterShift(dateStr,idx,key,val) {
+  const dd=getDayData(dateStr)||emptyDayData(dateStr);
+  if (!dd.afterShift?.[idx]) return;
+  dd.afterShift[idx][key]=val;
+  if (key==='op'||key==='empId') {
+    const emp=DB.employees.find(e=>e.id===dd.afterShift[idx].empId);
+    const rate=emp?.rates?.[dd.afterShift[idx].op]||0;
+    if(rate) dd.afterShift[idx].rate=rate;
+  }
+  dd.afterShift[idx].gross=(dd.afterShift[idx].qty||0)*(dd.afterShift[idx].rate||0);
+  setDayData(dateStr,dd);
+}
+function autoFillAfterRate(dateStr,idx) {
+  const dd=getDayData(dateStr); if(!dd?.afterShift?.[idx]) return;
+  const emp=DB.employees.find(e=>e.id===dd.afterShift[idx].empId);
+  const rate=emp?.rates?.[dd.afterShift[idx].op]||0;
+  if(rate){dd.afterShift[idx].rate=rate;setDayData(dateStr,dd);}
+}
+function calcAfterGross(dateStr,idx) {
+  const dd=getDayData(dateStr); if(!dd?.afterShift?.[idx]) return;
+  const g=(dd.afterShift[idx].qty||0)*(dd.afterShift[idx].rate||0);
+  dd.afterShift[idx].gross=g; setDayData(dateStr,dd);
+  const el=document.getElementById(`after-gross-${idx}`);
+  if(el) el.textContent=fmtMoney(g);
+}
+
+// ─── СВОДНАЯ ТАБЛИЦА ПЕРИОДА ───
+function renderSalPeriodSummary() {
+  const cont = document.getElementById('sal-period-summary');
+  if (!cont) return;
+  const monthStr = document.getElementById('sal-month')?.value || '';
+  if (!monthStr) { cont.innerHTML = '<div class="alert info"><span>ℹ</span><span>Выберите месяц.</span></div>'; return; }
+
+  const days = getPeriodDays(monthStr, salPeriodFilter);
+  const ndflRate  = parseFloat(document.getElementById('sal-ndfl')?.value)||13;
+  const ins1Rate  = parseFloat(document.getElementById('sal-ins1')?.value)||30.2;
+  const ins2Rate  = parseFloat(document.getElementById('sal-ins2')?.value)||7.6;
+  const threshold = parseFloat(document.getElementById('sal-threshold')?.value)||40639.5;
+  const period    = salPeriodFilter;
+  const payLabel  = period==='1' ? '→ Выплата 25-го' : '→ Выплата 10-го следующего месяца';
+
+  // Собираем начисления производственных за период
+  const byEmp = {};
+  DB.employees.forEach(e => { byEmp[e.id] = {emp:e, gross:0, premium:DB.salPremiums?.[monthStr+period]?.[e.id]||0}; });
+  days.forEach(date => {
+    const dd = getDayData(date);
+    if (!dd) return;
+    (dd.indiv||[]).forEach(r => {
+      if (byEmp[r.empId] === undefined) return;
+      byEmp[r.empId].gross += r.gross||0;
+    });
+    // После смены — индивидуальная и бригадная выработка
+    (dd.afterShift||[]).forEach(r => {
+      if (r.isBrigade) {
+        const per=(r.members||[]).length>0?(r.gross||0)/(r.members||[]).length:0;
+        (r.members||[]).forEach(eid=>{ if(byEmp[eid]!==undefined) byEmp[eid].gross+=per; });
+      } else {
+        if(byEmp[r.empId]!==undefined) byEmp[r.empId].gross+=r.gross||0;
+      }
+    });
+    const members = dd.brigadeMembers || [];
+    const brigadeTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
+    const per = members.length > 0 ? brigadeTotal / members.length : 0;
+    members.forEach(empId => {
+      if (byEmp[empId] === undefined) return;
+      byEmp[empId].gross += per;
+    });
+  });
+
+  function calcTax(gross) {
+    const ndfl = gross * ndflRate/100;
+    const net  = gross - ndfl;
+    const ins  = Math.min(gross,threshold)*ins1Rate/100 + Math.max(0,gross-threshold)*ins2Rate/100;
+    return {ndfl, net, ins, cost: gross+ins};
+  }
+
+  // ── ПРОИЗВОДСТВЕННЫЕ ──
+  const prodEmps = DB.employees.filter(e=>e.empType!=='office');
+  let pTotGross=0,pTotNdfl=0,pTotNet=0,pTotIns=0,pTotCost=0,pTotPrem=0;
+
+  const prodRows = prodEmps.map(e => {
+    const d = byEmp[e.id];
+    const sdelGross = d?.gross||0;
+    const premium   = d?.premium||0;
+    const cash      = getSalCash(e.id, monthStr, period);
+    const gross     = sdelGross + premium;
+    if (gross === 0) return '';
+    const taxBase   = Math.max(0, gross - cash); // наличка уменьшает налогооблагаемую базу
+    const {ndfl,net,ins,cost} = calcTax(taxBase);
+    pTotGross+=gross; pTotNdfl+=ndfl; pTotNet+=net; pTotIns+=ins; pTotCost+=cost; pTotPrem+=premium;
+    return `<tr>
+      <td class="b">${e.name}</td>
+      <td class="m">${e.position||'—'}</td>
+      <td class="r">${fmtMoney(sdelGross)}</td>
+      <td class="r">
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px"
+          value="${premium||''}" placeholder="0"
+          oninput="setSalPremium('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(gross)}</td>
+      <td class="r" style="color:var(--amber)">
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;border-color:var(--amber)"
+          value="${cash||''}" placeholder="0"
+          onchange="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(taxBase)}</td>
+      <td class="am">${fmtMoney(ndfl)}</td>
+      <td class="g">${fmtMoney(net)}</td>
+      <td class="bl">${fmtMoney(ins)}</td>
+      <td class="r" style="font-weight:700">${fmtMoney(cost)}</td>
+    </tr>`;
+  }).join('');
+
+  // ── ОФИСНЫЕ ──
+  const officeEmps = DB.employees.filter(e=>e.empType==='office');
+  let oTotOklad=0,oTotPrem=0,oTotGross=0,oTotNdfl=0,oTotNet=0,oTotIns=0,oTotCost=0;
+
+  const officeRows = officeEmps.map(e => {
+    const oklad   = (e.salaryBase||0) / 2;
+    const premium = byEmp[e.id]?.premium||0;
+    const cash    = getSalCash(e.id, monthStr, period);
+    const gross   = oklad + premium;
+    const taxBase = Math.max(0, gross - cash);
+    const {ndfl,net,ins,cost} = calcTax(taxBase);
+    oTotOklad+=oklad; oTotPrem+=premium; oTotGross+=gross;
+    oTotNdfl+=ndfl; oTotNet+=net; oTotIns+=ins; oTotCost+=cost;
+    return `<tr>
+      <td class="b">${e.name}</td>
+      <td class="m">${e.position||'—'}</td>
+      <td class="r">${fmtMoney(oklad)}</td>
+      <td class="r">
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px"
+          value="${premium||''}" placeholder="0"
+          oninput="setSalPremium('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(gross)}</td>
+      <td class="r" style="color:var(--amber)">
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;border-color:var(--amber)"
+          value="${cash||''}" placeholder="0"
+          onchange="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(taxBase)}</td>
+      <td class="am">${fmtMoney(ndfl)}</td>
+      <td class="g">${fmtMoney(net)}</td>
+      <td class="bl">${fmtMoney(ins)}</td>
+      <td class="r" style="font-weight:700">${fmtMoney(cost)}</td>
+    </tr>`;
+  }).join('');
+
+  const totGross = pTotGross + oTotGross;
+  const totNet   = pTotNet   + oTotNet;
+  const totIns   = pTotIns   + oTotIns;
+  const totCost  = pTotCost  + oTotCost;
+  const totNdfl  = pTotNdfl  + oTotNdfl;
+  // Суммируем все наличные выплаты
+  const totCash  = DB.employees.reduce((s,e)=>{
+    const cash = DB.salPremiums?.[monthStr+period]?.['cash_'+e.id]||0;
+    return s + cash;
+  }, 0);
+
+  cont.innerHTML = `
+    <div class="kpi-grid c4" style="margin-bottom:10px">
+      <div class="kcard ok"><div class="kl">Итого начислено</div><div class="kv g">${fmtMoney(totGross)}</div></div>
+      <div class="kcard amb"><div class="kl">НДФЛ</div><div class="kv a">${fmtMoney(totNdfl)}</div></div>
+      <div class="kcard teal"><div class="kl">На руки</div><div class="kv t">${fmtMoney(totNet)}</div><div class="ks">в т.ч. наличкой: ${fmtMoney(totCash)}</div></div>
+      <div class="kcard info"><div class="kl">Итого затрат</div><div class="kv b">${fmtMoney(totCost)}</div><div class="ks">взносы: ${fmtMoney(totIns)}</div></div>
+    </div>
+
+    <!-- Производственные -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--purple)">🔨 Производственный персонал — Период ${period} ${monthStr}</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)">${payLabel}</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Сотрудник</th><th>Должность</th>
+            <th class="r">Сдельная</th><th class="r">Премия</th>
+            <th class="r">Итого нач.</th>
+            <th class="r" style="color:var(--amber)">Наличка</th>
+            <th class="r">Остаток</th>
+            <th class="r">НДФЛ</th>
+            <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
+          </tr></thead>
+          <tbody>${prodRows||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Нет производственных сотрудников</td></tr>'}</tbody>
+          ${pTotGross>0?`<tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
+            <td colspan="2" style="padding:5px 10px">Итого</td>
+            <td class="r">${fmtMoney(pTotGross-pTotPrem)}</td>
+            <td class="r">${fmtMoney(pTotPrem)}</td>
+            <td class="r">${fmtMoney(pTotGross)}</td>
+            <td class="r">—</td>
+            <td class="r">—</td>
+            <td class="am">${fmtMoney(pTotNdfl)}</td>
+            <td class="g">${fmtMoney(pTotNet)}</td>
+            <td class="bl">${fmtMoney(pTotIns)}</td>
+            <td class="r">${fmtMoney(pTotCost)}</td>
+          </tr></tfoot>`:''}
+        </table>
+      </div>
+    </div>
+
+    <!-- Офисные -->
+    ${officeEmps.length ? `<div class="card" style="margin-bottom:10px">
+      <div class="card-hdr">
+        <div class="card-title" style="color:var(--blue)">💼 Офисный персонал — Период ${period} ${monthStr}</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3)">${payLabel}</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Сотрудник</th><th>Должность</th>
+            <th class="r">Оклад (½ мес.)</th><th class="r">Премия</th>
+            <th class="r">Итого нач.</th>
+            <th class="r" style="color:var(--amber)">Наличка</th>
+            <th class="r">Остаток</th>
+            <th class="r">НДФЛ</th>
+            <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
+          </tr></thead>
+          <tbody>${officeRows}</tbody>
+          ${oTotGross>0?`<tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
+            <td colspan="2" style="padding:5px 10px">Итого</td>
+            <td class="r">${fmtMoney(oTotOklad)}</td>
+            <td class="r">${fmtMoney(oTotPrem)}</td>
+            <td class="r">${fmtMoney(oTotGross)}</td>
+            <td class="r">—</td>
+            <td class="r">—</td>
+            <td class="am">${fmtMoney(oTotNdfl)}</td>
+            <td class="g">${fmtMoney(oTotNet)}</td>
+            <td class="bl">${fmtMoney(oTotIns)}</td>
+            <td class="r">${fmtMoney(oTotCost)}</td>
+          </tr></tfoot>`:''}
+        </table>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+// Премии хранятся в отдельном объекте
+if (!DB.salPremiums) DB.salPremiums = {};
+function setSalPremium(empId, monthStr, period, val) {
+  if (!DB.salPremiums) DB.salPremiums = {};
+  const key = monthStr + period;
+  if (!DB.salPremiums[key]) DB.salPremiums[key] = {};
+  DB.salPremiums[key][empId] = val;
+  renderSalPeriodSummary();
+  syncNow();
+}
+
+function setSalCash(empId, monthStr, period, val) {
+  if (!DB.salPremiums) DB.salPremiums = {};
+  const key = monthStr + period;
+  if (!DB.salPremiums[key]) DB.salPremiums[key] = {};
+  DB.salPremiums[key]['cash_'+empId] = val;
+  renderSalPeriodSummary();
+  syncNow();
+}
+
+function getSalCash(empId, monthStr, period) {
+  return DB.salPremiums?.[monthStr+period]?.['cash_'+empId] || 0;
+}
+
+// Модальное окно сотрудника
+function openEmpModal(empId=null) {
+  const emp = empId ? DB.employees.find(e=>e.id===empId) : null;
+  const V  = (key, def='')  => emp?.[key] ?? def;
+  const VR = (key, def='')  => emp?.rates?.[key] ?? def;
+  const SEW_RATES = [
+    ['sew5f','5П'],['sew5nf','5НФ'],
+    ['sew8f','8П'],['sew8nf','8НФ'],
+    ['sew10f','10П'],['sew10nf','10НФ'],
+    ['sew13f','13П'],['sew13nf','13НФ'],
+    ['sew16f','16П'],['sew16nf','16НФ'],
+  ];
+  const FOL_RATES = [
+    ['fol_5f','5Ф'],['fol_5tf','5ТФ'],
+    ['fol_8f','8Ф'],['fol_8tf','8ТФ'],
+    ['fol_10f','10Ф'],['fol_10tf','10ТФ'],
+    ['fol_13f','13Ф'],['fol_13tf','13ТФ'],
+    ['fol_16f','16Ф'],['fol_16tf','16ТФ'],
+    ['glue','Клей FP (₽/кг)'],
+  ];
+  const isOffice = (V('empType') === 'office');
+  openModal(empId ? 'Редактировать сотрудника' : 'Новый сотрудник', `
+    <div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">ФИО</div>
+        <input class="field-inp" id="emp-name" value="${V('name')}" placeholder="Иванов Иван Иванович">
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Должность</div>
+        <input class="field-inp" id="emp-pos" value="${V('position')}" placeholder="Прошивщик">
+      </div>
+      <div class="modal-field"><div class="field-lbl">Тип сотрудника</div>
+        <select class="field-inp" id="emp-type" onchange="document.getElementById('emp-office-block').style.display=this.value==='office'?'':'none';document.getElementById('emp-prod-block').style.display=this.value==='office'?'none':''">
+          <option value="prod" ${!isOffice?'selected':''}>Производственный (сдельник)</option>
+          <option value="office" ${isOffice?'selected':''}>Офисный (оклад)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Офисный блок -->
+    <div id="emp-office-block" style="display:${isOffice?'':'none'}">
+      <div class="modal-row">
+        <div class="modal-field"><div class="field-lbl">Оклад (₽/мес)</div>
+          <input class="field-inp" id="emp-salary-base" value="${V('salaryBase',0)}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Производственный блок -->
+    <div id="emp-prod-block" style="display:${isOffice?'none':''}">
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Тарифы прошива (₽/м²)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${SEW_RATES.map(([k,lbl])=>`<div class="modal-field">
+          <div class="field-lbl">${lbl}</div>
+          <input class="field-inp" id="emp-rate-${k}" value="${VR(k)?(+VR(k)).toFixed(2):''}" step="0.01" placeholder="0.00">
+        </div>`).join('')}
+      </div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">Тарифы фольгирования (₽/м² или кг)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${FOL_RATES.map(([k,lbl])=>`<div class="modal-field">
+          <div class="field-lbl">${lbl}</div>
+          <input class="field-inp" id="emp-rate-${k}" value="${VR(k)?(+VR(k)).toFixed(2):''}" step="0.01" placeholder="0.00">
+        </div>`).join('')}
+      </div>
+    </div>
+  `, () => {
+    const name = document.getElementById('emp-name')?.value?.trim();
+    if (!name) { toast('Введите ФИО','err'); return false; }
+    const empType = document.getElementById('emp-type')?.value || 'prod';
+    const allRateKeys = [...SEW_RATES,...FOL_RATES].map(([k])=>k);
+    const rates = {};
+    if (empType !== 'office') {
+      allRateKeys.forEach(k => {
+        const v = parseFloat(document.getElementById(`emp-rate-${k}`)?.value);
+        if (!isNaN(v) && v > 0) rates[k] = v;
+      });
+    }
+    const record = {
+      id: empId||uid(), name,
+      position:   document.getElementById('emp-pos')?.value||'',
+      empType,
+      salaryBase: parseFloat(document.getElementById('emp-salary-base')?.value)||0,
+      rates,
+      ytdGross:   emp?.ytdGross||0
+    };
+    if (empId) DB.employees = DB.employees.map(e=>e.id===empId?record:e);
+    else       DB.employees.push(record);
+    populateEmpSelects();
+    renderSalary();
+    syncNow();
+    toast(empId?'Обновлено ✓':'Сотрудник добавлен ✓');
+  });
+}
+
+function deleteEmployee(id) {
+  if (!confirm('Удалить сотрудника?')) return;
+  DB.employees = DB.employees.filter(e=>e.id!==id);
+  populateEmpSelects();
+  renderSalary();
+  syncNow();
+}
+
+// ═══════════════════════════════════════════════════════
+//  ВКЛАДКА ФИНАНСЫ
+// ═══════════════════════════════════════════════════════
+let modalPaymentType = 'in';
+let modalCallback    = null;
+
+function openAddPayment(type) {
+  modalPaymentType = type;
+  const titles = {in:'Ожидаемое поступление',out:'Предстоящий платёж',fact:'Фактический платёж'};
+  openModal(titles[type]||'Платёж', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="mp-date" value="${today()}"></div>
+      <div class="modal-field"><div class="field-lbl">Сумма ₽</div><input class="field-inp" id="mp-amount" placeholder="0"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">Контрагент/описание</div><input class="field-inp" id="mp-desc" placeholder="Описание"></div>
+    </div>
+    ${type==='in'||type==='out'?`<div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">Ссылка (на счёт/договор)</div><input class="field-inp" id="mp-ref" placeholder="необязательно"></div>
+    </div>`:''}
+    ${type==='fact'?`<div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Тип</div><select class="field-inp" id="mp-dir">
+        <option value="in">Поступление</option><option value="out">Расход</option>
+      </select></div>
+    </div>`:''}
+  `, () => {
+    const date   = document.getElementById('mp-date')?.value||today();
+    const amount = parseFloat(document.getElementById('mp-amount')?.value)||0;
+    const desc   = document.getElementById('mp-desc')?.value||'';
+    const dir    = type==='fact'?(document.getElementById('mp-dir')?.value||'in'):type;
+    if(!amount){toast('Укажите сумму','err');return false;}
+    DB.payments.push({id:uid(),date,type:dir,planned:type!=='fact',desc,amount});
+    renderFin();
+    syncNow();
+    toast('Добавлено ✓');
+  });
+}
+
+function openModal(title, bodyHtml, onOk) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML    = bodyHtml;
+  document.getElementById('modal').classList.add('open');
+  modalCallback = onOk;
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function modalOk(){ if(modalCallback && modalCallback()!==false) closeModal(); }
+
+function editPayment(id) {
+  const p = DB.payments.find(x=>x.id===id);
+  if (!p) return;
+  openModal('Редактировать платёж', `
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Дата</div><input type="date" class="field-inp" id="epm-date" value="${p.date||''}"></div>
+      <div class="modal-field"><div class="field-lbl">Сумма ₽</div><input class="field-inp" id="epm-amount" value="${p.amount||0}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field full"><div class="field-lbl">Описание</div><input class="field-inp" id="epm-desc" value="${p.desc||''}"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="field-lbl">Тип</div>
+        <select class="field-inp" id="epm-type">
+          <option value="in"   ${p.type==='in'  ?'selected':''}>Поступление</option>
+          <option value="out"  ${p.type==='out' ?'selected':''}>Расход</option>
+        </select>
+      </div>
+      <div class="modal-field"><div class="field-lbl">Статус</div>
+        <select class="field-inp" id="epm-planned">
+          <option value="fact"    ${!p.planned?'selected':''}>Фактический</option>
+          <option value="planned" ${p.planned ?'selected':''}>Плановый</option>
+        </select>
+      </div>
+    </div>
+  `, () => {
+    const planned = document.getElementById('epm-planned').value === 'planned';
+    const updated = {
+      ...p,
+      date:    document.getElementById('epm-date').value,
+      amount:  parseFloat(document.getElementById('epm-amount').value)||0,
+      desc:    document.getElementById('epm-desc').value,
+      type:    document.getElementById('epm-type').value,
+      planned,
+    };
+    DB.payments = DB.payments.map(x=>x.id===id?updated:x);
+    renderFin();
+    syncNow();
+    toast('Платёж обновлён ✓');
+  });
+}
+
+function deletePayment(id){
+  if (!confirm('Удалить запись платежа?')) return;
+  DB.payments=DB.payments.filter(p=>p.id!==id);
+  renderFin();syncNow();
+}
+
+function renderFin() {
+  const period = document.getElementById('fin-period')?.value||'month';
+  const now    = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  // KPI
+  const gpStock  = calcGpStock();
+  const rawStock = calcRawStock();
+  let gpVal=0; Object.values(gpStock).forEach(s=>gpVal+=s.totalCost||0);
+  let rawVal=0; Object.values(rawStock).forEach(m=>Object.values(m).forEach(s=>rawVal+=s.val||0));
+
+  // Дебиторка
+  let debit=0;
+  DB.sales.forEach(r=>{
+    if (r.paid==='no')          debit += r.withVat||0;
+    else if (r.paid==='partial') debit += Math.max(0,(r.withVat||0)-(r.paidAmt||0));
+    // paid==='yes' → долга нет
+  });
+
+  // Кредиторка — считаем от суммы с НДС, учитываем статус оплаты
+  let credit=0;
+  DB.receipts.forEach(r=>{
+    const sumVat = r.withVat || 0;
+    if (r.paid === 'yes') {
+      // Полностью оплачено — задолженности нет
+    } else if (r.paid === 'partial') {
+      credit += Math.max(0, sumVat - (r.paidAmt||0));
+    } else {
+      credit += sumVat;
+    }
+  });
+
+  // Деньги на счёте
+  let cash=0;
+  DB.payments.filter(p=>!p.planned).forEach(p=>{
+    cash += p.type==='in' ? (p.amount||0) : -(p.amount||0);
+  });
+
+  const result = cash + debit + gpVal - credit;
+  document.getElementById('kv-fin-cash').textContent   = fmtMoney(cash);
+  document.getElementById('kv-fin-debit').textContent  = fmtMoney(debit);
+  document.getElementById('kv-fin-credit').textContent = fmtMoney(credit);
+  document.getElementById('kv-fin-stock').textContent  = fmtMoney(gpVal);
+  document.getElementById('kv-fin-result').textContent = fmtMoney(result);
+  const rc = document.getElementById('kcard-fin-result');
+  if(rc) rc.className = `kcard ${result>=0?'ok':'bad'}`;
+  const rv = document.getElementById('kv-fin-result');
+  if(rv) rv.className = `kv ${result>=0?'g':'r'}`;
+
+  // P&L
+  const filterSales = period==='month' ? DB.sales.filter(r=>r.date&&r.date.startsWith(monthStr)) : DB.sales;
+  let revMonth=0, costMonth=0;
+  filterSales.forEach(r=>{ revMonth+=r.price||0; costMonth+=(r.costUnit||0)*(r.qty||0); });
+  const grossProfit = revMonth - costMonth;
+
+  // Затраты на персонал из зарплатных данных
+  const ndflRatePnl  = parseFloat(document.getElementById('sal-ndfl')?.value)||13;
+  const ins1RatePnl  = parseFloat(document.getElementById('sal-ins1')?.value)||30.2;
+  const ins2RatePnl  = parseFloat(document.getElementById('sal-ins2')?.value)||7.6;
+  const threshPnl    = parseFloat(document.getElementById('sal-threshold')?.value)||40639.5;
+
+  // Производственный персонал за месяц
+  let prodLaborCost = 0;
+  DB.salaryLogs.filter(d=>d.date&&d.date.startsWith(monthStr)).forEach(dd=>{
+    (dd.indiv||[]).forEach(r=>{
+      const g=r.gross||0;
+      prodLaborCost += g + Math.min(g,threshPnl)*ins1RatePnl/100 + Math.max(0,g-threshPnl)*ins2RatePnl/100;
+    });
+    const members=dd.brigadeMembers||[];
+    const brigTotal=(dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
+    const per=members.length>0?brigTotal/members.length:0;
+    members.forEach(()=>{
+      prodLaborCost += per + Math.min(per,threshPnl)*ins1RatePnl/100 + Math.max(0,per-threshPnl)*ins2RatePnl/100;
+    });
+  });
+
+  // Офисный персонал — оклады + премии + взносы
+  let officeLaborCost = 0;
+  DB.employees.filter(e=>e.empType==='office').forEach(e=>{
+    const base  = e.salaryBase||0;
+    const prem1 = DB.salPremiums?.[monthStr+'1']?.[e.id]||0;
+    const prem2 = DB.salPremiums?.[monthStr+'2']?.[e.id]||0;
+    const gross = base + prem1 + prem2;
+    officeLaborCost += gross + Math.min(gross,threshPnl)*ins1RatePnl/100 + Math.max(0,gross-threshPnl)*ins2RatePnl/100;
+  });
+
+  const totalLaborCost = prodLaborCost + officeLaborCost;
+  const operProfit = grossProfit - totalLaborCost;
+
+  const pnlEl = document.getElementById('pnl-body');
+  if(pnlEl) pnlEl.innerHTML =
+    `<div class="fin-row"><div class="fin-key">Выручка (б/НДС)</div><div class="fin-val" style="color:var(--green)">${fmtMoney(revMonth)}</div></div>` +
+    `<div class="fin-row"><div class="fin-key">Себестоимость материалов</div><div class="fin-val" style="color:var(--red)">&#8722;${fmtMoney(costMonth)}</div></div>` +
+    `<div class="fin-row" style="background:rgba(74,222,128,.04)"><div class="fin-key" style="font-weight:700">Валовая прибыль</div><div class="fin-val" style="font-weight:700;color:${grossProfit>=0?'var(--green)':'var(--red)'}">${fmtMoney(grossProfit)}</div></div>` +
+    `<div class="fin-row"><div class="fin-key">Маржинальность</div><div class="fin-val" style="color:var(--amber)">${revMonth>0?fmtDec(grossProfit/revMonth*100,1):'0,00'}%</div></div>` +
+    `<div class="fin-row"><div class="fin-key" style="color:var(--purple)">Затраты пр-го персонала</div><div class="fin-val" style="color:var(--red)">&#8722;${fmtMoney(prodLaborCost)}</div></div>` +
+    `<div class="fin-row"><div class="fin-key" style="color:var(--blue)">Затраты офисного персонала</div><div class="fin-val" style="color:var(--red)">&#8722;${fmtMoney(officeLaborCost)}</div></div>` +
+    `<div class="fin-row" style="background:rgba(74,222,128,.04)"><div class="fin-key" style="font-weight:700">Операционная прибыль</div><div class="fin-val" style="font-weight:700;color:${operProfit>=0?'var(--green)':'var(--red)'}">${fmtMoney(operProfit)}</div></div>` +
+    `<div class="fin-row"><div class="fin-key">Опер. маржа</div><div class="fin-val" style="color:var(--amber)">${revMonth>0?fmtDec(operProfit/revMonth*100,1):'0,00'}%</div></div>` +
+    `<div class="fin-row"><div class="fin-key">Остаток сырья (по с/с)</div><div class="fin-val" style="color:var(--teal)">${fmtMoney(rawVal)}</div></div>` +
+    `<div class="fin-row"><div class="fin-key">Остаток ГП (по с/с)</div><div class="fin-val" style="color:var(--teal)">${fmtMoney(gpVal)}</div></div>`;
+
+
+  // ДДС ожидаемые поступления
+  const planned_in = DB.payments.filter(p=>p.planned&&p.type==='in').sort((a,b)=>a.date>b.date?1:-1);
+  const incEl = document.getElementById('income-body');
+  let incTotal=0;
+  if(incEl) incEl.innerHTML = planned_in.map(p=>{incTotal+=p.amount||0;return `
+    <div class="fin-row">
+      <div><div class="fin-key">${p.desc||'Поступление'}</div><div class="fin-meta">${fmtDate(p.date)}</div></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="fin-val" style="color:var(--green)">${fmtMoney(p.amount)}</div>
+        <button class="btn del sm" onclick="deletePayment('${p.id}')">✕</button>
+      </div>
+    </div>`}).join('')||'<div style="padding:12px;color:var(--text3);font-size:11px;text-align:center">Нет ожидаемых поступлений</div>';
+  const itEl=document.getElementById('income-total');
+  if(itEl){itEl.innerHTML=`<span>Итого ожидается</span><span style="color:var(--green)">${fmtMoney(incTotal)}</span>`;}
+
+  // ДДС предстоящие платежи
+  const planned_out = DB.payments.filter(p=>p.planned&&p.type==='out').sort((a,b)=>a.date>b.date?1:-1);
+  const expEl = document.getElementById('expense-body');
+  let expTotal=0;
+  if(expEl) expEl.innerHTML = planned_out.map(p=>{expTotal+=p.amount||0;return `
+    <div class="fin-row">
+      <div><div class="fin-key">${p.desc||'Платёж'}</div><div class="fin-meta">${fmtDate(p.date)}</div></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="fin-val" style="color:var(--red)">${fmtMoney(p.amount)}</div>
+        <button class="btn del sm" onclick="deletePayment('${p.id}')">✕</button>
+      </div>
+    </div>`}).join('')||'<div style="padding:12px;color:var(--text3);font-size:11px;text-align:center">Нет предстоящих платежей</div>';
+  const etEl=document.getElementById('expense-total');
+  if(etEl){etEl.innerHTML=`<span>Итого к оплате</span><span style="color:var(--red)">${fmtMoney(expTotal)}</span>`;}
+
+  // Кассовые операции (фактические)
+  const facts = DB.payments.filter(p=>!p.planned).sort((a,b)=>b.date>a.date?1:-1);
+  let running=0;
+  const factsSorted=[...facts].sort((a,b)=>a.date>b.date?1:-1);
+  const balances={};
+  factsSorted.forEach(p=>{
+    running += p.type==='in'?(p.amount||0):-(p.amount||0);
+    balances[p.id]=running;
+  });
+  const cfEl=document.getElementById('cashflow-tbody');
+  if(cfEl) cfEl.innerHTML=[...facts].map(p=>`<tr>
+    <td class="m">${fmtDate(p.date)}</td>
+    <td><span class="badge ${p.type==='in'?'ok':'bad'}">${p.type==='in'?'ПРИХОД':'РАСХОД'}</span></td>
+    <td>${p.desc||'—'}</td>
+    <td class="${p.type==='in'?'g':'zero'}">${p.type==='in'?fmtMoney(p.amount):'—'}</td>
+    <td class="${p.type==='out'?'red':'zero'}">${p.type==='out'?fmtMoney(p.amount):'—'}</td>
+    <td class="${(balances[p.id]||0)>=0?'bl':'red'}">${fmtMoney(balances[p.id]||0)}</td>
+    <td><button class="btn del sm" onclick="deletePayment('${p.id}')">✕</button></td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:16px">Нет операций</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  ПЛАНИРОВЩИК (сокращённая версия, полная логика из v3)
+// ═══════════════════════════════════════════════════════
+const TH=[
+  {t:'5',dot:'#4ade80',capS:'s5',capF:'ff5',capTF:'tf5'},
+  {t:'8',dot:'#60a5fa',capS:'s8',capF:'ff8',capTF:'tf8'},
+  {t:'10',dot:'#a78bfa',capS:'s10',capF:'ff8',capTF:'tf8'},
+  {t:'13',dot:'#fbbf24',capS:'s10',capF:'ff8',capTF:'tf8'},
+  {t:'16',dot:'#f472b6',capS:'s10',capF:'ff8',capTF:'tf8'},
+];
+// Инвентарь планировщика: ПФ (5П,5НФ,...), ГП (5Ф,5ТФ,...), Холст, Клей
+const INV_PLAN=[
+  '5p','5nf','8p','8nf','10p','10nf','13p','13nf','16p','16nf',   // прошитые ПФ
+  '5f','5tf','8f','8tf','10f','10tf','13f','13tf','16f','16tf',   // ГП фольг.
+  'glue',                                                          // клей
+  'x5','x8','x10','x13','x16'                                     // холст
+];
+// Операция зарплаты → ключ инвентаря
+const SAL_OP_INV = {
+  sew5f:'5p', sew5nf:'5nf', sew8f:'8p', sew8nf:'8nf',
+  sew10f:'10p', sew10nf:'10nf', sew13f:'13p', sew13nf:'13nf',
+  sew16f:'16p', sew16nf:'16nf',
+  fol_5f:'5f', fol_5tf:'5tf', fol_8f:'8f', fol_8tf:'8tf',
+  fol_10f:'10f', fol_10tf:'10tf', fol_13f:'13f', fol_13tf:'13tf',
+  fol_16f:'16f', fol_16tf:'16tf', glue:'glue'
+};
+// ПФ расходуется при фольгировании
+const PF_FOR_FOL = {
+  fol_5f:'5p',fol_5tf:'5nf',fol_8f:'8p',fol_8tf:'8nf',
+  fol_10f:'10p',fol_10tf:'10nf',fol_13f:'13p',fol_13tf:'13nf',
+  fol_16f:'16p',fol_16tf:'16nf'
+};
+// Артикул отгрузки → ключ инвентаря
+const ART_MAP_P={'5Ф':'5f','5ТФ':'5tf','8Ф':'8f','8ТФ':'8tf',
+  '10Ф':'10f','10ТФ':'10tf','13Ф':'13f','13ТФ':'13tf',
+  '16Ф':'16f','16ТФ':'16tf','Клей FP':'glue'};
+
+const DAYS_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+let planActiveDay=0;
+let planInvInit={};
+
+function addDaysFn(d,n){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().split('T')[0];}
+function fmtDateShort(d){if(!d)return'—';const dt=new Date(d);return`${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`;}
+function getDow(d){return DAYS_RU[new Date(d).getDay()];}
+function isWE(d){const dw=new Date(d).getDay();return dw===0||dw===6;}
+const capP=id=>parseFloat(document.getElementById('cap-'+id)?.value)||0;
+const getSups=()=>[0,1,2,3,4].map(i=>document.getElementById(`sup${i}`)?.value||`Поставщик ${i+1}`);
+
+function emptyPlanDay(){
+  return{bstv:[],shipments:[],s5p:0,s5nf:0,s8p:0,s8nf:0,s10p:0,s10nf:0,s13p:0,s13nf:0,s16p:0,s16nf:0,f5f:0,f5tf:0,f8f:0,f8tf:0,f10f:0,f10tf:0,f13f:0,f13tf:0,f16f:0,f16tf:0,glue:0};
+}
+
+// Синхронизируем остатки из зарплатных данных (производство)
+function syncStockFromProd(){
+  const inv={};
+  INV_PLAN.forEach(k=>inv[k]=0);
+  // Считаем из всех salaryLogs: прошив добавляет ПФ, фольгирование добавляет ГП и списывает ПФ
+  DB.salaryLogs.forEach(dd=>{
+    // Индивидуальный прошив → добавляет ПФ на склад
+    (dd.indiv||[]).forEach(r=>{
+      const k=SAL_OP_INV[r.op];
+      if(k) inv[k]=(inv[k]||0)+(r.qty||0);
+    });
+    // После смены → аналогично
+    (dd.afterShift||[]).forEach(r=>{
+      const k=SAL_OP_INV[r.op];
+      if(k) inv[k]=(inv[k]||0)+(r.qty||0);
+    });
+    // Бригада: фольгирование добавляет ГП, списывает ПФ
+    const bTotal=(dd.brigade||[]);
+    bTotal.forEach(b=>{
+      const gk=SAL_OP_INV[b.op];
+      if(gk) inv[gk]=(inv[gk]||0)+(b.qty||0);
+      const pfk=PF_FOR_FOL[b.op];
+      if(pfk) inv[pfk]=(inv[pfk]||0)-(b.qty||0);
+    });
+  });
+  // Холст из остатков приёмки
+  const rs=calcRawStock();
+  ['5','8','10','13','16'].forEach(t=>{
+    const mat='Х'+t;
+    if(rs[mat]) inv['x'+t]=Object.values(rs[mat]).reduce((s,v)=>s+v.qty,0);
+  });
+  // Вычитаем отгрузки из ГП
+  DB.sales.forEach(sale=>{
+    (sale.items||[{art:sale.art,qty:sale.qty||0}]).forEach(it=>{
+      const k=ART_MAP_P[it.art];
+      if(k) inv[k]=(inv[k]||0)-(it.qty||0);
+    });
+  });
+  planInvInit={...inv};
+  toast('Остатки синхронизированы из данных зарплаты ✓');
+  planRecalc();
+}
+
+function rebuildPlanDays(){
+  const startEl=document.getElementById('plan-start');
+  if(!startEl.value){const n=new Date();startEl.value=n.toISOString().split('T')[0];}
+  const nDays=parseInt(document.getElementById('plan-days').value)||10;
+  const ex={};
+  DB.planDays.forEach(d=>ex[d.date]=d.data);
+  DB.planDays=[];
+  let cur=startEl.value,wd=0;
+  while(wd<nDays){
+    if(!isWE(cur)){DB.planDays.push({date:cur,data:ex[cur]||emptyPlanDay()});wd++;}
+    cur=addDaysFn(cur,1);
+  }
+  if(planActiveDay>=DB.planDays.length)planActiveDay=0;
+  planRecalc();
+  syncNow();
+}
+
+function savePlanDayInputs(di){
+  const day=DB.planDays[di];if(!day)return;
+  const d=day.data;
+  TH.forEach(th=>{
+    ['p','nf'].forEach(tp=>{const k=`s${th.t}${tp}`;const el=document.getElementById(`oi-${k}`);if(el)d[k]=parseFloat(el.value)||0;});
+    ['f','tf'].forEach(tp=>{const k=`f${th.t}${tp}`;const el=document.getElementById(`oi-${k}`);if(el)d[k]=parseFloat(el.value)||0;});
+  });
+  const gel=document.getElementById('oi-glue');if(gel)d.glue=parseFloat(gel.value)||0;
+}
+
+function planCalcInv(){
+  let inv={...planInvInit};
+  const starts=[],ends=[],alerts=[];
+  DB.planDays.forEach((day)=>{
+    starts.push({...inv});
+    const d=day.data,al=[];
+    (d.bstv||[]).forEach(b=>{const k='x'+b.thick;if(inv[k]!==undefined)inv[k]+=(parseFloat(b.qty)||0);});
+    TH.forEach(th=>{const sp=d[`s${th.t}p`]||0,snf=d[`s${th.t}nf`]||0,tot=sp+snf;const xk='x'+th.t;inv[xk]-=tot;if(inv[xk]<0)al.push({t:'e',msg:`Нехватка Х${th.t}мм: дефицит ${fmtNum(Math.abs(inv[xk]))} м²`});inv[th.t+'p']+=sp;inv[th.t+'nf']+=snf;});
+    TH.forEach(th=>{const ff=d[`f${th.t}f`]||0,ftf=d[`f${th.t}tf`]||0;inv[th.t+'p']-=ff;inv[th.t+'nf']-=ftf;if(inv[th.t+'p']<0)al.push({t:'e',msg:`Нехватка ${th.t}П: ${fmtNum(Math.abs(inv[th.t+'p']))} м²`});if(inv[th.t+'nf']<0)al.push({t:'e',msg:`Нехватка ${th.t}НФ: ${fmtNum(Math.abs(inv[th.t+'nf']))} м²`});inv[th.t+'f']+=ff;inv[th.t+'tf']+=ftf;});
+    inv.glue+=(d.glue||0);
+    (d.shipments||[]).forEach(s=>{const qty=parseFloat(s.qty)||0;const k=ART_MAP_P[s.article];if(k&&inv[k]!==undefined){inv[k]-=qty;if(inv[k]<0)al.push({t:'e',msg:`Нехватка ${s.article}: дефицит ${fmtNum(Math.abs(inv[k]))} (${s.client||'?'})`});}});
+    ends.push({...inv});alerts.push(al);
+  });
+  return{starts,ends,alerts};
+}
+
+let planGC={starts:[],ends:[],alerts:[]};
+
+function planRecalc(){
+  savePlanDayInputs(planActiveDay);
+  planGC=planCalcInv();
+  renderPlanTabs();
+  renderPlanDay(planActiveDay);
+}
+
+function renderPlanTabs(){
+  const c=document.getElementById('plan-tabs');if(!c)return;
+  c.innerHTML='';
+  DB.planDays.forEach((day,i)=>{
+    const al=planGC.alerts[i]||[];
+    const bad=al.some(a=>a.t==='e');
+    const div=document.createElement('div');
+    div.className='dtab'+(i===planActiveDay?' active':'');
+    div.innerHTML=`<div class="dd">${fmtDateShort(day.date)}</div><div class="dw">${getDow(day.date)}</div><div class="da ${bad?'show':''}" style="background:var(--red)"></div>`;
+    div.onclick=()=>{savePlanDayInputs(planActiveDay);planActiveDay=i;renderPlanTabs();renderPlanDay(i);};
+    c.appendChild(div);
+  });
+}
+
+function renderPlanDay(di){
+  const day=DB.planDays[di];
+  const cont=document.getElementById('plan-day');if(!cont)return;
+  if(!day){cont.innerHTML='<div class="alert info"><span>ℹ</span><span>Настройте период планирования.</span></div>';return;}
+  const d=day.data;
+  const invS=planGC.starts[di]||{},invE=planGC.ends[di]||{};
+  const al=planGC.alerts[di]||[];
+
+  // NEED
+  function calcNeed(){
+    const xWA={};TH.forEach(th=>{xWA['x'+th.t]=(invS['x'+th.t]||0);});
+    (d.bstv||[]).forEach(b=>{const k='x'+b.thick;if(xWA[k]!==undefined)xWA[k]+=(parseFloat(b.qty)||0);});
+    const pfWS={};TH.forEach(th=>{pfWS[th.t+'p']=(invS[th.t+'p']||0)+(d['s'+th.t+'p']||0);pfWS[th.t+'nf']=(invS[th.t+'nf']||0)+(d['s'+th.t+'nf']||0);});
+    const gpWF={};TH.forEach(th=>{gpWF[th.t+'f']=(invS[th.t+'f']||0)+(d['f'+th.t+'f']||0);gpWF[th.t+'tf']=(invS[th.t+'tf']||0)+(d['f'+th.t+'tf']||0);});
+    const glueWP=(invS.glue||0)+(d.glue||0);
+    const shipByArt={};
+    (d.shipments||[]).forEach(s=>{const k=ART_MAP_P[s.article];if(!k)return;shipByArt[k]=(shipByArt[k]||0)+(parseFloat(s.qty)||0);});
+    const need={};
+    Object.entries(shipByArt).forEach(([k,qty])=>{
+      if(k==='glue'){need.glue_prod=Math.max(0,qty-glueWP);return;}
+      const gpStock=gpWF[k]||0,needGP=Math.max(0,qty-gpStock);
+      const pfk=ART_PF_P[k],pfStock=pfWS[pfk]||0,needPF=Math.max(0,needGP-pfStock);
+      const xk=ART_HX_P[k],xStock=xWA[xk]||0,needX=Math.max(0,needPF-xStock);
+      need[k]={qty,gpStock,needGP,pfStock,needPF,xStock,needX,pfk,xk};
+    });
+    return need;
+  }
+  const need=calcNeed();
+  const hasShip=(d.shipments||[]).length>0;
+
+  function needBlock(){
+    if(!hasShip)return'';
+    const artRows=Object.entries(need).filter(([k])=>k!=='glue_prod').map(([k,n])=>{
+      const artName=Object.keys(ART_MAP_P).find(a=>ART_MAP_P[a]===k)||k;
+      const folVal=n.needGP>0?`<span style="color:var(--amber)">+${fmtNum(n.needGP)} м²</span>`:`<span style="color:var(--green)">—</span>`;
+      const sewVal=n.needPF>0?`<span style="color:var(--amber)">+${fmtNum(n.needPF)} м²</span>`:`<span style="color:var(--green)">—</span>`;
+      const xVal=n.needX>0?`<span style="color:var(--red)">+${fmtNum(n.needX)} м²</span>`:`<span style="color:var(--green)">—</span>`;
+      return`<tr><td style="font-size:11px;font-weight:600;padding:4px 10px">${artName}</td><td style="font-family:var(--mono);font-size:11px;text-align:right;padding:4px 8px">${folVal}</td><td style="font-family:var(--mono);font-size:11px;text-align:right;padding:4px 8px">${sewVal}</td><td style="font-family:var(--mono);font-size:11px;text-align:right;padding:4px 10px">${xVal}</td></tr>`;
+    }).join('');
+    const glueNeed=need.glue_prod||0;
+    return`<div class="need-block"><div class="need-hdr"><div class="need-title">📋 Что нужно для отгрузок</div><div style="margin-left:auto;font-size:9px;color:var(--text3)">жёлтый = нужно · красный = нет холста</div></div>
+    <table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;text-align:left">Артикул</th>
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 8px;text-align:right">Зафольгировать</th>
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 8px;text-align:right">Прошить</th>
+      <th style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;text-align:right">Нужен холст</th>
+    </tr></thead><tbody>${artRows}${glueNeed>0?`<tr><td style="font-size:11px;font-weight:600;padding:4px 10px">Клей FP</td><td colspan="2" style="text-align:right;font-family:var(--mono);font-size:11px;padding:4px 8px"><span style="color:var(--amber)">произвести +${fmtNum(glueNeed)} кг</span></td><td style="padding:4px 10px;color:var(--green);font-family:var(--mono);font-size:11px;text-align:right">—</td></tr>`:''}</tbody></table></div>`;
+  }
+
+  function thCard(th){
+    function row(key,name,type,cls){
+      const s=invS[key]||0,e=invE[key]||0,diff=e-s;
+      const sCls=s<0?'neg':s===0?'zero':'';
+      const eCls=e<0?'neg':e===0?'zero':e<s?'warn':'pos';
+      const dCls=diff>0?'pos':diff<0?'neg':'zero';
+      return`<div class="trow ${cls}"><div class="tr-lbl"><div class="tr-name">${name}</div><div class="tr-type">${type}</div></div><div class="num ${sCls}">${s===0?'—':fmtNum(s)}</div><div class="num ${dCls}" style="min-width:38px">${diff>0?'+'+fmtNum(diff):diff<0?fmtNum(diff):'—'}</div><div class="num ${eCls}">${e===0?'—':fmtNum(e)}</div></div>`;
+    }
+    return`<div class="tcard"><div class="tcard-hdr"><div class="tcard-dot" style="background:${th.dot}"></div><div class="tcard-name" style="color:${th.dot}">${th.t} мм</div><div style="margin-left:auto;font-size:8px;color:var(--text3)">нач·±·кон</div></div><div class="tcard-body">
+      ${row(th.t+'f','BSALT-'+th.t+'Ф','ГП·Ф','row-gp')}
+      ${row(th.t+'tf','BSALT-'+th.t+'ТФ','ГП·ТФ','row-gp')}
+      ${row(th.t+'p',th.t+'П','Пф·с плёнкой','row-pf')}
+      ${row(th.t+'nf',th.t+'НФ','Пф·без плёнки','row-nf')}
+      ${row('x'+th.t,'Х'+th.t,'Холст БСТВ','row-hx')}
+    </div></div>`;
+  }
+
+  function opRow(id,label,val,capId,unit,cls=''){
+    const cap=capP(capId);const pct=cap>0?Math.min(100,Math.round(val/cap*100)):0;
+    const oc=pct>100?'var(--red)':pct>80?'var(--amber)':'var(--text2)';
+    const fc=pct>100?'var(--red)':pct>80?'var(--amber)':cls==='fol'?'var(--green)':'var(--purple)';
+    return`<div class="op-row"><div class="op-lbl">${label}</div><input class="op-inp ${cls}" id="oi-${id}" value="${val||''}" placeholder="0" onchange="planRecalc()"><div class="op-cap">${fmtNum(cap)} ${unit}</div><div class="op-pct" style="color:${oc}">${pct}%</div></div><div class="op-bar"><div class="op-bar-fill" style="width:${pct}%;background:${fc}"></div></div>`;
+  }
+
+  const sups=getSups();
+  const bstvRows=(d.bstv||[]).map((b,i)=>`<div class="list-row">
+    <select class="sel" style="flex:1" onchange="DB.planDays[planActiveDay].data.bstv[${i}].sup=this.value;planRecalc()">
+      ${sups.map((s,j)=>`<option value="${j}" ${b.sup==j?'selected':''}>${s}</option>`).join('')}
+    </select>
+    <select class="sel" onchange="DB.planDays[planActiveDay].data.bstv[${i}].thick=this.value;planRecalc()">
+      ${['5','8','10','13','16'].map(t=>`<option value="${t}" ${b.thick===t?'selected':''}>Х${t}</option>`).join('')}
+    </select>
+    <input class="ci r" value="${b.qty||''}" placeholder="0" style="width:60px" onchange="DB.planDays[planActiveDay].data.bstv[${i}].qty=parseFloat(this.value)||0;planRecalc()">
+    <span style="font-size:9px;color:var(--text3)">м²</span>
+    <button class="del-btn" onclick="DB.planDays[planActiveDay].data.bstv.splice(${i},1);planRecalc()">✕</button>
+  </div>`).join('');
+
+  const ARTS_SHIP=['5Ф','5ТФ','8Ф','8ТФ','10Ф','10ТФ','13Ф','13ТФ','16Ф','16ТФ','Клей FP'];
+  const shipRows=(d.shipments||[]).map((s,i)=>{
+    const unit=s.article==='Клей FP'?'кг':'м²';
+    return`<div class="list-row">
+      <input class="ci" value="${s.client||''}" placeholder="Контрагент" style="flex:1;border:1px solid var(--border);border-radius:3px;padding:2px 5px" onchange="DB.planDays[planActiveDay].data.shipments[${i}].client=this.value">
+      <select class="sel" onchange="DB.planDays[planActiveDay].data.shipments[${i}].article=this.value;planRecalc()">
+        ${ARTS_SHIP.map(a=>`<option ${s.article===a?'selected':''}>${a}</option>`).join('')}
+      </select>
+      <input class="ci r" value="${s.qty||''}" placeholder="0" style="width:58px" onchange="DB.planDays[planActiveDay].data.shipments[${i}].qty=parseFloat(this.value)||0;planRecalc()">
+      <span style="font-size:9px;color:var(--text3);width:14px">${unit}</span>
+      <button class="del-btn" onclick="DB.planDays[planActiveDay].data.shipments.splice(${i},1);planRecalc()">✕</button>
+    </div>`;
+  }).join('');
+
+  const hasBad=al.some(a=>a.t==='e');
+  const totalShipM2=(d.shipments||[]).filter(s=>s.article!=='Клей FP').reduce((s,x)=>s+(parseFloat(x.qty)||0),0);
+  const totalShipKg=(d.shipments||[]).filter(s=>s.article==='Клей FP').reduce((s,x)=>s+(parseFloat(x.qty)||0),0);
+
+  cont.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:17px;font-weight:800;font-family:var(--mono)">${fmtDateShort(day.date)}</div>
+      <div style="font-size:11px;color:var(--text2)">${getDow(day.date)}, ${day.date}</div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        ${hasBad?'<span class="badge bad">ДЕФИЦИТ</span>':'<span class="badge ok">OK</span>'}
+        ${(d.bstv||[]).length?'<span class="badge teal">↓ БСТВ</span>':''}
+        ${totalShipM2>0?`<span class="badge info">→ ${fmtNum(totalShipM2)} м²</span>`:''}
+        ${totalShipKg>0?`<span class="badge info">→ ${fmtNum(totalShipKg)} кг</span>`:''}
+      </div>
+    </div>
+    ${al.length?`<div style="margin-bottom:8px">${al.map(a=>`<div class="alert ${a.t==='e'?'err':'warn'}"><span>${a.t==='e'?'✕':'⚠'}</span><span>${a.msg}</span></div>`).join('')}</div>`:''}
+    ${needBlock()}
+    <div class="two-col" style="margin-bottom:8px">
+      <div class="list-card">
+        <div class="list-hdr" style="color:var(--teal)">⇓ Приход БСТВ</div>
+        <div>${bstvRows}<button class="add-btn teal" onclick="DB.planDays[planActiveDay].data.bstv.push({sup:'0',thick:'5',qty:0});planRecalc()">+ Добавить партию</button></div>
+      </div>
+      <div class="list-card">
+        <div class="list-hdr" style="color:var(--blue)">→ Отгрузки</div>
+        <div>${shipRows}<button class="add-btn" onclick="DB.planDays[planActiveDay].data.shipments.push({client:'',article:'5Ф',qty:0});planRecalc()">+ Добавить отгрузку</button></div>
+      </div>
+    </div>
+    <div class="thick-grid">${TH.map(th=>thCard(th)).join('')}</div>
+    <div class="ops-grid">
+      <div class="op-card"><details open><summary class="op-hdr"><span style="color:var(--purple)">▣</span> Прошивной станок <span style="margin-left:auto;font-size:9px;color:var(--text3)">▾</span></summary>
+        <div class="op-body">${TH.map(th=>`<div class="op-thick">${th.t} мм</div>${opRow('s'+th.t+'p',th.t+'П',d['s'+th.t+'p']||0,th.capS,'м²')}${opRow('s'+th.t+'nf',th.t+'НФ',d['s'+th.t+'nf']||0,th.capS,'м²')}`).join('')}</div>
+      </details></div>
+      <div class="op-card"><details open><summary class="op-hdr"><span style="color:var(--green)">◈</span> Фольгировщик <span style="margin-left:auto;font-size:9px;color:var(--text3)">▾</span></summary>
+        <div class="op-body">${TH.map(th=>`<div class="op-thick">${th.t} мм</div>${opRow('f'+th.t+'f',th.t+'Ф',d['f'+th.t+'f']||0,th.capF,'м²','fol')}${opRow('f'+th.t+'tf',th.t+'ТФ',d['f'+th.t+'tf']||0,th.capTF,'м²','fol')}`).join('')}<div class="op-thick">Клей FP</div>${opRow('glue','Клей FP',d.glue||0,'g2','кг','fol')}</div>
+      </details></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ИНИЦИАЛИЗАЦИЯ
+// ═══════════════════════════════════════════════════════
+function init(){
+  // Даты по умолчанию
+  const n=new Date();
+  document.getElementById('recv-date').value  = today();
+  document.getElementById('prod-date').value  = today();
+  document.getElementById('sale-date').value  = today();
+  // sal-date убран (нет такого поля в новой вкладке зарплаты)
+  const m=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('recv-filter-month').value=m;
+  document.getElementById('prod-filter-month').value=m;
+  document.getElementById('sale-filter-month').value=m;
+  const salMonthEl=document.getElementById('sal-month');
+  if(salMonthEl){const n2=new Date();salMonthEl.value=`${n2.getFullYear()}-${String(n2.getMonth()+1).padStart(2,'0')}`;}
+  setSalPeriodFilter('1');
+  // Планировщик — начало со следующего понедельника
+  const dow=n.getDay();const toMon=dow===1?0:dow===0?1:(8-dow)%7;
+  const mon=new Date(n);mon.setDate(mon.getDate()+toMon);
+  document.getElementById('plan-start').value=mon.toISOString().split('T')[0];
+  updateProdArtList();
+  renderRef();
+  populateEmpSelects();
+  renderSalary();
+  populateSupplierSelect();
+  setSyncStatus('loading');
+  loadAll();
+}
+
+init();
+</script>
+</body>
+</html>
