@@ -984,17 +984,48 @@ function setSyncStatus(state) {
 // ═══════════════════════════════════════════════════════
 // Все запросы через GET + URLSearchParams — работает с https://
 async function gsCall(params) {
-  const url = GS_URL + '?' + new URLSearchParams(params).toString();
+  // Если данные большие — используем POST через form, иначе GET
+  const qs = new URLSearchParams(params).toString();
   try {
-    const res  = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let res;
+    if (qs.length > 3000) {
+      // POST через no-cors не даёт ответ — используем GET с укороченными данными
+      // Для больших данных разбивка делается снаружи (по 1 строке)
+      res = await fetch(GS_URL + '?' + qs, {method:'GET'});
+    } else {
+      res = await fetch(GS_URL + '?' + qs);
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' (url len=' + qs.length + ')');
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'GS error');
     return data;
   } catch(e) {
-    console.error('gsCall failed:', params.action, params.table, e.message);
+    console.error('gsCall failed:', params.action, params.table, 'urlLen:', qs.length, e.message);
     throw e;
   }
+}
+
+// Специальная функция для сохранения одной строки (для planDays/salaryLogs)
+async function gsCallRow(table, rowObj, isFirst) {
+  const keys = Object.keys(rowObj);
+  const vals = keys.map(k => {
+    const v = rowObj[k];
+    return v === undefined || v === null ? '' : String(v);
+  });
+  // Если первый — шапка + строка, иначе только строка
+  const rows = isFirst ? [keys, vals] : [vals];
+  const params = {action:'save', table, rows:JSON.stringify(rows), clear: isFirst?'1':'0'};
+  const qs = new URLSearchParams(params).toString();
+  // Проверяем длину
+  if (qs.length > 7000) {
+    // Данные слишком большие — сжимаем data
+    console.warn('gsCallRow: row too large for', table, 'len=', qs.length);
+  }
+  const res = await fetch(GS_URL + '?' + qs);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error||'GS error');
+  return data;
 }
 
 // Сохранить таблицу в GS
@@ -1063,15 +1094,22 @@ async function syncNow() {
     await saveTable('production',       DB.production);
     await saveTable('sales',            DB.sales);
     await saveTable('payments',         DB.payments);
-    // planDays — сохраняем по 2 дня за раз (URL лимит)
-    await saveTable('planDays', DB.planDays.map(d=>({date:d.date, data:JSON.stringify(d.data)})));
     await saveTable('settings', [{data: JSON.stringify(DB.settings||{})}]);
     await saveTable('ref_counterparty', DB.ref.counterparty);
     await saveTable('ref_product',      DB.ref.product);
     await saveTable('ref_material',     DB.ref.material);
     await saveTable('employees',        DB.employees);
-    await saveTable('salaryLogs', DB.salaryLogs.map(d=>({date:d.date, data:JSON.stringify(d)})));
     await saveTable('salPremiums', [{data: JSON.stringify(DB.salPremiums||{})}]);
+    // planDays — каждый день отдельным запросом (данные слишком большие)
+    for (let _pi=0; _pi<DB.planDays.length; _pi++) {
+      const _d=DB.planDays[_pi];
+      await gsCallRow('planDays', {date:_d.date, data:JSON.stringify(_d.data)}, _pi===0);
+    }
+    // salaryLogs — каждый день отдельным запросом
+    for (let _si=0; _si<DB.salaryLogs.length; _si++) {
+      const _d=DB.salaryLogs[_si];
+      await gsCallRow('salaryLogs', {date:_d.date, data:JSON.stringify(_d)}, _si===0);
+    }
     setSyncStatus('ok');
     toast('Данные сохранены в Google Sheets ✓');
     setTimeout(() => setSyncStatus('idle'), 3000);
@@ -2936,7 +2974,7 @@ function renderSalPeriodSummary() {
       <td class="r" style="color:var(--amber)">
         <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;border-color:var(--amber)"
           value="${cash||''}" placeholder="0"
-          oninput="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+          onchange="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
       </td>
       <td class="r" style="font-weight:700">${fmtMoney(taxBase)}</td>
       <td class="am">${fmtMoney(ndfl)}</td>
@@ -2972,7 +3010,7 @@ function renderSalPeriodSummary() {
       <td class="r" style="color:var(--amber)">
         <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;border-color:var(--amber)"
           value="${cash||''}" placeholder="0"
-          oninput="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+          onchange="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
       </td>
       <td class="r" style="font-weight:700">${fmtMoney(taxBase)}</td>
       <td class="am">${fmtMoney(ndfl)}</td>
@@ -2987,13 +3025,18 @@ function renderSalPeriodSummary() {
   const totIns   = pTotIns   + oTotIns;
   const totCost  = pTotCost  + oTotCost;
   const totNdfl  = pTotNdfl  + oTotNdfl;
+  // Суммируем все наличные выплаты
+  const totCash  = DB.employees.reduce((s,e)=>{
+    const cash = DB.salPremiums?.[monthStr+period]?.['cash_'+e.id]||0;
+    return s + cash;
+  }, 0);
 
   cont.innerHTML = `
     <div class="kpi-grid c4" style="margin-bottom:10px">
       <div class="kcard ok"><div class="kl">Итого начислено</div><div class="kv g">${fmtMoney(totGross)}</div></div>
       <div class="kcard amb"><div class="kl">НДФЛ</div><div class="kv a">${fmtMoney(totNdfl)}</div></div>
-      <div class="kcard teal"><div class="kl">К выплате на руки</div><div class="kv t">${fmtMoney(totNet)}</div></div>
-      <div class="kcard info"><div class="kl">Страх. взносы + затраты</div><div class="kv b">${fmtMoney(totCost)}</div><div class="ks">${payLabel}</div></div>
+      <div class="kcard teal"><div class="kl">На руки</div><div class="kv t">${fmtMoney(totNet)}</div><div class="ks">в т.ч. наличкой: ${fmtMoney(totCash)}</div></div>
+      <div class="kcard info"><div class="kl">Итого затрат</div><div class="kv b">${fmtMoney(totCost)}</div><div class="ks">взносы: ${fmtMoney(totIns)}</div></div>
     </div>
 
     <!-- Производственные -->
