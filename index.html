@@ -120,7 +120,7 @@ select.ci{font-family:system-ui,sans-serif}
     <div id="emp-list"></div>
 
     <div style="margin-top:12px">
-      <button class="btn" onclick="syncNow()">☁ Синхронизировать</button>
+      <button class="btn" onclick="console.log('btn click');syncNow()">☁ Синхронизировать</button>
     </div>
   </div>
 
@@ -340,24 +340,30 @@ function scheduleSave() {
 }
 
 async function syncNow() {
-  if (!isReady) return;
+  if (!isReady) { console.log('syncNow: not ready, skip'); return; }
+  console.log('syncNow: start, days=', Object.keys(DB.days).length);
   setStatus('loading','сохранение...');
   try {
+    console.log('saving employees:', DB.employees.length);
     await gsSave('sal_employees', DB.employees);
-
+    
     const dayRows = Object.entries(DB.days)
       .filter(([,d]) => (d.indiv||[]).length || (d.brigade?.ops||[]).length || (d.after||[]).length || Object.keys(d.absences||{}).length)
       .map(([date,d]) => ({date, data: JSON.stringify(d)}));
+    console.log('saving days:', dayRows.length, 'non-empty days');
+    if (dayRows.length > 0) console.log('first day:', dayRows[0].date, 'dataLen:', dayRows[0].data.length);
     await gsSave('sal_days', dayRows);
+    console.log('days saved OK');
 
     await gsSave('sal_premiums', [{data: JSON.stringify(DB.premiums)}]);
     await gsSave('sal_settings', [{data: JSON.stringify(DB.brigRates)}]);
 
     setStatus('ok','сохранено ✓');
+    console.log('syncNow: all done');
     setTimeout(() => setStatus('ok','синхронизировано'), 2000);
   } catch(e) {
-    setStatus('err','ошибка сохранения');
-    console.error('syncNow error:', e);
+    setStatus('err','ошибка: ' + e.message);
+    console.error('syncNow FAILED:', e.message, e.stack);
   }
 }
 
