@@ -704,6 +704,7 @@ function renderDayView() {
   document.getElementById('content').innerHTML = html;
 }
 
+}
 // ── ВИД ПЕРИОДА ──
 function renderPeriodView() {
   const month = getMonth();
@@ -1035,7 +1036,6 @@ function deleteEmp(id) {
   scheduleSave(); renderSidebar(); renderContent();
 }
 
-}
 // ── ИНИЦИАЛИЗАЦИЯ ──
 function init() {
   const now = new Date();
