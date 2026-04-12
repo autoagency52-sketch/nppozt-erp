@@ -1123,6 +1123,7 @@ async function loadAll() {
     if (!DB.salPremiums) DB.salPremiums = {};
     setSyncStatus('ok');
     toast('Данные загружены из Google Sheets ✓');
+    loadPlanInv();
     renderAll();
     setTimeout(() => setSyncStatus('idle'), 3000);
   } catch(e) {
