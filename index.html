@@ -2,300 +2,164 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Зарплата НПП ОЗТ</title>
 <style>
-:root{
-  --bg:#0f1117;--bg2:#161b22;--bg3:#1c2128;--bg4:#21262d;--bg5:#2d333b;
-  --border:#30363d;--border2:#444c56;
-  --text:#e6edf3;--text2:#adbac7;--text3:#768390;
-  --green:#4ade80;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;
-  --purple:#a78bfa;--teal:#2dd4bf;
-  --mono:'JetBrains Mono',monospace;
-  --r:6px;
-}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-
-/* HEADER */
-.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-.hdr-title{font-weight:700;font-size:15px}
-.hdr-sub{color:var(--text3);font-size:11px}
-.sync-btn{margin-left:auto;background:var(--bg4);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:var(--r);cursor:pointer;font-size:11px}
-.sync-btn:hover{background:var(--bg5)}
-.sync-status{font-size:10px;padding:3px 8px;border-radius:10px}
-.sync-status.ok{background:rgba(74,222,128,.15);color:var(--green)}
-.sync-status.err{background:rgba(248,113,113,.15);color:var(--red)}
-.sync-status.loading{background:rgba(96,165,250,.15);color:var(--blue)}
-
-/* LAYOUT */
-.main{display:flex;flex:1;overflow:hidden}
-.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:10px;flex-shrink:0}
-.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
-
-/* SIDEBAR */
-.sb-section{margin-bottom:12px}
-.sb-hdr{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px;font-weight:600}
-.sb-btn{display:block;width:100%;text-align:left;padding:5px 8px;border-radius:var(--r);border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:500}
-.sb-btn:hover{background:var(--bg4)}
-.sb-btn.active{background:var(--bg5);color:var(--green);border:1px solid rgba(74,222,128,.3)}
-.sb-btn.weekend{color:var(--red)}
-.sb-btn.weekend.active{color:var(--green)}
-.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-left:4px;vertical-align:middle}
-
-/* TABS */
-.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-.tab{padding:8px 16px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent}
-.tab.active{color:var(--text);border-bottom-color:var(--green)}
-.tab:hover:not(.active){color:var(--text2)}
-
-/* PANELS */
-.panel{flex:1;overflow-y:auto;padding:12px;display:none}
-.panel.active{display:block}
-
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px}
-.card-hdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.card-title{font-weight:600;font-size:12px}
-.card-body{padding:10px 12px}
-.card-actions{margin-left:auto;display:flex;gap:6px}
-
+body{font-family:system-ui,sans-serif;background:#0f1117;color:#e2e8f0;font-size:13px}
+:root{
+  --bg1:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
+  --border:#2d3748;--border2:#3d4f6b;
+  --green:#4ade80;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;
+  --purple:#a78bfa;--teal:#2dd4bf;--text2:#94a3b8;--text3:#64748b;
+  --mono:'Courier New',monospace
+}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh;overflow:hidden}
+/* Сайдбар */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:12px}
+.sidebar h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:12px 0 6px}
+.field{margin-bottom:6px}
+.field label{display:block;font-size:10px;color:var(--text3);margin-bottom:2px}
+.field input,.field select{width:100%;background:var(--bg3);border:1px solid var(--border);color:#e2e8f0;padding:5px 8px;border-radius:5px;font-size:12px}
+.btn{background:var(--bg4);border:1px solid var(--border2);color:#e2e8f0;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;width:100%;margin-bottom:4px}
+.btn:hover{background:var(--bg3)}
+.btn.green{background:rgba(74,222,128,.15);border-color:var(--green);color:var(--green)}
+.btn.blue{background:rgba(96,165,250,.15);border-color:var(--blue);color:var(--blue)}
+.emp-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px}
+.emp-name{font-weight:600;font-size:12px}
+.emp-pos{font-size:10px;color:var(--text3)}
+.emp-btns{display:flex;gap:4px;margin-top:6px}
+.emp-btns button{flex:1;padding:3px;font-size:10px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:#e2e8f0}
+/* Основная область */
+.main{display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px}
+.tab{padding:10px 16px;cursor:pointer;font-size:12px;color:var(--text3);border-bottom:2px solid transparent}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.content{flex:1;overflow-y:auto;padding:16px}
+/* Список дней */
+.days-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-bottom:16px}
+.day-btn{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px;cursor:pointer;text-align:center;font-size:11px}
+.day-btn.active{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.08)}
+.day-btn.weekend{border-color:rgba(248,113,113,.3);color:var(--red);background:rgba(248,113,113,.05)}
+.day-btn.weekend.active{border-color:var(--red)}
+.day-btn.has-data::after{content:'•';color:var(--green);display:block;font-size:16px;line-height:1}
+/* Карточки */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.card-title{font-weight:600;font-size:13px}
+.card-body{padding:12px 14px}
+/* Таблицы */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border)}
+td{padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px}
+tr:last-child td{border-bottom:none}
+td.r,th.r{text-align:right}
+td.num{font-family:var(--mono);font-size:12px}
+/* Инпуты в таблице */
+.ci{background:var(--bg3);border:1px solid var(--border);color:#e2e8f0;padding:3px 6px;border-radius:4px;font-size:12px;font-family:var(--mono)}
+select.ci{font-family:system-ui,sans-serif}
+/* Статус */
+.status{padding:4px 10px;font-size:11px;border-radius:4px;display:inline-block}
+.status.ok{background:rgba(74,222,128,.15);color:var(--green)}
+.status.err{background:rgba(248,113,113,.15);color:var(--red)}
+.status.loading{background:rgba(96,165,250,.15);color:var(--blue)}
 /* KPI */
-.kpi-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;min-width:140px;flex:1}
-.kpi-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-.kpi-value{font-size:16px;font-weight:700;font-family:var(--mono)}
-.kpi-sub{font-size:9px;color:var(--text3);margin-top:1px}
-.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.blue{color:var(--blue)}.purple{color:var(--purple)}
-
-/* TABLE */
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th{background:var(--bg3);color:var(--text3);font-weight:600;padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:4px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
-tr:hover td{background:var(--bg3)}
-.r{text-align:right}.c{text-align:center}
-tfoot td{font-weight:700;background:var(--bg3);border-top:1px solid var(--border2)}
-
-/* FORM */
-.field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
-.field label{font-size:10px;color:var(--text3);font-weight:500}
-.inp{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:var(--r);font-size:12px;width:100%}
-.inp:focus{outline:none;border-color:var(--blue)}
-.sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:var(--r);font-size:12px}
-.ci{background:transparent;border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:11px;font-family:var(--mono)}
-.ci:focus{outline:none;border-color:var(--blue);background:var(--bg3)}
-
-/* BUTTONS */
-.btn{padding:5px 12px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;font-size:11px;font-weight:500;background:var(--bg3);color:var(--text2)}
-.btn:hover{background:var(--bg4)}
-.btn.g{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--green)}
-.btn.g:hover{background:rgba(74,222,128,.2)}
-.btn.r{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--red)}
-.btn.sm{padding:3px 8px;font-size:10px}
-.btn.del{color:var(--red);border-color:transparent;background:transparent}
-.btn.del:hover{background:rgba(248,113,113,.1)}
-
-/* ATTENDANCE CARDS */
-.att-grid{display:flex;flex-wrap:wrap;gap:6px;padding:8px}
-.att-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;min-width:160px}
-.att-card.brigade{border-color:rgba(74,222,128,.3)}
-.att-card.absent{border-color:rgba(251,191,36,.3)}
-.att-name{font-weight:600;font-size:11px;margin-bottom:2px}
-.att-pos{font-size:9px;color:var(--text3);margin-bottom:4px}
-.att-earn{font-size:10px;margin-bottom:4px}
-.att-btns{display:flex;gap:3px;flex-wrap:wrap}
-
-/* BRIGADE BLOCK */
-.brigade-block{background:var(--bg3);border:1px solid rgba(74,222,128,.2);border-radius:var(--r);padding:10px;margin-bottom:8px}
-.brigade-members{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:100;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:20px;min-width:360px;max-width:560px;max-height:90vh;overflow-y:auto}
-.modal-title{font-weight:700;font-size:14px;margin-bottom:14px}
-.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:10px;border-top:1px solid var(--border)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-
-/* PERIOD SUMMARY */
-.period-section{margin-bottom:16px}
-.period-section-title{font-size:11px;font-weight:700;padding:6px 10px;background:var(--bg3);border-radius:var(--r);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-
-/* MISC */
-.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600}
-.badge.amber{background:rgba(251,191,36,.2);color:var(--amber)}
-.badge.green{background:rgba(74,222,128,.2);color:var(--green)}
-.badge.blue{background:rgba(96,165,250,.2);color:var(--blue)}
-.subsec{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px}
-.alert{padding:8px 12px;border-radius:var(--r);font-size:11px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:var(--blue);margin-bottom:8px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.kcard{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px}
+.kcard .lbl{font-size:10px;color:var(--text3);margin-bottom:4px}
+.kcard .val{font-size:18px;font-weight:700;font-family:var(--mono)}
+.g{color:var(--green)}.r{color:var(--red)}.a{color:var(--amber)}.b{color:var(--blue)}
+/* Модал */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:20px;width:500px;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:14px;font-size:15px}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.mrow.full{grid-template-columns:1fr}
+.mfield label{display:block;font-size:10px;color:var(--text3);margin-bottom:3px}
+.mfield input,.mfield select{width:100%;background:var(--bg3);border:1px solid var(--border);color:#e2e8f0;padding:6px 8px;border-radius:5px;font-size:12px}
+.modal-btns{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.modal-btns button{padding:7px 18px;border-radius:5px;cursor:pointer;font-size:12px;border:1px solid var(--border2);background:var(--bg3);color:#e2e8f0}
+.modal-btns .save{background:rgba(74,222,128,.2);border-color:var(--green);color:var(--green)}
+.del-btn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px}
+.add-btn{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--green);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
+.sec-hdr{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:4px 0;border-bottom:1px solid var(--border);margin:8px 0 6px}
+.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px}
+.badge.off{background:rgba(96,165,250,.15);color:var(--blue)}
 </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<div class="hdr">
-  <div>
-    <div class="hdr-title">НПП ОЗТ — Зарплата</div>
-    <div class="hdr-sub">Базальтовые огнезащитные материалы</div>
-  </div>
-  <span class="sync-status" id="sync-status">—</span>
-  <button class="sync-btn" onclick="saveAll()">💾 Сохранить</button>
-  <button class="sync-btn" onclick="loadAll()">↻ Загрузить</button>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-  <!-- SIDEBAR: список дней -->
+<div class="app">
+  <!-- САЙДБАР -->
   <div class="sidebar">
-    <div class="sb-section">
-      <div class="sb-hdr">Период</div>
-      <div class="field" style="margin-bottom:6px">
-        <label>Месяц</label>
-        <input type="month" class="inp" id="sel-month" onchange="buildDayList()">
-      </div>
-      <div style="display:flex;gap:4px;margin-bottom:8px">
-        <button class="btn sm" id="btn-p1" onclick="setPeriod(1)" style="flex:1">П1 (1–15)</button>
-        <button class="btn sm" id="btn-p2" onclick="setPeriod(2)" style="flex:1">П2 (16–кон.)</button>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <b style="font-size:14px">НПП ОЗТ</b>
+      <span id="sync-status" class="status loading">загрузка</span>
     </div>
-    <div class="sb-section">
-      <div class="sb-hdr">Дни</div>
-      <div id="day-list"></div>
+
+    <div class="field">
+      <label>Месяц</label>
+      <input type="month" id="sel-month">
+    </div>
+    <div style="display:flex;gap:4px;margin-bottom:8px">
+      <button class="btn" id="btn-p1" onclick="setPeriod(1)" style="flex:1">П1 (1-15)</button>
+      <button class="btn" id="btn-p2" onclick="setPeriod(2)" style="flex:1">П2 (16-кон)</button>
+    </div>
+
+    <h3>Параметры налогов</h3>
+    <div class="field"><label>НДФЛ %</label><input class="ci" id="tax-ndfl" value="13" style="width:80px"></div>
+    <div class="field"><label>Взносы до порога %</label><input class="ci" id="tax-ins1" value="30.2" style="width:80px"></div>
+    <div class="field"><label>Взносы сверх %</label><input class="ci" id="tax-ins2" value="7.6" style="width:80px"></div>
+    <div class="field"><label>Порог МСП ₽</label><input class="ci" id="tax-thresh" value="40639.5" style="width:100px"></div>
+
+    <h3>Тарифы бригады ₽/м²</h3>
+    <div id="brigade-rates"></div>
+
+    <h3>Сотрудники</h3>
+    <button class="btn green" onclick="openEmpModal()">+ Добавить сотрудника</button>
+    <div id="emp-list"></div>
+
+    <div style="margin-top:12px">
+      <button class="btn" onclick="syncNow()">☁ Синхронизировать</button>
     </div>
   </div>
 
-  <!-- CONTENT -->
-  <div class="content">
-    <!-- TABS -->
+  <!-- ОСНОВНАЯ ОБЛАСТЬ -->
+  <div class="main">
     <div class="tabs">
-      <div class="tab active" id="tab-day" onclick="showTab('day')">📅 День</div>
-      <div class="tab" id="tab-period" onclick="showTab('period')">📊 Итог периода</div>
-      <div class="tab" id="tab-emps" onclick="showTab('emps')">👤 Сотрудники</div>
+      <div class="tab active" onclick="showTab('day')" id="tab-day">📅 День</div>
+      <div class="tab" onclick="showTab('period')" id="tab-period">📊 Итог периода</div>
     </div>
-
-    <!-- ДЕНЬ -->
-    <div class="panel active" id="panel-day">
-      <div class="alert" id="day-hint">Выберите день в списке слева</div>
-      <div id="day-content" style="display:none">
-
-        <!-- Явка -->
-        <div class="card">
-          <div class="card-hdr">
-            <div class="card-title amber">👥 Явка производственных</div>
-          </div>
-          <div class="att-grid" id="att-grid"></div>
-        </div>
-
-        <!-- Прошив -->
-        <div class="card">
-          <div class="card-hdr">
-            <div class="card-title purple">🔨 Прошив — индивидуальная сдельщина</div>
-            <div class="card-actions"><button class="btn sm" onclick="addSewRow()">+ Строка</button></div>
-          </div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Сотрудник</th><th>Артикул</th><th class="r">Объём, м²</th><th class="r">Тариф ₽/м²</th><th class="r">Начислено</th><th></th></tr></thead>
-              <tbody id="sew-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Бригада -->
-        <div class="card">
-          <div class="card-hdr">
-            <div class="card-title green">◈ Фольгирование и Клей — бригадный котёл</div>
-            <div class="card-actions"><button class="btn sm g" onclick="addBrigadeOp()">+ Операция</button></div>
-          </div>
-          <div id="brigade-ops-wrap">
-            <div class="tbl-wrap">
-              <table>
-                <thead><tr><th>Артикул</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Сумма</th><th></th></tr></thead>
-                <tbody id="brigade-tbody"></tbody>
-                <tfoot><tr><td colspan="3" style="padding:5px 8px">Итого котёл</td><td class="r" id="brigade-total">0,00 ₽</td><td></td></tr></tfoot>
-              </table>
-            </div>
-            <div style="padding:8px 12px;border-top:1px solid var(--border)">
-              <div class="subsec" style="margin-top:0">Состав бригады <span id="brigade-per-person" style="color:var(--amber)"></span></div>
-              <div id="brigade-members" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- После смены -->
-        <div class="card">
-          <div class="card-hdr">
-            <div class="card-title amber">🌙 После смены</div>
-            <div class="card-actions">
-              <button class="btn sm" onclick="addAfterRow(false)">+ Индивид.</button>
-              <button class="btn sm g" onclick="addAfterRow(true)">+ Бригада</button>
-            </div>
-          </div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Сотрудник / состав</th><th>Артикул</th><th class="r">Объём</th><th class="r">Тариф</th><th class="r">Начислено</th><th></th></tr></thead>
-              <tbody id="after-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Офисные -->
-        <div class="card">
-          <div class="card-hdr"><div class="card-title blue">💼 Офисные сотрудники</div></div>
-          <div class="att-grid" id="office-grid"></div>
-        </div>
-
-        <!-- Итог дня -->
-        <div class="kpi-row" id="day-kpis" style="margin-top:10px"></div>
-
-      </div>
+    <div class="content" id="content">
+      <div style="color:var(--text3);text-align:center;margin-top:40px">Выберите месяц и день</div>
     </div>
-
-    <!-- ИТОГ ПЕРИОДА -->
-    <div class="panel" id="panel-period">
-      <div class="kpi-row" id="period-kpis"></div>
-
-      <!-- Налоговые параметры -->
-      <div class="card" style="margin-bottom:10px">
-        <div class="card-hdr"><div class="card-title">⚙ Параметры расчёта</div></div>
-        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:12px">
-          <div class="field" style="width:120px"><label>НДФЛ %</label><input class="inp" id="p-ndfl" value="13" type="number"></div>
-          <div class="field" style="width:120px"><label>Взносы до порога %</label><input class="inp" id="p-ins1" value="30.2" type="number"></div>
-          <div class="field" style="width:120px"><label>Взносы сверх %</label><input class="inp" id="p-ins2" value="7.6" type="number"></div>
-          <div class="field" style="width:140px"><label>Порог МСП, ₽</label><input class="inp" id="p-thresh" value="40639.5" type="number"></div>
-          <div style="align-self:flex-end"><button class="btn g" onclick="renderPeriod()">Пересчитать</button></div>
-        </div>
-      </div>
-
-      <div id="period-tables"></div>
-    </div>
-
-    <!-- СОТРУДНИКИ -->
-    <div class="panel" id="panel-emps">
-      <div style="margin-bottom:10px"><button class="btn g" onclick="openEmpModal()">+ Добавить сотрудника</button></div>
-      <div id="emps-list"></div>
-
-      <!-- Тарифы бригады -->
-      <div class="card" style="margin-top:10px">
-        <div class="card-hdr"><div class="card-title green">◈ Тарифы бригады (фольгирование)</div></div>
-        <div class="card-body">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px" id="brigade-rates-grid"></div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modal">
+<!-- МОДАЛ СОТРУДНИКА -->
+<div class="modal-bg" id="emp-modal">
   <div class="modal">
-    <div class="modal-title" id="modal-title"></div>
-    <div id="modal-body"></div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal()">Отмена</button>
-      <button class="btn g" id="modal-ok" onclick="modalOk()">Сохранить</button>
+    <h3 id="emp-modal-title">Сотрудник</h3>
+    <div class="mrow full"><div class="mfield"><label>ФИО</label><input id="e-name" placeholder="Иванов Иван Иванович"></div></div>
+    <div class="mrow">
+      <div class="mfield"><label>Должность</label><input id="e-pos" placeholder="Прошивщик"></div>
+      <div class="mfield"><label>Тип</label>
+        <select id="e-type" onchange="toggleEmpType()">
+          <option value="prod">Производственный</option>
+          <option value="office">Офисный (оклад)</option>
+        </select>
+      </div>
+    </div>
+    <div id="e-salary-block" style="display:none">
+      <div class="mrow"><div class="mfield"><label>Оклад ₽/мес</label><input id="e-salary" value="0"></div></div>
+    </div>
+    <div id="e-rates-block">
+      <div class="sec-hdr">Тарифы прошива ₽/м²</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="e-rates-grid"></div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeEmpModal()">Отмена</button>
+      <button class="save" onclick="saveEmp()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -303,748 +167,849 @@ tfoot td{font-weight:700;background:var(--bg3);border-top:1px solid var(--border
 <script>
 'use strict';
 
-// ═══════════════════════════════════════════════
-// КОНСТАНТЫ
-// ═══════════════════════════════════════════════
 const GS_URL = 'https://script.google.com/macros/s/AKfycbzC0vd34pjqKioZyiy_f7P9zTbrmmlZO6Xacw1XZSVvv1vSfsq2dJwi4vK1bhrzRZUwkQ/exec';
 
-const ARTS_SEW  = ['5П','5НФ','8П','8НФ','10П','10НФ','13П','13НФ','16П','16НФ'];
-const ARTS_FOL  = ['5Ф','5ТФ','8Ф','8ТФ','10Ф','10ТФ','13Ф','13ТФ','16Ф','16ТФ','Клей FP'];
-const ARTS_ALL  = [...ARTS_SEW, ...ARTS_FOL];
-const ABSENCE   = {vacation:'Отпуск', sick:'Больничный', admin:'Административный'};
-const DAYS_RU   = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-
-// ═══════════════════════════════════════════════
-// ДАННЫЕ
-// ═══════════════════════════════════════════════
-let DB = {
-  employees: [],   // [{id,name,position,type:'prod'|'office',salaryBase,rates:{}}]
-  days: [],        // [{date, sew:[{empId,art,qty,rate,gross}], brigade:[{art,qty,rate,gross}],
-                   //   brigadeMembers:[empId], absences:{empId:type}, after:[{isBrigade,empId?,members?,art,qty,rate,gross}]}]
-  premiums: {},    // {monthPeriod_empId: {premium,cash}}
-  brigadeRates: {} // {art: rate}
+// ── КОНСТАНТЫ ──
+const SEW_OPS = {
+  sew5f:'5П', sew5nf:'5НФ', sew8f:'8П', sew8nf:'8НФ',
+  sew10f:'10П', sew10nf:'10НФ', sew13f:'13П', sew13nf:'13НФ',
+  sew16f:'16П', sew16nf:'16НФ'
 };
+const FOL_OPS = {
+  fol_5f:'5Ф', fol_5tf:'5ТФ', fol_8f:'8Ф', fol_8tf:'8ТФ',
+  fol_10f:'10Ф', fol_10tf:'10ТФ', fol_13f:'13Ф', fol_13tf:'13ТФ',
+  fol_16f:'16Ф', fol_16tf:'16ТФ', glue:'Клей FP'
+};
+const ALL_OPS = {...SEW_OPS, ...FOL_OPS};
 
-let activeDate = '';
-let activePeriod = 1;
-let isLoading = false;
+// ── СОСТОЯНИЕ ──
+let DB = {
+  employees: [],   // [{id,name,pos,type,salary,rates:{sew5f:3.5,...}}]
+  days: {},        // {'2026-04-01': {indiv:[{empId,op,qty,rate,gross}], brigade:{ops:[{op,qty,rate,gross}],members:[empId]}, after:[{empId,op,qty,rate,gross,isBrigade,members}], absences:{empId:'vacation'}}}
+  premiums: {},    // {'2026-041_empId': {premium,cash}}
+  brigRates: {}    // {fol_5f: 2.5, ...}
+};
+let curPeriod = 1;
+let curDay = '';
+let curTab = 'day';
+let isReady = false; // не сохраняем пока не загружены данные
 
-// ═══════════════════════════════════════════════
-// УТИЛИТЫ
-// ═══════════════════════════════════════════════
+// ── УТИЛИТЫ ──
 const uid = () => Math.random().toString(36).slice(2,9);
-const fmt = n => (n||0).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt = n => (+(n||0)).toLocaleString('ru',{minimumFractionDigits:2,maximumFractionDigits:2});
 const today = () => new Date().toISOString().split('T')[0];
+const getMonth = () => document.getElementById('sel-month').value || new Date().toISOString().slice(0,7);
 
-function getDay(date) {
-  return DB.days.find(d=>d.date===date) || null;
-}
-function getOrCreateDay(date) {
-  let d = DB.days.find(d=>d.date===date);
-  if (!d) { d={date,sew:[],brigade:[],brigadeMembers:[],absences:{},after:[]}; DB.days.push(d); }
-  return d;
-}
-
-function getDaysInPeriod(monthStr, period) {
-  if (!monthStr) return [];
-  const [y,m] = monthStr.split('-').map(Number);
-  const start = period===1 ? 1 : 16;
-  const end   = period===1 ? 15 : new Date(y,m,0).getDate();
-  const days  = [];
-  for (let d=start; d<=end; d++) {
-    const s = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    days.push(s);
+function getPeriodDays(month, period) {
+  if (!month) return [];
+  const [y,m] = month.split('-').map(Number);
+  const start = period === 1 ? 1 : 16;
+  const end = period === 1 ? 15 : new Date(y,m,0).getDate();
+  const days = [];
+  for (let d = start; d <= end; d++) {
+    days.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
   }
   return days;
 }
 
+function isWeekend(date) {
+  const d = new Date(date).getDay();
+  return d === 0 || d === 6;
+}
+
+const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+function dayLabel(date) {
+  const dt = new Date(date);
+  return `${String(dt.getDate()).padStart(2,'0')} ${DAYS_RU[dt.getDay()]}`;
+}
+
+function getDay(date) {
+  if (!DB.days[date]) DB.days[date] = {indiv:[], brigade:{ops:[],members:[]}, after:[], absences:{}};
+  const d = DB.days[date];
+  if (!d.brigade) d.brigade = {ops:[],members:[]};
+  if (!d.after) d.after = [];
+  if (!d.absences) d.absences = {};
+  return d;
+}
+
 function calcDayTotals(date) {
-  const d = getDay(date);
+  const d = DB.days[date];
   if (!d) return {};
   const totals = {};
-  // Прошив
-  (d.sew||[]).forEach(r=>{ totals[r.empId]=(totals[r.empId]||0)+(r.gross||0); });
-  // Бригада
-  const members = d.brigadeMembers||[];
-  const brigTotal = (d.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
-  const per = members.length>0 ? brigTotal/members.length : 0;
-  members.forEach(id=>{ totals[id]=(totals[id]||0)+per; });
-  // После смены
-  (d.after||[]).forEach(r=>{
+  (d.indiv||[]).forEach(r => { totals[r.empId] = (totals[r.empId]||0) + (r.gross||0); });
+  const bOps = d.brigade?.ops||[];
+  const bMem = d.brigade?.members||[];
+  const bTotal = bOps.reduce((s,b)=>s+(b.gross||0),0);
+  const bPer = bMem.length > 0 ? bTotal/bMem.length : 0;
+  bMem.forEach(id => { totals[id] = (totals[id]||0) + bPer; });
+  (d.after||[]).forEach(r => {
     if (r.isBrigade) {
-      const mems = r.members||[];
-      const p = mems.length>0?(r.gross||0)/mems.length:0;
-      mems.forEach(id=>{ totals[id]=(totals[id]||0)+p; });
+      const per = (r.members||[]).length > 0 ? (r.gross||0)/(r.members||[]).length : 0;
+      (r.members||[]).forEach(id => { totals[id] = (totals[id]||0) + per; });
     } else {
-      totals[r.empId]=(totals[r.empId]||0)+(r.gross||0);
+      totals[r.empId] = (totals[r.empId]||0) + (r.gross||0);
     }
   });
   return totals;
 }
 
-function getEmpRate(empId, art) {
-  const emp = DB.employees.find(e=>e.id===empId);
-  return emp?.rates?.[art] || 0;
-}
-function getBrigadeRate(art) {
-  return DB.brigadeRates[art] || 0;
-}
-
-// ═══════════════════════════════════════════════
-// GOOGLE SHEETS
-// ═══════════════════════════════════════════════
-function setStatus(s, msg) {
-  const el = document.getElementById('sync-status');
-  el.className = 'sync-status ' + s;
-  el.textContent = msg;
-}
-
-async function gsGet(params) {
-  const qs = new URLSearchParams(params).toString();
-  const res = await fetch(GS_URL + '?' + qs);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error||'GS error');
-  return data;
-}
-
+// ── GOOGLE SHEETS ──
 async function gsLoad(table) {
-  try {
-    const r = await gsGet({action:'load', table});
-    const rows = r.rows||[];
-    if (rows.length < 2) return [];
-    const keys = rows[0];
-    return rows.slice(1).map(row=>{
-      const obj={};
-      keys.forEach((k,i)=>{ try{obj[k]=JSON.parse(row[i]);}catch{obj[k]=row[i];} });
-      return obj;
+  const r = await fetch(`${GS_URL}?action=load&table=${table}`);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error);
+  const rows = j.rows||[];
+  if (rows.length < 2) return [];
+  const keys = rows[0];
+  return rows.slice(1).map(row => {
+    const obj = {};
+    keys.forEach((k,i) => { try { obj[k] = JSON.parse(row[i]); } catch { obj[k] = row[i]; } });
+    return obj;
+  });
+}
+
+async function gsSave(table, rows) {
+  if (!rows || rows.length === 0) {
+    const r = await fetch(GS_URL + '?action=clear&table=' + encodeURIComponent(table));
+    return;
+  }
+  const keys = Object.keys(rows[0]);
+  // Каждую строку — отдельным запросом (избегаем лимит URL)
+  for (let i = 0; i < rows.length; i++) {
+    const isFirst = i === 0;
+    const rowVals = keys.map(k => {
+      const v = rows[i][k];
+      return v === undefined || v === null ? '' : JSON.stringify(v);
     });
-  } catch(e) { console.warn('gsLoad failed:', table, e.message); return []; }
-}
-
-async function gsSaveOne(table, rowObj, isFirst) {
-  const keys = Object.keys(rowObj);
-  const vals = keys.map(k=>{ const v=rowObj[k]; return v==null?'':String(v); });
-  const rows = isFirst ? [keys, vals] : [vals];
-  const params = {action:'save', table, rows:JSON.stringify(rows), clear: isFirst?'1':'0'};
-  await gsGet(params);
-}
-
-async function gsSaveTable(table, arr) {
-  if (!arr || arr.length===0) { await gsGet({action:'clear', table}); return; }
-  const keys = Object.keys(arr[0]);
-  const allRows = [keys, ...arr.map(r=>keys.map(k=>{ const v=r[k]; return v==null?'':JSON.stringify(v); }))];
-  const CHUNK = 20;
-  for (let i=0; i<allRows.length; i+=CHUNK) {
-    const chunk = allRows.slice(i, i+CHUNK);
-    await gsGet({action:'save', table, rows:JSON.stringify(chunk), clear: i===0?'1':'0'});
+    const batch = isFirst ? [keys, rowVals] : [rowVals];
+    const params = new URLSearchParams({
+      action: 'save', table,
+      rows: JSON.stringify(batch),
+      clear: isFirst ? '1' : '0'
+    });
+    const res = await fetch(GS_URL + '?' + params.toString());
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' on ' + table + '[' + i + ']');
+    const j = await res.json();
+    if (!j.ok) throw new Error((j.error||'GS err') + ' on ' + table + '[' + i + ']');
   }
 }
 
+
 async function loadAll() {
-  setStatus('loading','Загрузка...');
-  isLoading = true;
+  setStatus('loading','загрузка...');
   try {
     // Сотрудники
     const emps = await gsLoad('sal_employees');
     if (emps.length) DB.employees = emps;
 
-    // Дни
+    // Дни зарплаты
     const days = await gsLoad('sal_days');
-    if (days.length) {
-      DB.days = days.map(r=>{
-        let d={date:r.date,sew:[],brigade:[],brigadeMembers:[],absences:{},after:[]};
-        try{ const p=JSON.parse(r.data); Object.assign(d,p); }catch{}
-        return d;
-      });
-    }
-
-    // Премии
-    const prems = await gsLoad('sal_premiums');
-    if (prems.length && prems[0]?.data) {
-      try{ DB.premiums=JSON.parse(prems[0].data); }catch{}
-    }
-
-    // Тарифы бригады
-    const br = await gsLoad('sal_brigade_rates');
-    if (br.length && br[0]?.data) {
-      try{ DB.brigadeRates=JSON.parse(br[0].data); }catch{}
-    }
-
-    setStatus('ok','Загружено ✓');
-    loadBrigadeRatesUI();
-    buildDayList();
-    if (activeDate) renderDay(activeDate);
-    renderEmps();
-  } catch(e) {
-    console.error('loadAll error:', e);
-    setStatus('err','Ошибка загрузки');
-  }
-  isLoading = false;
-}
-
-async function saveAll() {
-  if (isLoading) return;
-  setStatus('loading','Сохранение...');
-  try {
-    // Сотрудники
-    await gsSaveTable('sal_employees', DB.employees);
-
-    // Дни — каждый день отдельно (данные большие)
-    const dayRows = DB.days.filter(d=>{
-      // Сохраняем только непустые дни
-      return (d.sew&&d.sew.length)||(d.brigade&&d.brigade.length)||
-             (d.brigadeMembers&&d.brigadeMembers.length)||
-             Object.keys(d.absences||{}).length||(d.after&&d.after.length);
+    days.forEach(r => {
+      try { DB.days[r.date] = JSON.parse(r.data); } catch {}
     });
-    if (dayRows.length===0) {
-      await gsGet({action:'clear', table:'sal_days'});
-    } else {
-      for (let i=0; i<dayRows.length; i++) {
-        const d = dayRows[i];
-        const compact = {sew:d.sew||[],brigade:d.brigade||[],brigadeMembers:d.brigadeMembers||[],absences:d.absences||{},after:d.after||[]};
-        await gsSaveOne('sal_days', {date:d.date, data:JSON.stringify(compact)}, i===0);
-      }
+
+    // Премии/наличка
+    const prems = await gsLoad('sal_premiums');
+    if (prems.length && prems[0].data) {
+      try { DB.premiums = JSON.parse(prems[0].data); } catch {}
     }
 
-    // Премии
-    await gsSaveTable('sal_premiums', [{data:JSON.stringify(DB.premiums)}]);
+    // Настройки (тарифы бригады)
+    const sets = await gsLoad('sal_settings');
+    if (sets.length && sets[0].data) {
+      try { DB.brigRates = JSON.parse(sets[0].data); } catch {}
+    }
 
-    // Тарифы бригады
-    await gsSaveTable('sal_brigade_rates', [{data:JSON.stringify(DB.brigadeRates)}]);
-
-    setStatus('ok','Сохранено ✓');
-    setTimeout(()=>setStatus('ok',''), 3000);
+    isReady = true;
+    setStatus('ok','синхронизировано');
+    renderSidebar();
+    renderContent();
   } catch(e) {
-    console.error('saveAll error:', e);
-    setStatus('err','Ошибка: ' + e.message);
+    isReady = true;
+    setStatus('err','офлайн');
+    console.error('loadAll error:', e);
   }
 }
 
-// ═══════════════════════════════════════════════
-// НАВИГАЦИЯ
-// ═══════════════════════════════════════════════
-function showTab(tab) {
-  ['day','period','emps'].forEach(t=>{
-    document.getElementById('tab-'+t).className='tab'+(t===tab?' active':'');
-    document.getElementById('panel-'+t).className='panel'+(t===tab?' active':'');
-  });
-  if (tab==='period') renderPeriod();
-  if (tab==='emps') renderEmps();
+let syncTimer = null;
+function scheduleSave() {
+  if (!isReady) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 1500);
 }
 
-function setPeriod(p) {
-  activePeriod = p;
-  document.getElementById('btn-p1').className = 'btn sm' + (p===1?' g':'');
-  document.getElementById('btn-p2').className = 'btn sm' + (p===2?' g':'');
-  buildDayList();
+async function syncNow() {
+  if (!isReady) return;
+  setStatus('loading','сохранение...');
+  try {
+    await gsSave('sal_employees', DB.employees);
+
+    const dayRows = Object.entries(DB.days)
+      .filter(([,d]) => (d.indiv||[]).length || (d.brigade?.ops||[]).length || (d.after||[]).length || Object.keys(d.absences||{}).length)
+      .map(([date,d]) => ({date, data: JSON.stringify(d)}));
+    await gsSave('sal_days', dayRows);
+
+    await gsSave('sal_premiums', [{data: JSON.stringify(DB.premiums)}]);
+    await gsSave('sal_settings', [{data: JSON.stringify(DB.brigRates)}]);
+
+    setStatus('ok','сохранено ✓');
+    setTimeout(() => setStatus('ok','синхронизировано'), 2000);
+  } catch(e) {
+    setStatus('err','ошибка сохранения');
+    console.error('syncNow error:', e);
+  }
 }
 
-function buildDayList() {
-  const month = document.getElementById('sel-month').value;
-  const days  = getDaysInPeriod(month, activePeriod);
-  const list  = document.getElementById('day-list');
-  list.innerHTML = days.map(date=>{
-    const dt  = new Date(date+'T00:00:00');
-    const dow = dt.getDay();
-    const isWE= dow===0||dow===6;
-    const d   = getDay(date);
-    const hasData = d && ((d.sew&&d.sew.length)||(d.brigade&&d.brigade.length)||(d.after&&d.after.length)||Object.keys(d.absences||{}).length);
-    const totals  = calcDayTotals(date);
-    const total   = Object.values(totals).reduce((s,v)=>s+v,0);
-    const isActive= date===activeDate;
-    return `<button class="sb-btn${isWE?' weekend':''}${isActive?' active':''}" onclick="selectDay('${date}')">
-      ${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')} ${DAYS_RU[dow]}
-      ${hasData?`<span class="sb-dot"></span>`:''}
-      ${total>0&&!isActive?`<span style="font-size:9px;color:var(--text3);display:block">${fmt(total)} ₽</span>`:''}
-    </button>`;
-  }).join('') || '<div style="font-size:10px;color:var(--text3)">Выберите месяц</div>';
+function setStatus(type, text) {
+  const el = document.getElementById('sync-status');
+  el.className = `status ${type}`;
+  el.textContent = text;
 }
 
-function selectDay(date) {
-  activeDate = date;
-  buildDayList();
-  renderDay(date);
-  document.getElementById('day-hint').style.display='none';
-  document.getElementById('day-content').style.display='';
-  showTab('day');
-}
+// ── РЕНДЕР САЙДБАРА ──
+function renderSidebar() {
+  // Тарифы бригады
+  const brEl = document.getElementById('brigade-rates');
+  brEl.innerHTML = Object.entries(FOL_OPS).map(([k,v]) =>
+    `<div class="field" style="display:flex;align-items:center;gap:6px">
+      <label style="width:55px;margin:0">${v}</label>
+      <input class="ci" style="width:70px" value="${(DB.brigRates[k]||'')}" placeholder="0.00"
+        onchange="DB.brigRates['${k}']=parseFloat(this.value)||0;scheduleSave()">
+    </div>`
+  ).join('');
 
-// ═══════════════════════════════════════════════
-// ДНЕВНОЙ ВИД
-// ═══════════════════════════════════════════════
-function renderDay(date) {
-  if (!date) return;
-  const d = getOrCreateDay(date);
-  renderAttendance(d, date);
-  renderSewTable(d, date);
-  renderBrigadeBlock(d, date);
-  renderAfterTable(d, date);
-  renderOfficeGrid(d, date);
-  renderDayKpis(date);
-}
-
-function renderAttendance(d, date) {
-  const prods = DB.employees.filter(e=>e.type==='prod');
-  const totals = calcDayTotals(date);
-  const brigadeMembers = new Set(d.brigadeMembers||[]);
-  const brigTotal = (d.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
-  const perPerson = brigadeMembers.size>0 ? brigTotal/brigadeMembers.size : 0;
-
-  document.getElementById('att-grid').innerHTML = prods.map(e=>{
-    const abs = (d.absences||{})[e.id];
-    const inBrig = brigadeMembers.has(e.id);
-    const sewGross = (d.sew||[]).filter(r=>r.empId===e.id).reduce((s,r)=>s+(r.gross||0),0);
-    const brigShare = inBrig ? perPerson : 0;
-    const afterGross = (d.after||[]).reduce((s,r)=>{
-      if(r.isBrigade) return s+((r.members||[]).includes(e.id)?(r.gross||0)/Math.max(1,(r.members||[]).length):0);
-      return s+(r.empId===e.id?(r.gross||0):0);
-    },0);
-    const total = totals[e.id]||0;
-
-    const absBtns = Object.entries(ABSENCE).map(([k,v])=>
-      `<button class="btn sm${abs===k?' g':''}" style="font-size:9px;padding:2px 5px" onclick="toggleAbsence('${date}','${e.id}','${k}')">${v}</button>`
-    ).join('');
-
-    return `<div class="att-card${inBrig?' brigade':''}${abs?' absent':''}">
-      <div class="att-name">${e.name}</div>
-      <div class="att-pos">${e.position||''}</div>
-      ${abs?`<div style="font-size:10px;color:var(--amber);margin-bottom:3px">📋 ${ABSENCE[abs]}</div>`:''}
-      ${!abs&&total>0?`<div class="att-earn">
-        ${sewGross>0?`<span class="purple">🔨 ${fmt(sewGross)}</span> `:''}
-        ${brigShare>0?`<span class="green">◈ ${fmt(brigShare)}</span> `:''}
-        ${afterGross>0?`<span class="amber">🌙 ${fmt(afterGross)}</span>`:''}
-        ${total>0?`<div style="font-weight:700;font-size:11px;margin-top:2px">= ${fmt(total)} ₽</div>`:''}
-      </div>`:''}
-      <div class="att-btns">${absBtns}
-        ${abs?`<button class="btn sm del" onclick="toggleAbsence('${date}','${e.id}','')">✕</button>`:''}
+  // Сотрудники
+  const empEl = document.getElementById('emp-list');
+  empEl.innerHTML = DB.employees.map(e =>
+    `<div class="emp-card">
+      <div class="emp-name">${e.name} ${e.type==='office'?'<span class="badge off">оклад</span>':''}</div>
+      <div class="emp-pos">${e.pos||''}</div>
+      <div class="emp-btns">
+        <button onclick="openEmpModal('${e.id}')">✏ Ред.</button>
+        <button onclick="deleteEmp('${e.id}')" style="color:var(--red)">✕</button>
       </div>
-    </div>`;
-  }).join('') || '<div style="padding:8px;color:var(--text3);font-size:10px">Нет производственных сотрудников</div>';
+    </div>`
+  ).join('') || '<div style="color:var(--text3);font-size:11px;padding:8px 0">Нет сотрудников</div>';
 }
+
+// ── ПЕРИОД И ДНИ ──
+function setPeriod(p) {
+  curPeriod = p;
+  document.getElementById('btn-p1').style.borderColor = p===1 ? 'var(--green)' : '';
+  document.getElementById('btn-p2').style.borderColor = p===2 ? 'var(--green)' : '';
+  document.getElementById('btn-p1').style.color = p===1 ? 'var(--green)' : '';
+  document.getElementById('btn-p2').style.color = p===2 ? 'var(--green)' : '';
+  curDay = '';
+  renderContent();
+}
+
+function showTab(tab) {
+  curTab = tab;
+  document.getElementById('tab-day').className = 'tab' + (tab==='day'?' active':'');
+  document.getElementById('tab-period').className = 'tab' + (tab==='period'?' active':'');
+  renderContent();
+}
+
+function renderContent() {
+  if (curTab === 'day') renderDayView();
+  else renderPeriodView();
+}
+
+// ── ВИД ДНЯ ──
+function renderDayView() {
+  const month = getMonth();
+  const days = getPeriodDays(month, curPeriod);
+  const payDate = curPeriod===1
+    ? `25.${month.slice(5)}.${month.slice(0,4)}`
+    : `10.${String(+month.slice(5)+1).padStart(2,'0')}.${month.slice(0,4)}`;
+
+  let html = `<div style="margin-bottom:12px;color:var(--text3);font-size:11px">
+    Период ${curPeriod} · Выплата ${payDate}
+  </div>`;
+
+  // Сетка дней
+  html += '<div class="days-grid">';
+  days.forEach(date => {
+    const d = DB.days[date];
+    const hasData = d && ((d.indiv||[]).length || (d.brigade?.ops||[]).length || (d.after||[]).length);
+    const we = isWeekend(date);
+    const active = date === curDay;
+    html += `<div class="day-btn ${we?'weekend':''} ${active?'active':''} ${hasData?'has-data':''}"
+      onclick="selectDay('${date}')">${dayLabel(date)}</div>`;
+  });
+  html += '</div>';
+
+  if (!curDay) {
+    html += '<div style="color:var(--text3);text-align:center;padding:20px">Выберите день</div>';
+    document.getElementById('content').innerHTML = html;
+    return;
+  }
+
+  const day = getDay(curDay);
+  const totals = calcDayTotals(curDay);
+  const totalDay = Object.values(totals).reduce((s,v)=>s+v,0);
+  const ABSENCE = {vacation:'Отпуск',sick:'Больничный',admin:'Административный'};
+  const prodEmps = DB.employees.filter(e=>e.type!=='office');
+  const offEmps = DB.employees.filter(e=>e.type==='office');
+
+  // KPI
+  if (totalDay > 0) {
+    html += `<div class="kpi">
+      <div class="kcard"><div class="lbl">Начислено за день</div><div class="val g">${fmt(totalDay)} ₽</div></div>
+      <div class="kcard"><div class="lbl">В бригаде</div><div class="val">${(day.brigade?.members||[]).length} чел.</div></div>
+      <div class="kcard"><div class="lbl">Отсутствуют</div><div class="val a">${Object.keys(day.absences||{}).length} чел.</div></div>
+    </div>`;
+  }
+
+  // Явка производственных
+  if (prodEmps.length) {
+    html += `<div class="card">
+      <div class="card-head"><span class="card-title" style="color:var(--amber)">👥 Явка производственных</span></div>
+      <div class="card-body" style="display:flex;flex-wrap:wrap;gap:8px">`;
+    prodEmps.forEach(e => {
+      const abs = (day.absences||{})[e.id];
+      const indGross = (day.indiv||[]).filter(r=>r.empId===e.id).reduce((s,r)=>s+(r.gross||0),0);
+      const bMem = day.brigade?.members||[];
+      const bTotal = (day.brigade?.ops||[]).reduce((s,b)=>s+(b.gross||0),0);
+      const bShare = bMem.includes(e.id) && bMem.length>0 ? bTotal/bMem.length : 0;
+      const total = totals[e.id]||0;
+      html += `<div style="background:var(--bg3);border:1px solid ${abs?'var(--amber)':total>0?'var(--green)':'var(--border)'};border-radius:6px;padding:8px;min-width:160px">
+        <div style="font-weight:600;margin-bottom:3px">${e.name}</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${e.pos||''}</div>
+        ${abs ? `<div style="color:var(--amber);font-size:11px;margin-bottom:4px">📋 ${ABSENCE[abs]}</div>` : ''}
+        ${!abs && indGross>0 ? `<div style="font-size:11px;color:var(--purple)">🔨 ${fmt(indGross)} ₽</div>` : ''}
+        ${!abs && bShare>0 ? `<div style="font-size:11px;color:var(--green)">◈ ${fmt(bShare)} ₽</div>` : ''}
+        ${!abs && total>0 ? `<div style="font-size:11px;font-weight:600;color:var(--green);margin-top:2px">= ${fmt(total)} ₽</div>` : ''}
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:6px">
+          ${Object.entries(ABSENCE).map(([k,v])=>`<button onclick="toggleAbsence('${curDay}','${e.id}','${k}')"
+            style="font-size:9px;padding:2px 5px;border-radius:3px;cursor:pointer;border:1px solid ${abs===k?'var(--amber)':'var(--border)'};background:${abs===k?'rgba(251,191,36,.2)':'var(--bg4)'};color:${abs===k?'var(--amber)':'#e2e8f0'}">${v}</button>`).join('')}
+          ${abs?`<button onclick="toggleAbsence('${curDay}','${e.id}','')" style="font-size:9px;padding:2px 5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--text3)">Убрать</button>`:''}
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Прошив
+  html += `<div class="card">
+    <div class="card-head">
+      <span class="card-title" style="color:var(--purple)">🔨 Прошив — индивидуальная сдельщина</span>
+      <button class="add-btn" onclick="addIndiv('${curDay}')">+ Строка</button>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Сотрудник</th><th>Артикул</th><th class="r">Объём м²</th><th class="r">Тариф ₽</th><th class="r">Начислено</th><th></th></tr></thead>
+        <tbody>`;
+  (day.indiv||[]).forEach((r,i) => {
+    html += `<tr>
+      <td><select class="ci" onchange="updIndiv('${curDay}',${i},'empId',this.value)">
+        ${prodEmps.map(e=>`<option value="${e.id}" ${e.id===r.empId?'selected':''}>${e.name}</option>`).join('')}
+      </select></td>
+      <td><select class="ci" onchange="updIndiv('${curDay}',${i},'op',this.value);autoRate('${curDay}',${i})">
+        ${Object.entries(SEW_OPS).map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('')}
+      </select></td>
+      <td><input class="ci r" style="width:70px" value="${r.qty||''}" placeholder="0"
+        onchange="updIndiv('${curDay}',${i},'qty',parseFloat(this.value)||0);calcIndiv('${curDay}',${i})"></td>
+      <td><input class="ci r" style="width:70px" value="${r.rate?(+r.rate).toFixed(2):''}" placeholder="0.00"
+        onchange="updIndiv('${curDay}',${i},'rate',parseFloat(this.value)||0);calcIndiv('${curDay}',${i})"></td>
+      <td class="num g">${fmt(r.gross||0)}</td>
+      <td><button class="del-btn" onclick="delIndiv('${curDay}',${i})">✕</button></td>
+    </tr>`;
+  });
+  if (!(day.indiv||[]).length) html += '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:10px">Нет записей</td></tr>';
+  html += '</tbody></table></div></div>';
+
+  // Бригадный котёл
+  const bOps = day.brigade?.ops||[];
+  const bMem = day.brigade?.members||[];
+  const bTotal = bOps.reduce((s,b)=>s+(b.gross||0),0);
+  const bPer = bMem.length>0 ? bTotal/bMem.length : 0;
+  html += `<div class="card">
+    <div class="card-head">
+      <span class="card-title" style="color:var(--green)">◈ Фольгирование и Клей — бригадный котёл</span>
+      <button class="add-btn" onclick="addBrigOp('${curDay}')">+ Операция</button>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Артикул</th><th class="r">Объём</th><th class="r">Тариф ₽</th><th class="r">Сумма</th><th></th></tr></thead>
+        <tbody>`;
+  bOps.forEach((b,i) => {
+    html += `<tr>
+      <td><select class="ci" onchange="updBrigOp('${curDay}',${i},'op',this.value);autoBrigRate('${curDay}',${i})">
+        ${Object.entries(FOL_OPS).map(([k,v])=>`<option value="${k}" ${k===b.op?'selected':''}>${v}</option>`).join('')}
+      </select></td>
+      <td><input class="ci r" style="width:70px" value="${b.qty||''}" placeholder="0"
+        onchange="updBrigOp('${curDay}',${i},'qty',parseFloat(this.value)||0);calcBrig('${curDay}')"></td>
+      <td><input class="ci r" style="width:70px" value="${b.rate?(+b.rate).toFixed(2):''}" placeholder="0.00"
+        onchange="updBrigOp('${curDay}',${i},'rate',parseFloat(this.value)||0);calcBrig('${curDay}')"></td>
+      <td class="num g">${fmt((b.qty||0)*(b.rate||0))}</td>
+      <td><button class="del-btn" onclick="delBrigOp('${curDay}',${i})">✕</button></td>
+    </tr>`;
+  });
+  if (!bOps.length) html += '<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:10px">Нет операций</td></tr>';
+  html += `</tbody>
+        ${bTotal>0?`<tfoot><tr><td colspan="3" style="font-weight:600;padding:6px 8px">Котёл итого</td><td class="num g" style="font-weight:700">${fmt(bTotal)}</td><td></td></tr></tfoot>`:''}
+      </table>
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Состав бригады (${bMem.length} чел.${bPer>0?' → по '+fmt(bPer)+' ₽ каждому':''})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">`;
+  prodEmps.forEach(e => {
+    const abs = (day.absences||{})[e.id];
+    html += `<label style="display:flex;align-items:center;gap:5px;cursor:${abs?'not-allowed':'pointer'};opacity:${abs?0.4:1}">
+      <input type="checkbox" ${bMem.includes(e.id)?'checked':''} ${abs?'disabled':''}
+        onchange="toggleBrigMember('${curDay}','${e.id}',this.checked)">
+      <span style="font-size:12px">${e.name}</span>
+    </label>`;
+  });
+  html += `</div></div></div></div>`;
+
+  // После смены
+  html += `<div class="card">
+    <div class="card-head">
+      <span class="card-title" style="color:var(--amber)">🌙 После смены</span>
+      <div style="display:flex;gap:6px">
+        <button class="add-btn" onclick="addAfter('${curDay}',false)">+ Строка</button>
+        <button class="add-btn" style="border-color:var(--green);color:var(--green)" onclick="addAfter('${curDay}',true)">+ Бригада</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Сотрудник / состав</th><th>Артикул</th><th class="r">Объём</th><th class="r">Тариф ₽</th><th class="r">Начислено</th><th></th></tr></thead>
+        <tbody>`;
+  (day.after||[]).forEach((r,i) => {
+    if (r.isBrigade) {
+      const per = (r.members||[]).length>0?(r.gross||0)/(r.members||[]).length:0;
+      html += `<tr>
+        <td style="font-size:11px">
+          <div style="color:var(--green);font-weight:600;margin-bottom:4px">◈ Бригада</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${prodEmps.map(e=>`<label style="display:flex;align-items:center;gap:3px;font-size:10px">
+              <input type="checkbox" ${(r.members||[]).includes(e.id)?'checked':''}
+                onchange="toggleAfterMember('${curDay}',${i},'${e.id}',this.checked)">
+              ${e.name}</label>`).join('')}
+          </div>
+          ${per>0?`<div style="color:var(--amber);font-size:10px;margin-top:3px">По ${fmt(per)} ₽</div>`:''}
+        </td>
+        <td><select class="ci" onchange="updAfter('${curDay}',${i},'op',this.value);autoBrigRateAfter('${curDay}',${i})">
+          ${Object.entries(FOL_OPS).map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('')}
+        </select></td>
+        <td><input class="ci r" style="width:65px" value="${r.qty||''}"
+          onchange="updAfter('${curDay}',${i},'qty',parseFloat(this.value)||0);calcAfter('${curDay}',${i})"></td>
+        <td><input class="ci r" style="width:65px" value="${r.rate?(+r.rate).toFixed(2):''}"
+          onchange="updAfter('${curDay}',${i},'rate',parseFloat(this.value)||0);calcAfter('${curDay}',${i})"></td>
+        <td class="num g">${fmt(r.gross||0)}</td>
+        <td><button class="del-btn" onclick="delAfter('${curDay}',${i})">✕</button></td>
+      </tr>`;
+    } else {
+      html += `<tr>
+        <td><select class="ci" onchange="updAfter('${curDay}',${i},'empId',this.value)">
+          ${DB.employees.map(e=>`<option value="${e.id}" ${e.id===r.empId?'selected':''}>${e.name}</option>`).join('')}
+        </select></td>
+        <td><select class="ci" onchange="updAfter('${curDay}',${i},'op',this.value);autoRateAfter('${curDay}',${i})">
+          ${Object.entries(ALL_OPS).map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('')}
+        </select></td>
+        <td><input class="ci r" style="width:65px" value="${r.qty||''}"
+          onchange="updAfter('${curDay}',${i},'qty',parseFloat(this.value)||0);calcAfter('${curDay}',${i})"></td>
+        <td><input class="ci r" style="width:65px" value="${r.rate?(+r.rate).toFixed(2):''}"
+          onchange="updAfter('${curDay}',${i},'rate',parseFloat(this.value)||0);calcAfter('${curDay}',${i})"></td>
+        <td class="num g">${fmt(r.gross||0)}</td>
+        <td><button class="del-btn" onclick="delAfter('${curDay}',${i})">✕</button></td>
+      </tr>`;
+    }
+  });
+  if (!(day.after||[]).length) html += '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:10px">Нет записей</td></tr>';
+  html += '</tbody></table></div></div>';
+
+  // Офисные
+  if (offEmps.length) {
+    html += `<div class="card">
+      <div class="card-head"><span class="card-title" style="color:var(--blue)">💼 Офисные сотрудники</span></div>
+      <div class="card-body" style="display:flex;flex-wrap:wrap;gap:8px">`;
+    offEmps.forEach(e => {
+      const abs = (day.absences||{})[e.id];
+      html += `<div style="background:var(--bg3);border:1px solid ${abs?'var(--amber)':'var(--border)'};border-radius:6px;padding:8px;min-width:160px">
+        <div style="font-weight:600">${e.name}</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${e.pos||''} · ${fmt(e.salary||0)} ₽/мес</div>
+        ${abs?`<div style="color:var(--amber);font-size:11px;margin-bottom:4px">📋 ${ABSENCE[abs]}</div>`:`<div style="color:var(--green);font-size:11px;margin-bottom:4px">✓ Рабочий день</div>`}
+        <div style="display:flex;gap:3px;flex-wrap:wrap">
+          ${Object.entries(ABSENCE).map(([k,v])=>`<button onclick="toggleAbsence('${curDay}','${e.id}','${k}')"
+            style="font-size:9px;padding:2px 5px;border-radius:3px;cursor:pointer;border:1px solid ${abs===k?'var(--amber)':'var(--border)'};background:${abs===k?'rgba(251,191,36,.2)':'var(--bg4)'};color:${abs===k?'var(--amber)':'#e2e8f0'}">${v}</button>`).join('')}
+          ${abs?`<button onclick="toggleAbsence('${curDay}','${e.id}','')" style="font-size:9px;padding:2px 5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--text3)">Убрать</button>`:''}
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── ВИД ПЕРИОДА ──
+function renderPeriodView() {
+  const month = getMonth();
+  const days = getPeriodDays(month, curPeriod);
+  const ndfl = parseFloat(document.getElementById('tax-ndfl').value)||13;
+  const ins1 = parseFloat(document.getElementById('tax-ins1').value)||30.2;
+  const ins2 = parseFloat(document.getElementById('tax-ins2').value)||7.6;
+  const thresh = parseFloat(document.getElementById('tax-thresh').value)||40639.5;
+  const periodKey = month + curPeriod;
+  const payLabel = curPeriod===1 ? 'Выплата 25-го' : 'Выплата 10-го следующего месяца';
+
+  // Собираем начисления
+  const byEmp = {};
+  DB.employees.forEach(e => { byEmp[e.id] = {emp:e, gross:0}; });
+  days.forEach(date => {
+    const t = calcDayTotals(date);
+    Object.entries(t).forEach(([id,g]) => { if(byEmp[id]) byEmp[id].gross += g; });
+  });
+
+  function calcTax(offBase) {
+    const n = offBase * ndfl/100;
+    const net = offBase - n;
+    const ins = Math.min(offBase,thresh)*ins1/100 + Math.max(0,offBase-thresh)*ins2/100;
+    return {ndfl:n, net, ins};
+  }
+
+  function getPrem(empId) {
+    return DB.premiums[`${periodKey}_${empId}`] || {premium:0,cash:0};
+  }
+
+  const prodEmps = DB.employees.filter(e=>e.type!=='office');
+  const offEmps = DB.employees.filter(e=>e.type==='office');
+
+  let pGross=0,pNdfl=0,pNet=0,pIns=0,pCost=0;
+  let oGross=0,oNdfl=0,oNet=0,oIns=0,oCost=0;
+
+  const prodRows = prodEmps.map(e => {
+    const g = byEmp[e.id]?.gross||0;
+    const {premium,cash} = getPrem(e.id);
+    const total = g + premium;
+    if (total===0 && !premium && !cash) return '';
+    const offBase = Math.max(0, total - cash);
+    const {ndfl:n,net,ins} = calcTax(offBase);
+    const cost = offBase + ins + cash;
+    pGross+=total; pNdfl+=n; pNet+=net; pIns+=ins; pCost+=cost;
+    return `<tr>
+      <td>${e.name}</td><td style="color:var(--text3)">${e.pos||''}</td>
+      <td class="num">${fmt(g)}</td>
+      <td><input class="ci r" style="width:75px" value="${premium||''}" placeholder="0"
+        onchange="setPrem('${e.id}','${periodKey}','premium',parseFloat(this.value)||0)"></td>
+      <td class="num" style="font-weight:600">${fmt(total)}</td>
+      <td><input class="ci r" style="width:75px" value="${cash||''}" placeholder="0"
+        onchange="setPrem('${e.id}','${periodKey}','cash',parseFloat(this.value)||0)"></td>
+      <td class="num">${fmt(offBase)}</td>
+      <td class="num" style="color:var(--red)">${fmt(n)}</td>
+      <td class="num g" style="font-weight:600">${fmt(net)}</td>
+      <td class="num" style="color:var(--blue)">${fmt(ins)}</td>
+      <td class="num" style="font-weight:700">${fmt(cost)}</td>
+    </tr>`;
+  }).join('');
+
+  const offRows = offEmps.map(e => {
+    const oklad = (e.salary||0)/2;
+    const {premium,cash} = getPrem(e.id);
+    const total = oklad + premium;
+    const offBase = Math.max(0, total - cash);
+    const {ndfl:n,net,ins} = calcTax(offBase);
+    const cost = offBase + ins + cash;
+    oGross+=total; oNdfl+=n; oNet+=net; oIns+=ins; oCost+=cost;
+    return `<tr>
+      <td>${e.name}</td><td style="color:var(--text3)">${e.pos||''}</td>
+      <td class="num">${fmt(oklad)}</td>
+      <td><input class="ci r" style="width:75px" value="${premium||''}" placeholder="0"
+        onchange="setPrem('${e.id}','${periodKey}','premium',parseFloat(this.value)||0)"></td>
+      <td class="num" style="font-weight:600">${fmt(total)}</td>
+      <td><input class="ci r" style="width:75px" value="${cash||''}" placeholder="0"
+        onchange="setPrem('${e.id}','${periodKey}','cash',parseFloat(this.value)||0)"></td>
+      <td class="num">${fmt(offBase)}</td>
+      <td class="num" style="color:var(--red)">${fmt(n)}</td>
+      <td class="num g" style="font-weight:600">${fmt(net)}</td>
+      <td class="num" style="color:var(--blue)">${fmt(ins)}</td>
+      <td class="num" style="font-weight:700">${fmt(cost)}</td>
+    </tr>`;
+  }).join('');
+
+  const thead = `<thead><tr>
+    <th>Сотрудник</th><th>Должность</th>
+    <th class="r">Сдельная/Оклад</th><th class="r">Премия</th>
+    <th class="r">Начислено</th><th class="r" style="color:var(--amber)">Наличка</th>
+    <th class="r">Офиц.база</th><th class="r">НДФЛ</th>
+    <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
+  </tr></thead>`;
+
+  const tfoot = (tot,n,net,ins,cost) => `<tfoot><tr style="font-weight:700;border-top:2px solid var(--border2)">
+    <td colspan="4" style="padding:6px 8px">Итого</td>
+    <td class="num">${fmt(tot)}</td><td></td>
+    <td></td><td class="num r">${fmt(n)}</td>
+    <td class="num g">${fmt(net)}</td><td class="num b">${fmt(ins)}</td>
+    <td class="num">${fmt(cost)}</td>
+  </tr></tfoot>`;
+
+  let html = `<div style="margin-bottom:12px">
+    <b>Расчётная ведомость — Период ${curPeriod} · ${month}</b>
+    <span style="color:var(--text3);margin-left:12px;font-size:11px">${payLabel}</span>
+  </div>`;
+
+  // ── Объёмы производства за период ──
+  const volSew = {}; // art -> m2
+  const volFol = {}; // art -> m2
+  let volGlue = 0;
+
+  days.forEach(date => {
+    const d = DB.days[date]; if(!d) return;
+    // Прошив (indiv)
+    (d.indiv||[]).forEach(r => {
+      const art = SEW_OPS[r.op] || r.op || r.art;
+      volSew[art] = (volSew[art]||0) + (r.qty||0);
+    });
+    // Фольгирование (brigade ops)
+    (d.brigade?.ops||[]).forEach(b => {
+      const art = FOL_OPS[b.op] || b.op || b.art;
+      if (art === 'Клей FP') volGlue += (b.qty||0);
+      else volFol[art] = (volFol[art]||0) + (b.qty||0);
+    });
+    // После смены
+    (d.after||[]).forEach(r => {
+      const art = ALL_OPS[r.op] || r.op || r.art;
+      const qty = r.qty||0;
+      if (SEW_OPS[r.op]||Object.values(SEW_OPS).includes(art)) volSew[art]=(volSew[art]||0)+qty;
+      else if (art==='Клей FP') volGlue+=qty;
+      else volFol[art]=(volFol[art]||0)+qty;
+    });
+  });
+
+  const totSew  = Object.values(volSew).reduce((s,v)=>s+v,0);
+  const totFol  = Object.values(volFol).reduce((s,v)=>s+v,0);
+  const totCostAll = pCost + oCost;
+
+  // Распределение затрат на ед. продукции
+  // Пропорционально: (прошив+фольгирование) vs клей
+  const folSewCost  = totFol + totSew > 0 ? totCostAll * (totFol+totSew) / (totFol+totSew+volGlue||1) : 0;
+  const glueCost    = volGlue > 0 ? totCostAll * volGlue / (totFol+totSew+volGlue||1) : 0;
+  const costPerM2   = (totFol+totSew) > 0 ? folSewCost/(totFol+totSew) : 0;
+  const costPerKg   = volGlue > 0 ? glueCost/volGlue : 0;
+
+  html += \`<div class="kpi">
+    <div class="kcard"><div class="lbl">Итого начислено</div><div class="val g">\${fmt(pGross+oGross)} ₽</div></div>
+    <div class="kcard"><div class="lbl">НДФЛ</div><div class="val r">\${fmt(pNdfl+oNdfl)} ₽</div></div>
+    <div class="kcard"><div class="lbl">На руки</div><div class="val">\${fmt(pNet+oNet)} ₽</div></div>
+    <div class="kcard"><div class="lbl">Взносы</div><div class="val b">\${fmt(pIns+oIns)} ₽</div></div>
+    <div class="kcard"><div class="lbl">Итого затрат</div><div class="val a">\${fmt(totCostAll)} ₽</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head"><span class="card-title">📦 Производство за период \${curPeriod}</span></div>
+    <div class="card-body">
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">🔨 Прошив (ПФ)</div>
+          \${Object.entries(volSew).filter(([,v])=>v>0).map(([a,v])=>\`<div style="font-size:11px">\${a}: <b>\${fmtNum(v)} м²</b></div>\`).join('')||'<div style="color:var(--text3);font-size:11px">—</div>'}
+          <div style="margin-top:4px;font-size:11px;font-weight:700">Итого: \${fmtNum(totSew)} м²</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">◈ Фольгирование (ГП)</div>
+          \${Object.entries(volFol).filter(([,v])=>v>0).map(([a,v])=>\`<div style="font-size:11px">\${a}: <b>\${fmtNum(v)} м²</b></div>\`).join('')||'<div style="color:var(--text3);font-size:11px">—</div>'}
+          <div style="margin-top:4px;font-size:11px;font-weight:700">Итого: \${fmtNum(totFol)} м²</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">🧴 Клей FP</div>
+          <div style="font-size:14px;font-weight:700">\${fmtNum(volGlue)} кг</div>
+        </div>
+      </div>
+      \${totCostAll>0?(\`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Затраты на персонал на единицу продукции</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          \${(totFol+totSew)>0?\`<div style="background:var(--bg3);border-radius:6px;padding:8px 12px">
+            <div style="font-size:10px;color:var(--text3)">Прошив + Фольгирование (1 м²)</div>
+            <div style="font-size:16px;font-weight:700;color:var(--amber)">\${fmt(costPerM2)} ₽</div>
+            <div style="font-size:9px;color:var(--text3)">(\${fmt(folSewCost)} ₽ / \${fmtNum(totFol+totSew)} м²)</div>
+          </div>\`:''}
+          \${volGlue>0?\`<div style="background:var(--bg3);border-radius:6px;padding:8px 12px">
+            <div style="font-size:10px;color:var(--text3)">Клей FP (1 кг)</div>
+            <div style="font-size:16px;font-weight:700;color:var(--amber)">\${fmt(costPerKg)} ₽</div>
+            <div style="font-size:9px;color:var(--text3)">(\${fmt(glueCost)} ₽ / \${fmtNum(volGlue)} кг)</div>
+          </div>\`:''}
+        </div>
+      </div>\`):''}
+    </div>
+  </div>\`;
+
+  if (prodEmps.length) {
+    html += `<div class="card" style="margin-bottom:12px">
+      <div class="card-head"><span class="card-title" style="color:var(--purple)">🔨 Производственный персонал</span></div>
+      <div style="overflow-x:auto"><table>${thead}<tbody>${prodRows||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Нет данных</td></tr>'}</tbody>${pGross?tfoot(pGross,pNdfl,pNet,pIns,pCost):''}</table></div>
+    </div>`;
+  }
+
+  if (offEmps.length) {
+    html += `<div class="card">
+      <div class="card-head"><span class="card-title" style="color:var(--blue)">💼 Офисный персонал</span></div>
+      <div style="overflow-x:auto"><table>${thead}<tbody>${offRows}</tbody>${oGross?tfoot(oGross,oNdfl,oNet,oIns,oCost):''}</table></div>
+    </div>`;
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── ДЕЙСТВИЯ ──
+function selectDay(date) { curDay = date; renderDayView(); }
 
 function toggleAbsence(date, empId, type) {
-  const d = getOrCreateDay(date);
-  if (!type) { delete d.absences[empId]; }
+  const d = getDay(date);
+  if (!type) delete d.absences[empId];
   else {
     d.absences[empId] = type;
     // Убираем из бригады
-    d.brigadeMembers = (d.brigadeMembers||[]).filter(id=>id!==empId);
+    const m = d.brigade?.members||[];
+    const idx = m.indexOf(empId);
+    if (idx>=0) m.splice(idx,1);
   }
-  renderDay(date);
+  scheduleSave(); renderDayView();
 }
 
-// ─── ПРОШИВ ───
-function sewOpts(empId) {
-  return DB.employees.map(e=>`<option value="${e.id}" ${e.id===empId?'selected':''}>${e.name}</option>`).join('');
-}
-function artOpts(art, list) {
-  return list.map(a=>`<option value="${a}" ${a===art?'selected':''}>${a}</option>`).join('');
-}
-
-function renderSewTable(d, date) {
-  const sew = d.sew||[];
-  document.getElementById('sew-tbody').innerHTML = sew.length ? sew.map((r,i)=>
-    `<tr>
-      <td><select class="sel" style="width:110px" onchange="updateSew('${date}',${i},'empId',this.value);autoSewRate('${date}',${i})">${sewOpts(r.empId)}</select></td>
-      <td><select class="sel" style="width:80px" onchange="updateSew('${date}',${i},'art',this.value);autoSewRate('${date}',${i})">${artOpts(r.art,ARTS_SEW)}</select></td>
-      <td><input class="ci r" style="width:70px" value="${r.qty||''}" onchange="updateSew('${date}',${i},'qty',parseFloat(this.value)||0)"></td>
-      <td><input class="ci r" style="width:70px" value="${r.rate?(+r.rate).toFixed(2):''}" onchange="updateSew('${date}',${i},'rate',parseFloat(this.value)||0)"></td>
-      <td class="r green">${fmt(r.gross||0)}</td>
-      <td><button class="btn del sm" onclick="removeSew('${date}',${i})">✕</button></td>
-    </tr>`).join('')
-    : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px">Нет записей</td></tr>';
-}
-
-function addSewRow() {
-  const d = getOrCreateDay(activeDate);
-  const firstProd = DB.employees.find(e=>e.type==='prod');
-  const empId = firstProd?.id||'';
-  d.sew.push({empId, art:'5П', qty:0, rate: getEmpRate(empId,'5П'), gross:0});
-  renderDay(activeDate);
-}
-function removeSew(date,i) { const d=getOrCreateDay(date); d.sew.splice(i,1); renderDay(date); }
-function updateSew(date,i,key,val) {
-  const d=getOrCreateDay(date); if(!d.sew[i]) return;
-  d.sew[i][key]=val;
-  d.sew[i].gross=(d.sew[i].qty||0)*(d.sew[i].rate||0);
-  renderDay(date);
-}
-function autoSewRate(date,i) {
-  const d=getOrCreateDay(date); if(!d.sew[i]) return;
-  const rate=getEmpRate(d.sew[i].empId, d.sew[i].art);
-  if(rate) { d.sew[i].rate=rate; d.sew[i].gross=(d.sew[i].qty||0)*rate; renderDay(date); }
-}
-
-// ─── БРИГАДА ───
-function renderBrigadeBlock(d, date) {
-  const brig = d.brigade||[];
-  const total = brig.reduce((s,b)=>s+(b.gross||0),0);
-  const members = d.brigadeMembers||[];
-  const per = members.length>0 ? total/members.length : 0;
-
-  document.getElementById('brigade-tbody').innerHTML = brig.length ? brig.map((b,i)=>
-    `<tr>
-      <td><select class="sel" style="width:100px" onchange="updateBrig('${date}',${i},'art',this.value)">${artOpts(b.art,ARTS_FOL)}</select></td>
-      <td><input class="ci r" style="width:65px" value="${b.qty||''}" onchange="updateBrig('${date}',${i},'qty',parseFloat(this.value)||0)"></td>
-      <td><input class="ci r" style="width:65px" value="${b.rate?(+b.rate).toFixed(2):''}" onchange="updateBrig('${date}',${i},'rate',parseFloat(this.value)||0)"></td>
-      <td class="r green">${fmt(b.gross||0)}</td>
-      <td><button class="btn del sm" onclick="removeBrig('${date}',${i})">✕</button></td>
-    </tr>`).join('')
-    : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:8px">Нет операций</td></tr>';
-
-  document.getElementById('brigade-total').textContent = fmt(total) + ' ₽';
-  document.getElementById('brigade-per-person').textContent = members.length>0 ? `→ по ${fmt(per)} ₽ каждому (${members.length} чел.)` : '';
-
-  const absences = d.absences||{};
-  document.getElementById('brigade-members').innerHTML = DB.employees.filter(e=>e.type==='prod').map(e=>{
-    const disabled = !!absences[e.id];
-    const checked  = members.includes(e.id);
-    return `<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:${disabled?'not-allowed':'pointer'};opacity:${disabled?.4:1}">
-      <input type="checkbox" ${checked?'checked':''} ${disabled?'disabled':''} onchange="toggleBrigMember('${date}','${e.id}',this.checked)">
-      ${e.name}
-    </label>`;
-  }).join('');
-}
-
-function addBrigadeOp() {
-  const d=getOrCreateDay(activeDate);
-  d.brigade.push({art:'5Ф', qty:0, rate:getBrigadeRate('5Ф'), gross:0});
-  renderDay(activeDate);
-}
-function removeBrig(date,i) { const d=getOrCreateDay(date); d.brigade.splice(i,1); renderDay(date); }
-function updateBrig(date,i,key,val) {
-  const d=getOrCreateDay(date); if(!d.brigade[i]) return;
-  d.brigade[i][key]=val;
-  if(key==='art') { const r=getBrigadeRate(val); if(r) d.brigade[i].rate=r; }
-  d.brigade[i].gross=(d.brigade[i].qty||0)*(d.brigade[i].rate||0);
-  renderDay(date);
-}
-function toggleBrigMember(date,empId,checked) {
-  const d=getOrCreateDay(date);
-  if(!d.brigadeMembers) d.brigadeMembers=[];
-  if(checked&&!d.brigadeMembers.includes(empId)) d.brigadeMembers.push(empId);
-  if(!checked) d.brigadeMembers=d.brigadeMembers.filter(id=>id!==empId);
-  renderDay(date);
-}
-
-// ─── ПОСЛЕ СМЕНЫ ───
-function renderAfterTable(d, date) {
-  const after = d.after||[];
-  document.getElementById('after-tbody').innerHTML = after.length ? after.map((r,i)=>{
-    if (r.isBrigade) {
-      const mems=r.members||[];
-      const per=mems.length>0?(r.gross||0)/mems.length:0;
-      const checks=DB.employees.filter(e=>e.type==='prod').map(e=>
-        `<label style="font-size:10px;display:flex;align-items:center;gap:3px;cursor:pointer">
-          <input type="checkbox" ${mems.includes(e.id)?'checked':''} onchange="toggleAfterMem('${date}',${i},'${e.id}',this.checked)">
-          ${e.name}
-        </label>`).join('');
-      return `<tr>
-        <td><div style="font-size:10px;color:var(--green);font-weight:600;margin-bottom:3px">◈ Бригада</div><div style="display:flex;flex-wrap:wrap;gap:5px">${checks}</div>${per>0?`<div style="color:var(--amber);font-size:9px;margin-top:2px">По ${fmt(per)} ₽</div>`:''}</td>
-        <td><select class="sel" style="width:90px" onchange="updateAfter('${date}',${i},'art',this.value)">${artOpts(r.art,ARTS_FOL)}</select></td>
-        <td><input class="ci r" style="width:60px" value="${r.qty||''}" onchange="updateAfter('${date}',${i},'qty',parseFloat(this.value)||0)"></td>
-        <td><input class="ci r" style="width:60px" value="${r.rate?(+r.rate).toFixed(2):''}" onchange="updateAfter('${date}',${i},'rate',parseFloat(this.value)||0)"></td>
-        <td class="r green">${fmt(r.gross||0)}</td>
-        <td><button class="btn del sm" onclick="removeAfter('${date}',${i})">✕</button></td>
-      </tr>`;
-    }
-    return `<tr>
-      <td><select class="sel" style="width:110px" onchange="updateAfter('${date}',${i},'empId',this.value)">${sewOpts(r.empId)}</select></td>
-      <td><select class="sel" style="width:90px" onchange="updateAfter('${date}',${i},'art',this.value)">${artOpts(r.art,ARTS_ALL)}</select></td>
-      <td><input class="ci r" style="width:60px" value="${r.qty||''}" onchange="updateAfter('${date}',${i},'qty',parseFloat(this.value)||0)"></td>
-      <td><input class="ci r" style="width:60px" value="${r.rate?(+r.rate).toFixed(2):''}" onchange="updateAfter('${date}',${i},'rate',parseFloat(this.value)||0)"></td>
-      <td class="r green">${fmt(r.gross||0)}</td>
-      <td><button class="btn del sm" onclick="removeAfter('${date}',${i})">✕</button></td>
-    </tr>`;
-  }).join('')
-  : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px">Нет записей</td></tr>';
-}
-
-function addAfterRow(isBrigade) {
-  const d=getOrCreateDay(activeDate);
-  if(!d.after) d.after=[];
-  if(isBrigade) d.after.push({isBrigade:true,art:'5Ф',qty:0,rate:getBrigadeRate('5Ф'),gross:0,members:[]});
-  else { const fp=DB.employees.find(e=>e.type==='prod'); d.after.push({isBrigade:false,empId:fp?.id||'',art:'5П',qty:0,rate:0,gross:0}); }
-  renderDay(activeDate);
-}
-function removeAfter(date,i){ const d=getOrCreateDay(date); d.after.splice(i,1); renderDay(date); }
-function updateAfter(date,i,key,val){
-  const d=getOrCreateDay(date); if(!d.after[i]) return;
-  d.after[i][key]=val;
-  if(key==='art'&&d.after[i].isBrigade){ const r=getBrigadeRate(val); if(r) d.after[i].rate=r; }
-  d.after[i].gross=(d.after[i].qty||0)*(d.after[i].rate||0);
-  renderDay(date);
-}
-function toggleAfterMem(date,i,empId,checked){
-  const d=getOrCreateDay(date); if(!d.after[i]) return;
-  const m=d.after[i].members||[];
-  if(checked&&!m.includes(empId)) m.push(empId);
-  if(!checked) d.after[i].members=m.filter(id=>id!==empId);
-  d.after[i].members=m;
-  d.after[i].gross=(d.after[i].qty||0)*(d.after[i].rate||0);
-  renderDay(date);
-}
-
-// ─── ОФИСНЫЕ ───
-function renderOfficeGrid(d, date) {
-  const offs = DB.employees.filter(e=>e.type==='office');
-  document.getElementById('office-grid').innerHTML = offs.map(e=>{
-    const abs = (d.absences||{})[e.id];
-    const absBtns = Object.entries(ABSENCE).map(([k,v])=>
-      `<button class="btn sm${abs===k?' g':''}" style="font-size:9px;padding:2px 5px" onclick="toggleAbsence('${date}','${e.id}','${k}')">${v}</button>`
-    ).join('');
-    return `<div class="att-card${abs?' absent':''}">
-      <div class="att-name">${e.name}</div>
-      <div class="att-pos">${e.position||''} · Оклад ${fmt(e.salaryBase||0)} ₽</div>
-      ${abs?`<div style="font-size:10px;color:var(--amber);margin-bottom:3px">📋 ${ABSENCE[abs]}</div>`:`<div style="font-size:10px;color:var(--green);margin-bottom:3px">✓ Рабочий день</div>`}
-      <div class="att-btns">${absBtns}
-        ${abs?`<button class="btn sm del" onclick="toggleAbsence('${date}','${e.id}','')">✕</button>`:''}
-      </div>
-    </div>`;
-  }).join('') || '<div style="padding:8px;color:var(--text3);font-size:10px">Нет офисных сотрудников</div>';
-}
-
-// ─── KPI ДНЯ ───
-function renderDayKpis(date) {
-  const totals = calcDayTotals(date);
-  const total  = Object.values(totals).reduce((s,v)=>s+v,0);
+function addIndiv(date) {
   const d = getDay(date);
-  const nAbs = Object.keys(d?.absences||{}).length;
-  const nBrig = (d?.brigadeMembers||[]).length;
-  document.getElementById('day-kpis').innerHTML = total>0||nAbs>0 ? `
-    <div class="kpi"><div class="kpi-label">Начислено за день</div><div class="kpi-value green">${fmt(total)} ₽</div></div>
-    <div class="kpi"><div class="kpi-label">В бригаде</div><div class="kpi-value">${nBrig} чел.</div></div>
-    <div class="kpi"><div class="kpi-label">Отсутствуют</div><div class="kpi-value amber">${nAbs} чел.</div></div>
-  ` : '';
+  const firstEmp = DB.employees.find(e=>e.type!=='office');
+  d.indiv.push({empId:firstEmp?.id||'', op:'sew5f', qty:0, rate:firstEmp?.rates?.sew5f||0, gross:0});
+  scheduleSave(); renderDayView();
+}
+function updIndiv(date,i,key,val) { getDay(date).indiv[i][key]=val; }
+function autoRate(date,i) {
+  const r = getDay(date).indiv[i];
+  const emp = DB.employees.find(e=>e.id===r.empId);
+  if (emp?.rates?.[r.op]) r.rate = emp.rates[r.op];
+  renderDayView();
+}
+function calcIndiv(date,i) {
+  const r = getDay(date).indiv[i];
+  r.gross = (r.qty||0)*(r.rate||0);
+  scheduleSave(); renderDayView();
+}
+function delIndiv(date,i) { getDay(date).indiv.splice(i,1); scheduleSave(); renderDayView(); }
+
+function addBrigOp(date) {
+  const d = getDay(date);
+  const op = 'fol_5f';
+  d.brigade.ops.push({op, qty:0, rate:DB.brigRates[op]||0, gross:0});
+  scheduleSave(); renderDayView();
+}
+function updBrigOp(date,i,key,val) { getDay(date).brigade.ops[i][key]=val; }
+function autoBrigRate(date,i) {
+  const b = getDay(date).brigade.ops[i];
+  b.rate = DB.brigRates[b.op]||0;
+  renderDayView();
+}
+function calcBrig(date) {
+  const d = getDay(date);
+  d.brigade.ops.forEach(b => { b.gross=(b.qty||0)*(b.rate||0); });
+  scheduleSave(); renderDayView();
+}
+function delBrigOp(date,i) { getDay(date).brigade.ops.splice(i,1); scheduleSave(); renderDayView(); }
+function toggleBrigMember(date,empId,checked) {
+  const m = getDay(date).brigade.members;
+  if (checked && !m.includes(empId)) m.push(empId);
+  if (!checked) { const i=m.indexOf(empId); if(i>=0) m.splice(i,1); }
+  scheduleSave(); renderDayView();
 }
 
-// ═══════════════════════════════════════════════
-// ИТОГ ПЕРИОДА
-// ═══════════════════════════════════════════════
-function getPremium(empId) {
-  const month = document.getElementById('sel-month').value;
-  const key   = `${month}_${activePeriod}_${empId}`;
-  return DB.premiums[key] || {premium:0, cash:0};
+function addAfter(date,isBrigade) {
+  const d = getDay(date);
+  const firstEmp = DB.employees[0];
+  if (isBrigade) d.after.push({isBrigade:true,op:'fol_5f',qty:0,rate:DB.brigRates.fol_5f||0,gross:0,members:[]});
+  else d.after.push({empId:firstEmp?.id||'',op:'sew5f',qty:0,rate:firstEmp?.rates?.sew5f||0,gross:0});
+  scheduleSave(); renderDayView();
 }
-function setPremium(empId, field, val) {
-  const month = document.getElementById('sel-month').value;
-  const key   = `${month}_${activePeriod}_${empId}`;
-  if (!DB.premiums[key]) DB.premiums[key]={premium:0,cash:0};
-  DB.premiums[key][field] = val;
-  renderPeriod();
+function updAfter(date,i,key,val) { getDay(date).after[i][key]=val; }
+function autoRateAfter(date,i) {
+  const r = getDay(date).after[i];
+  const emp = DB.employees.find(e=>e.id===r.empId);
+  if (emp?.rates?.[r.op]) r.rate = emp.rates[r.op];
+  renderDayView();
 }
-
-function calcTax(offBase) {
-  const ndfl  = parseFloat(document.getElementById('p-ndfl').value)||13;
-  const ins1  = parseFloat(document.getElementById('p-ins1').value)||30.2;
-  const ins2  = parseFloat(document.getElementById('p-ins2').value)||7.6;
-  const thresh= parseFloat(document.getElementById('p-thresh').value)||40639.5;
-  const tax   = offBase * ndfl/100;
-  const net   = offBase - tax;
-  const ins   = Math.min(offBase,thresh)*ins1/100 + Math.max(0,offBase-thresh)*ins2/100;
-  return {tax, net, ins};
+function autoBrigRateAfter(date,i) {
+  const r = getDay(date).after[i];
+  r.rate = DB.brigRates[r.op]||0;
+  renderDayView();
 }
-
-function renderPeriod() {
-  const month = document.getElementById('sel-month').value;
-  if (!month) { document.getElementById('period-tables').innerHTML='<div class="alert">Выберите месяц</div>'; return; }
-  const days  = getDaysInPeriod(month, activePeriod);
-
-  // Собираем начисления
-  const earned = {}; // empId -> gross
-  DB.employees.forEach(e=>{ earned[e.id]=0; });
-  days.forEach(date=>{
-    const d=getDay(date); if(!d) return;
-    (d.sew||[]).forEach(r=>{ if(earned[r.empId]!==undefined) earned[r.empId]+=(r.gross||0); });
-    const mems=d.brigadeMembers||[];
-    const brigTotal=(d.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
-    const per=mems.length>0?brigTotal/mems.length:0;
-    mems.forEach(id=>{ if(earned[id]!==undefined) earned[id]+=per; });
-    (d.after||[]).forEach(r=>{
-      if(r.isBrigade){ const ms=r.members||[]; const p=ms.length>0?(r.gross||0)/ms.length:0; ms.forEach(id=>{ if(earned[id]!==undefined) earned[id]+=p; }); }
-      else if(earned[r.empId]!==undefined) earned[r.empId]+=(r.gross||0);
-    });
-  });
-
-  const payLabel = activePeriod===1 ? 'Выплата 25-го' : 'Выплата 10-го следующего месяца';
-
-  const makeRow = (e, baseGross, label) => {
-    const {premium,cash} = getPremium(e.id);
-    const totalNach = baseGross + premium;
-    const offBase   = Math.max(0, totalNach - cash);
-    const {tax,net,ins} = calcTax(offBase);
-    const cost      = offBase + ins + cash;
-    return {e, baseGross, premium, cash, totalNach, offBase, tax, net, ins, cost};
-  };
-
-  const thead = `<thead><tr>
-    <th>Сотрудник</th><th>Должность</th><th class="r">База</th><th class="r">Премия</th>
-    <th class="r">Начислено</th><th class="r amber">Наличка</th><th class="r">Офиц. база</th>
-    <th class="r">НДФЛ</th><th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
-  </tr></thead>`;
-
-  const makeTableRow = (row, i) => {
-    const {e,baseGross,premium,cash,totalNach,offBase,tax,net,ins,cost} = row;
-    return `<tr>
-      <td style="font-weight:600">${e.name}</td>
-      <td style="color:var(--text3)">${e.position||'—'}</td>
-      <td class="r">${fmt(baseGross)}</td>
-      <td class="r"><input class="ci r" style="width:75px" value="${premium||''}" placeholder="0" onchange="setPremium('${e.id}','premium',parseFloat(this.value)||0)"></td>
-      <td class="r" style="font-weight:600">${fmt(totalNach)}</td>
-      <td class="r"><input class="ci r" style="width:75px;border-color:var(--amber)" value="${cash||''}" placeholder="0" onchange="setPremium('${e.id}','cash',parseFloat(this.value)||0)"></td>
-      <td class="r">${fmt(offBase)}</td>
-      <td class="r red">${fmt(tax)}</td>
-      <td class="r green">${fmt(net)}</td>
-      <td class="r blue">${fmt(ins)}</td>
-      <td class="r" style="font-weight:600">${fmt(cost)}</td>
-    </tr>`;
-  };
-
-  const makeTfoot = (rows) => {
-    const T = (f) => rows.reduce((s,r)=>s+r[f],0);
-    return `<tfoot><tr>
-      <td colspan="2">Итого</td>
-      <td class="r">${fmt(T('baseGross'))}</td>
-      <td class="r">${fmt(T('premium'))}</td>
-      <td class="r">${fmt(T('totalNach'))}</td>
-      <td class="r">${fmt(T('cash'))}</td>
-      <td class="r">${fmt(T('offBase'))}</td>
-      <td class="r red">${fmt(T('tax'))}</td>
-      <td class="r green">${fmt(T('net'))}</td>
-      <td class="r blue">${fmt(T('ins'))}</td>
-      <td class="r">${fmt(T('cost'))}</td>
-    </tr></tfoot>`;
-  };
-
-  // Производственные
-  const prodRows = DB.employees.filter(e=>e.type==='prod').map(e=>makeRow(e,earned[e.id]||0,'Сдельная')).filter(r=>r.totalNach>0||r.cash>0);
-  // Офисные
-  const offRows  = DB.employees.filter(e=>e.type==='office').map(e=>makeRow(e,(e.salaryBase||0)/2,'Оклад ½')).filter(r=>r.totalNach>0||r.cash>0);
-
-  // KPI
-  const allRows = [...prodRows,...offRows];
-  const T = (f) => allRows.reduce((s,r)=>s+r[f],0);
-  document.getElementById('period-kpis').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Итого начислено</div><div class="kpi-value green">${fmt(T('totalNach'))} ₽</div></div>
-    <div class="kpi"><div class="kpi-label">НДФЛ</div><div class="kpi-value red">${fmt(T('tax'))} ₽</div></div>
-    <div class="kpi"><div class="kpi-label">На руки</div><div class="kpi-value">${fmt(T('net'))} ₽</div><div class="kpi-sub">в т.ч. наличкой: ${fmt(T('cash'))} ₽</div></div>
-    <div class="kpi"><div class="kpi-label">Итого затрат</div><div class="kpi-value amber">${fmt(T('cost'))} ₽</div><div class="kpi-sub">${payLabel}</div></div>
-  `;
-
-  document.getElementById('period-tables').innerHTML = `
-    <div class="period-section">
-      <div class="period-section-title purple">🔨 Производственный персонал — Период ${activePeriod}</div>
-      <div class="tbl-wrap"><table>${thead}<tbody>${prodRows.map(makeTableRow).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Нет данных</td></tr>'}</tbody>${prodRows.length?makeTfoot(prodRows):''}</table></div>
-    </div>
-    ${offRows.length?`<div class="period-section">
-      <div class="period-section-title blue">💼 Офисный персонал — Период ${activePeriod}</div>
-      <div class="tbl-wrap"><table>${thead}<tbody>${offRows.map(makeTableRow).join('')}</tbody>${makeTfoot(offRows)}</table></div>
-    </div>`:''}
-  `;
+function calcAfter(date,i) {
+  const r = getDay(date).after[i];
+  r.gross=(r.qty||0)*(r.rate||0);
+  scheduleSave(); renderDayView();
+}
+function delAfter(date,i) { getDay(date).after.splice(i,1); scheduleSave(); renderDayView(); }
+function toggleAfterMember(date,i,empId,checked) {
+  const r = getDay(date).after[i];
+  if (!r.members) r.members=[];
+  if (checked&&!r.members.includes(empId)) r.members.push(empId);
+  if (!checked){const j=r.members.indexOf(empId);if(j>=0)r.members.splice(j,1);}
+  r.gross=(r.qty||0)*(r.rate||0);
+  scheduleSave(); renderDayView();
 }
 
-// ═══════════════════════════════════════════════
-// СОТРУДНИКИ
-// ═══════════════════════════════════════════════
-function renderEmps() {
-  const list = document.getElementById('emps-list');
-  list.innerHTML = DB.employees.map(e=>`
-    <div class="card" style="margin-bottom:6px">
-      <div class="card-hdr">
-        <div>
-          <span style="font-weight:600">${e.name}</span>
-          <span class="badge ${e.type==='office'?'blue':'green'}" style="margin-left:6px">${e.type==='office'?'Офис':'Произв.'}</span>
-          <span style="color:var(--text3);font-size:10px;margin-left:6px">${e.position||''}</span>
-          ${e.type==='office'?`<span style="color:var(--text3);font-size:10px;margin-left:6px">Оклад: ${fmt(e.salaryBase||0)} ₽</span>`:''}
-        </div>
-        <div class="card-actions">
-          <button class="btn sm" onclick="openEmpModal('${e.id}')">✏</button>
-          <button class="btn sm del" onclick="deleteEmp('${e.id}')">✕</button>
-        </div>
-      </div>
-      ${e.type==='prod'&&Object.keys(e.rates||{}).length?`<div class="card-body" style="font-size:10px;color:var(--text3)">
-        Тарифы: ${Object.entries(e.rates||{}).map(([k,v])=>`${k}: ${fmt(v)}`).join(' · ')}
-      </div>`:''}
-    </div>`).join('') || '<div class="alert">Нет сотрудников</div>';
+function setPrem(empId,periodKey,field,val) {
+  if (!DB.premiums[`${periodKey}_${empId}`]) DB.premiums[`${periodKey}_${empId}`]={premium:0,cash:0};
+  DB.premiums[`${periodKey}_${empId}`][field]=val;
+  scheduleSave(); renderPeriodView();
+}
 
-  // Тарифы бригады
-  const grid = document.getElementById('brigade-rates-grid');
-  grid.innerHTML = ARTS_FOL.map(art=>`
-    <div class="field">
-      <label>${art}</label>
-      <input class="inp" id="br-${art}" value="${(DB.brigadeRates[art]||'')?(+DB.brigadeRates[art]).toFixed(2):''}" placeholder="0.00" type="number" step="0.01" onchange="DB.brigadeRates['${art}']=parseFloat(this.value)||0">
+// ── СОТРУДНИКИ ──
+let editEmpId = null;
+const SEW_KEYS = Object.keys(SEW_OPS);
+
+function openEmpModal(id) {
+  editEmpId = id||null;
+  const e = id ? DB.employees.find(x=>x.id===id) : null;
+  document.getElementById('emp-modal-title').textContent = id ? 'Редактировать сотрудника' : 'Новый сотрудник';
+  document.getElementById('e-name').value = e?.name||'';
+  document.getElementById('e-pos').value = e?.pos||'';
+  document.getElementById('e-type').value = e?.type||'prod';
+  document.getElementById('e-salary').value = e?.salary||0;
+  // Тарифы
+  const grid = document.getElementById('e-rates-grid');
+  grid.innerHTML = SEW_KEYS.map(k=>`
+    <div class="mfield">
+      <label>${SEW_OPS[k]}</label>
+      <input id="er-${k}" class="ci" value="${e?.rates?.[k]?(+e.rates[k]).toFixed(2):''}" placeholder="0.00" step="0.01">
     </div>`).join('');
+  toggleEmpType();
+  document.getElementById('emp-modal').className = 'modal-bg show';
 }
-
-function loadBrigadeRatesUI() {
-  ARTS_FOL.forEach(art=>{
-    const el=document.getElementById('br-'+art);
-    if(el&&DB.brigadeRates[art]) el.value=(+DB.brigadeRates[art]).toFixed(2);
-  });
+function toggleEmpType() {
+  const t = document.getElementById('e-type').value;
+  document.getElementById('e-salary-block').style.display = t==='office'?'':'none';
+  document.getElementById('e-rates-block').style.display = t==='office'?'none':'';
 }
-
-let modalEmpId = null;
-let modalCb    = null;
-
-function openEmpModal(empId=null) {
-  modalEmpId = empId;
-  const e = empId ? DB.employees.find(x=>x.id===empId) : null;
-  const V = (k,d='') => e?.[k]??d;
-  const isOffice = V('type')==='office';
-
-  document.getElementById('modal-title').textContent = empId ? 'Редактировать сотрудника' : 'Новый сотрудник';
-  document.getElementById('modal-body').innerHTML = `
-    <div class="form-grid">
-      <div class="field" style="grid-column:1/-1"><label>ФИО</label><input class="inp" id="e-name" value="${V('name')}" placeholder="Иванов Иван"></div>
-      <div class="field"><label>Должность</label><input class="inp" id="e-pos" value="${V('position')}"></div>
-      <div class="field"><label>Тип</label>
-        <select class="sel" id="e-type" onchange="document.getElementById('e-office').style.display=this.value==='office'?'':'none';document.getElementById('e-prod').style.display=this.value==='office'?'none':''">
-          <option value="prod" ${!isOffice?'selected':''}>Производственный</option>
-          <option value="office" ${isOffice?'selected':''}>Офисный (оклад)</option>
-        </select>
-      </div>
-    </div>
-    <div id="e-office" style="display:${isOffice?'':'none'}">
-      <div class="field"><label>Оклад (₽/мес)</label><input class="inp" id="e-salary" value="${V('salaryBase',0)}" type="number"></div>
-    </div>
-    <div id="e-prod" style="display:${isOffice?'none':''}">
-      <div class="subsec">Тарифы прошива (₽/м²)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-        ${ARTS_SEW.map(a=>`<div class="field"><label>${a}</label><input class="inp" id="er-${a}" value="${e?.rates?.[a]?(+e.rates[a]).toFixed(2):''}" placeholder="0.00" type="number" step="0.01"></div>`).join('')}
-      </div>
-    </div>
-  `;
-  modalCb = () => {
-    const name = document.getElementById('e-name').value.trim();
-    if (!name) { alert('Введите ФИО'); return false; }
-    const type = document.getElementById('e-type').value;
-    const rates = {};
-    if (type==='prod') ARTS_SEW.forEach(a=>{ const v=parseFloat(document.getElementById('er-'+a)?.value); if(v>0) rates[a]=v; });
-    const record = { id:empId||uid(), name, position:document.getElementById('e-pos').value, type, salaryBase:parseFloat(document.getElementById('e-salary')?.value)||0, rates };
-    if (empId) DB.employees=DB.employees.map(x=>x.id===empId?record:x);
-    else DB.employees.push(record);
-    renderEmps();
-    if(activeDate) renderDay(activeDate);
-    return true;
+function closeEmpModal() { document.getElementById('emp-modal').className='modal-bg'; }
+function saveEmp() {
+  const name = document.getElementById('e-name').value.trim();
+  if (!name) { alert('Введите ФИО'); return; }
+  const type = document.getElementById('e-type').value;
+  const rates = {};
+  SEW_KEYS.forEach(k=>{ const v=parseFloat(document.getElementById(`er-${k}`)?.value); if(v>0) rates[k]=v; });
+  const emp = {
+    id: editEmpId||uid(), name,
+    pos: document.getElementById('e-pos').value,
+    type, salary: parseFloat(document.getElementById('e-salary').value)||0,
+    rates
   };
-  document.getElementById('modal').classList.add('open');
+  if (editEmpId) DB.employees = DB.employees.map(e=>e.id===editEmpId?emp:e);
+  else DB.employees.push(emp);
+  closeEmpModal();
+  scheduleSave();
+  renderSidebar();
+  renderContent();
 }
-
 function deleteEmp(id) {
-  if(!confirm('Удалить сотрудника?')) return;
-  DB.employees=DB.employees.filter(e=>e.id!==id);
-  renderEmps();
+  if (!confirm('Удалить сотрудника?')) return;
+  DB.employees = DB.employees.filter(e=>e.id!==id);
+  scheduleSave(); renderSidebar(); renderContent();
 }
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
-function modalOk() { if(modalCb&&modalCb()!==false) closeModal(); }
 
-// ═══════════════════════════════════════════════
-// СТАРТ
-// ═══════════════════════════════════════════════
+// ── ИНИЦИАЛИЗАЦИЯ ──
 function init() {
-  const n = new Date();
-  document.getElementById('sel-month').value = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  const now = new Date();
+  document.getElementById('sel-month').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('sel-month').onchange = () => { curDay=''; renderContent(); };
   setPeriod(1);
   loadAll();
 }
