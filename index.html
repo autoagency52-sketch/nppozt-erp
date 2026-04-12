@@ -1100,15 +1100,34 @@ async function syncNow() {
     await saveTable('ref_material',     DB.ref.material);
     await saveTable('employees',        DB.employees);
     await saveTable('salPremiums', [{data: JSON.stringify(DB.salPremiums||{})}]);
-    // planDays — каждый день отдельным запросом (данные слишком большие)
+    // planDays — каждый день отдельным запросом
+    const compressPlanDay = (d) => {
+      const out = {};
+      if (d.bstv?.length)      out.bstv = d.bstv;
+      if (d.shipments?.length) out.shipments = d.shipments;
+      // Только ненулевые значения производства
+      Object.keys(d).forEach(k => { if (!['bstv','shipments'].includes(k) && d[k]) out[k] = d[k]; });
+      return out;
+    };
     for (let _pi=0; _pi<DB.planDays.length; _pi++) {
       const _d=DB.planDays[_pi];
-      await gsCallRow('planDays', {date:_d.date, data:JSON.stringify(_d.data)}, _pi===0);
+      await gsCallRow('planDays', {date:_d.date, data:JSON.stringify(compressPlanDay(_d.data))}, _pi===0);
     }
     // salaryLogs — каждый день отдельным запросом
+    // Сжимаем: убираем пустые массивы и нулевые значения
+    const compressDay = (d) => {
+      const out = {date: d.date};
+      if (d.indiv?.length)         out.indiv         = d.indiv;
+      if (d.brigade?.length)       out.brigade        = d.brigade;
+      if (d.brigadeMembers?.length)out.brigadeMembers = d.brigadeMembers;
+      if (d.afterShift?.length)    out.afterShift     = d.afterShift;
+      if (Object.keys(d.absences||{}).length) out.absences = d.absences;
+      return out;
+    };
     for (let _si=0; _si<DB.salaryLogs.length; _si++) {
       const _d=DB.salaryLogs[_si];
-      await gsCallRow('salaryLogs', {date:_d.date, data:JSON.stringify(_d)}, _si===0);
+      const _compact = compressDay(_d);
+      await gsCallRow('salaryLogs', {date:_d.date, data:JSON.stringify(_compact)}, _si===0);
     }
     setSyncStatus('ok');
     toast('Данные сохранены в Google Sheets ✓');
@@ -1123,25 +1142,30 @@ async function syncNow() {
 async function loadAll() {
   setSyncStatus('loading');
   try {
-    const [recv, prod, sales, payments, planRaw, settings, refCP, refProd, refMat, emps, salLogs, salPrem] = await Promise.all([
-      loadTable('receipts'),
-      loadTable('production'),
-      loadTable('sales'),
-      loadTable('payments'),
-      loadTable('planDays'),
-      loadTable('settings'),
-      loadTable('ref_counterparty'),
-      loadTable('ref_product'),
-      loadTable('ref_material'),
-      loadTable('employees'),
-      loadTable('salaryLogs'),
-      loadTable('salPremiums'),
-    ]);
+    // Загружаем последовательно чтобы не перегружать Apps Script
+    const safe = async (name) => { try { return await loadTable(name); } catch(e) { console.warn('loadTable failed:', name, e.message); return []; } };
+    const recv    = await safe('receipts');
+    const prod    = await safe('production');
+    const sales   = await safe('sales');
+    const payments= await safe('payments');
+    const planRaw = await safe('planDays');
+    const settings= await safe('settings');
+    const refCP   = await safe('ref_counterparty');
+    const refProd = await safe('ref_product');
+    const refMat  = await safe('ref_material');
+    const emps    = await safe('employees');
+    const salLogs = await safe('salaryLogs');
+    const salPrem = await safe('salPremiums');
+    {
     if (recv.length)     DB.receipts   = recv;
     if (prod.length)     DB.production = prod;
     if (sales.length)    DB.sales      = sales;
     if (payments.length) DB.payments   = payments;
-    if (planRaw.length)  DB.planDays   = planRaw.map(r=>({date:r.date, data:typeof r.data==='string'?JSON.parse(r.data):r.data}));
+    if (planRaw.length)  DB.planDays = planRaw.map(r=>{
+      let data = {};
+      try { data = typeof r.data==='string' ? JSON.parse(r.data) : (r.data||{}); } catch(e){}
+      return {date:r.date, data:{...emptyPlanDay(), ...data}};
+    });
     if (settings.length && settings[0]?.data) {
       try { DB.settings = JSON.parse(settings[0].data); } catch(e) { DB.settings = {}; }
     }
@@ -1151,14 +1175,18 @@ async function loadAll() {
     if (emps.length)     DB.employees        = emps;
     if (salLogs.length) {
       DB.salaryLogs = salLogs.map(r => {
-        if (r.data) { try { return JSON.parse(r.data); } catch(e) {} }
-        return r; // старый формат - обратная совместимость
+        let d = {};
+        if (r.data) { try { d = JSON.parse(r.data); } catch(e) { d = r; } } else { d = r; }
+        // Восстанавливаем пропущенные поля
+        return {date: d.date||r.date, indiv:d.indiv||[], brigade:d.brigade||[],
+                brigadeMembers:d.brigadeMembers||[], absences:d.absences||{}, afterShift:d.afterShift||[]};
       });
     }
     if (salPrem?.length && salPrem[0]?.data) {
       try { DB.salPremiums = JSON.parse(salPrem[0].data); } catch(e) { DB.salPremiums = {}; }
     }
     if (!DB.salPremiums) DB.salPremiums = {};
+    } // end safe block
     setSyncStatus('ok');
     toast('Данные загружены из Google Sheets ✓');
     loadPlanInv();
