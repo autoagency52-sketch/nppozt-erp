@@ -354,7 +354,6 @@ input,select,textarea,button{font-family:var(--sans)}
     <button class="nav-btn active" onclick="switchTab('plan')">📋 Планировщик</button>
     <button class="nav-btn" onclick="switchTab('ref')">📚 Справочник</button>
     <button class="nav-btn" onclick="switchTab('recv')">📥 Приёмка</button>
-    <button class="nav-btn" onclick="switchTab('prod')">🏭 Производство</button>
     <button class="nav-btn" onclick="switchTab('sales')">📦 Продажи</button>
     <button class="nav-btn" onclick="switchTab('salary')">👷 Зарплата</button>
     <button class="nav-btn" onclick="switchTab('fin')">💰 Финансы</button>
@@ -382,21 +381,7 @@ input,select,textarea,button{font-family:var(--sans)}
       <div class="form-row"><div class="form-lbl">Начало</div><input type="date" class="inp w120" id="plan-start" onchange="rebuildPlanDays()"></div>
       <div class="form-row"><div class="form-lbl">Раб. дней</div><input type="number" class="inp w60" id="plan-days" value="10" min="5" max="14" onchange="rebuildPlanDays()"></div>
     </div>
-    <div class="sec">
-      <div class="sec-hdr">Мощности / смену</div>
-      <div class="subsec">Прошив (м²)</div>
-      <div class="form-row"><div class="form-lbl">5 мм</div><input class="inp w60" id="cap-s5" value="1400" onchange="planRecalc()"></div>
-      <div class="form-row"><div class="form-lbl">8 мм</div><input class="inp w60" id="cap-s8" value="1000" onchange="planRecalc()"></div>
-      <div class="form-row"><div class="form-lbl">10-16 мм</div><input class="inp w60" id="cap-s10" value="756" onchange="planRecalc()"></div>
-      <div class="subsec">Фольгирование Ф (м²)</div>
-      <div class="form-row"><div class="form-lbl">5 мм</div><input class="inp w60" id="cap-ff5" value="3000" onchange="planRecalc()"></div>
-      <div class="form-row"><div class="form-lbl">8-16 мм</div><input class="inp w60" id="cap-ff8" value="2500" onchange="planRecalc()"></div>
-      <div class="subsec">Фольгирование ТФ (м²)</div>
-      <div class="form-row"><div class="form-lbl">5 мм</div><input class="inp w60" id="cap-tf5" value="2200" onchange="planRecalc()"></div>
-      <div class="form-row"><div class="form-lbl">8-16 мм</div><input class="inp w60" id="cap-tf8" value="1700" onchange="planRecalc()"></div>
-      <div class="subsec">Клей (кг)</div>
-      <div class="form-row"><div class="form-lbl">2 чел</div><input class="inp w60" id="cap-g2" value="4000" onchange="planRecalc()"></div>
-    </div>
+
     <div class="sec">
       <div class="sec-hdr">Поставщики БСТВ</div>
       <div class="form-row"><div class="form-lbl">1</div><input class="inp w120" id="sup0" value="Нытва"></div>
@@ -2407,9 +2392,8 @@ function renderSalDay(dateStr) {
   const prodEmps = new Set(DB.employees.filter(e=>e.empType!=='office').map(e=>e.id));
   const dayTotals = {};
   (dd.indiv||[]).forEach(r => { dayTotals[r.empId] = (dayTotals[r.empId]||0) + (r.gross||0); });
-  // Бригада: считаем только присутствующих членов
-  const brigadeMembers = new Set();
-  (dd.brigade||[]).forEach(b => (b.members||[]).forEach(id => brigadeMembers.add(id)));
+  // Бригада: состав из dd.brigadeMembers (единый список на день)
+  const brigadeMembers = new Set(dd.brigadeMembers || []);
   const brigadeGrossTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
   brigadeMembers.forEach(empId => {
     const share = brigadeMembers.size > 0 ? brigadeGrossTotal / brigadeMembers.size : 0;
@@ -2727,15 +2711,15 @@ function renderSalPeriodSummary() {
     if (!dd) return;
     // Индивидуальный прошив
     (dd.indiv||[]).forEach(r => {
-      if (!byEmp[r.empId]) return;
+      if (byEmp[r.empId] === undefined) return;
       byEmp[r.empId].gross += r.gross||0;
     });
-    // Бригадный котёл: единый состав на день
+    // Бригадный котёл — используем dd.brigadeMembers (единый состав дня)
     const members = dd.brigadeMembers || [];
     const brigadeTotal = (dd.brigade||[]).reduce((s,b)=>s+(b.gross||0),0);
     const per = members.length > 0 ? brigadeTotal / members.length : 0;
     members.forEach(empId => {
-      if (!byEmp[empId]) return;
+      if (byEmp[empId] === undefined) return;
       byEmp[empId].gross += per;
     });
   });
