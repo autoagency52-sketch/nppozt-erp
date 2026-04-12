@@ -2784,11 +2784,16 @@ function renderAfterShiftRows(dd, dateStr) {
     const perPerson = isBrigade && (r.members||[]).length > 0 ? (r.gross||0)/(r.members||[]).length : 0;
     return `<tr>
       ${isBrigade
-        ? `<td colspan="2" style="font-size:10px">
-            <div style="font-weight:600;color:var(--green);margin-bottom:3px">◈ Бригада после смены</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">${memberChecks}</div>
+        ? `<td style="font-size:10px;min-width:150px">
+            <div style="font-weight:600;color:var(--green);margin-bottom:3px">◈ Бригада</div>
+            <select class="sel" style="width:100%;margin-bottom:4px;font-size:10px"
+              onchange="updateAfterShift('${dateStr}',${i},'op',this.value);autoFillAfterRate('${dateStr}',${i})">
+              ${Object.entries(SAL_OPS).map(([k,v])=>`<option value="${k}" ${k===r.op?'selected':''}>${v}</option>`).join('')}
+            </select>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">${memberChecks}</div>
             ${perPerson>0?`<div style="color:var(--amber);font-size:9px;margin-top:2px">По ${fmtMoney(perPerson)} каждому</div>`:''}
-           </td>`
+           </td>
+           <td></td>`
         : `<td><select class="sel" style="width:115px" onchange="updateAfterShift('${dateStr}',${i},'empId',this.value)">${empOpts}</select></td>
            <td><select class="sel" style="width:120px" onchange="updateAfterShift('${dateStr}',${i},'op',this.value);autoFillAfterRate('${dateStr}',${i})">${opSelOpts}</select></td>`
       }
@@ -2911,20 +2916,28 @@ function renderSalPeriodSummary() {
     const d = byEmp[e.id];
     const sdelGross = d?.gross||0;
     const premium   = d?.premium||0;
+    const cash      = getSalCash(e.id, monthStr, period);
     const gross     = sdelGross + premium;
     if (gross === 0) return '';
-    const {ndfl,net,ins,cost} = calcTax(gross);
+    const taxBase   = Math.max(0, gross - cash); // наличка уменьшает налогооблагаемую базу
+    const {ndfl,net,ins,cost} = calcTax(taxBase);
     pTotGross+=gross; pTotNdfl+=ndfl; pTotNet+=net; pTotIns+=ins; pTotCost+=cost; pTotPrem+=premium;
     return `<tr>
       <td class="b">${e.name}</td>
       <td class="m">${e.position||'—'}</td>
       <td class="r">${fmtMoney(sdelGross)}</td>
       <td class="r">
-        <input class="ci r" style="width:80px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px"
           value="${premium||''}" placeholder="0"
           oninput="setSalPremium('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
       </td>
       <td class="r" style="font-weight:700">${fmtMoney(gross)}</td>
+      <td class="r" style="color:var(--amber)">
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;border-color:var(--amber)"
+          value="${cash||''}" placeholder="0"
+          oninput="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(taxBase)}</td>
       <td class="am">${fmtMoney(ndfl)}</td>
       <td class="g">${fmtMoney(net)}</td>
       <td class="bl">${fmtMoney(ins)}</td>
@@ -2937,10 +2950,12 @@ function renderSalPeriodSummary() {
   let oTotOklad=0,oTotPrem=0,oTotGross=0,oTotNdfl=0,oTotNet=0,oTotIns=0,oTotCost=0;
 
   const officeRows = officeEmps.map(e => {
-    const oklad   = (e.salaryBase||0) / 2; // за полпериода
+    const oklad   = (e.salaryBase||0) / 2;
     const premium = byEmp[e.id]?.premium||0;
+    const cash    = getSalCash(e.id, monthStr, period);
     const gross   = oklad + premium;
-    const {ndfl,net,ins,cost} = calcTax(gross);
+    const taxBase = Math.max(0, gross - cash);
+    const {ndfl,net,ins,cost} = calcTax(taxBase);
     oTotOklad+=oklad; oTotPrem+=premium; oTotGross+=gross;
     oTotNdfl+=ndfl; oTotNet+=net; oTotIns+=ins; oTotCost+=cost;
     return `<tr>
@@ -2948,11 +2963,17 @@ function renderSalPeriodSummary() {
       <td class="m">${e.position||'—'}</td>
       <td class="r">${fmtMoney(oklad)}</td>
       <td class="r">
-        <input class="ci r" style="width:80px;border:1px solid var(--border);border-radius:3px;padding:2px 5px"
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px"
           value="${premium||''}" placeholder="0"
           oninput="setSalPremium('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
       </td>
       <td class="r" style="font-weight:700">${fmtMoney(gross)}</td>
+      <td class="r" style="color:var(--amber)">
+        <input class="ci r" style="width:72px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;border-color:var(--amber)"
+          value="${cash||''}" placeholder="0"
+          oninput="setSalCash('${e.id}','${monthStr}','${period}',parseFloat(this.value)||0)">
+      </td>
+      <td class="r" style="font-weight:700">${fmtMoney(taxBase)}</td>
       <td class="am">${fmtMoney(ndfl)}</td>
       <td class="g">${fmtMoney(net)}</td>
       <td class="bl">${fmtMoney(ins)}</td>
@@ -2985,15 +3006,20 @@ function renderSalPeriodSummary() {
           <thead><tr>
             <th>Сотрудник</th><th>Должность</th>
             <th class="r">Сдельная</th><th class="r">Премия</th>
-            <th class="r">Итого нач.</th><th class="r">НДФЛ</th>
+            <th class="r">Итого нач.</th>
+            <th class="r" style="color:var(--amber)">Наличка</th>
+            <th class="r">Остаток</th>
+            <th class="r">НДФЛ</th>
             <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
           </tr></thead>
-          <tbody>${prodRows||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:12px">Нет производственных сотрудников</td></tr>'}</tbody>
+          <tbody>${prodRows||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Нет производственных сотрудников</td></tr>'}</tbody>
           ${pTotGross>0?`<tfoot><tr style="font-weight:700;border-top:1px solid var(--border2)">
             <td colspan="2" style="padding:5px 10px">Итого</td>
             <td class="r">${fmtMoney(pTotGross-pTotPrem)}</td>
             <td class="r">${fmtMoney(pTotPrem)}</td>
             <td class="r">${fmtMoney(pTotGross)}</td>
+            <td class="r">—</td>
+            <td class="r">—</td>
             <td class="am">${fmtMoney(pTotNdfl)}</td>
             <td class="g">${fmtMoney(pTotNet)}</td>
             <td class="bl">${fmtMoney(pTotIns)}</td>
@@ -3014,7 +3040,10 @@ function renderSalPeriodSummary() {
           <thead><tr>
             <th>Сотрудник</th><th>Должность</th>
             <th class="r">Оклад (½ мес.)</th><th class="r">Премия</th>
-            <th class="r">Итого нач.</th><th class="r">НДФЛ</th>
+            <th class="r">Итого нач.</th>
+            <th class="r" style="color:var(--amber)">Наличка</th>
+            <th class="r">Остаток</th>
+            <th class="r">НДФЛ</th>
             <th class="r">На руки</th><th class="r">Взносы</th><th class="r">Затраты</th>
           </tr></thead>
           <tbody>${officeRows}</tbody>
@@ -3023,6 +3052,8 @@ function renderSalPeriodSummary() {
             <td class="r">${fmtMoney(oTotOklad)}</td>
             <td class="r">${fmtMoney(oTotPrem)}</td>
             <td class="r">${fmtMoney(oTotGross)}</td>
+            <td class="r">—</td>
+            <td class="r">—</td>
             <td class="am">${fmtMoney(oTotNdfl)}</td>
             <td class="g">${fmtMoney(oTotNet)}</td>
             <td class="bl">${fmtMoney(oTotIns)}</td>
@@ -3041,9 +3072,21 @@ function setSalPremium(empId, monthStr, period, val) {
   const key = monthStr + period;
   if (!DB.salPremiums[key]) DB.salPremiums[key] = {};
   DB.salPremiums[key][empId] = val;
-  // Обновляем только итоговые суммы без полного перерендера
   renderSalPeriodSummary();
   syncNow();
+}
+
+function setSalCash(empId, monthStr, period, val) {
+  if (!DB.salPremiums) DB.salPremiums = {};
+  const key = monthStr + period;
+  if (!DB.salPremiums[key]) DB.salPremiums[key] = {};
+  DB.salPremiums[key]['cash_'+empId] = val;
+  renderSalPeriodSummary();
+  syncNow();
+}
+
+function getSalCash(empId, monthStr, period) {
+  return DB.salPremiums?.[monthStr+period]?.['cash_'+empId] || 0;
 }
 
 // Модальное окно сотрудника
