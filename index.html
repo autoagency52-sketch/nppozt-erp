@@ -135,6 +135,9 @@ const FOL_OPS = {fol_5f:'5Ф',fol_5tf:'5ТФ',fol_8f:'8Ф',fol_8tf:'8ТФ',fol_1
 const ALL_OPS = Object.assign({}, SEW_OPS, FOL_OPS);
 // Метров в рулоне для каждого артикула фольгирования
 const ROLL_M2 = {fol_5f:24,fol_5tf:24,fol_8f:12,fol_8tf:12,fol_10f:12,fol_10tf:12,fol_13f:12,fol_13tf:12,fol_16f:12,fol_16tf:12};
+// Для прошива метраж в рулоне не стандартизирован — пользователь вводит рулоны и м² вручную
+// Если нужна автоконвертация — задайте значения здесь
+const SEW_ROLL_M2 = {sew5f:0,sew5nf:0,sew8f:0,sew8nf:0,sew10f:0,sew10nf:0,sew13f:0,sew13nf:0,sew16f:0,sew16nf:0};
 const ABSENCE = {vacation:'Отпуск',sick:'Больничный',admin:'Административный'};
 
 const DB = {
@@ -427,7 +430,7 @@ function renderDay() {
   // Прошив
   html += '<div class="card"><div class="card-hdr"><div class="card-title" style="color:var(--purple)">🔨 Прошив — индивидуальная сдельщина</div>';
   html += '<div class="card-actions"><button class="btn sm" onclick="addIndiv()">+ Строка</button></div></div>';
-  html += '<div class="tbl-wrap"><table><thead><tr><th>Сотрудник</th><th>Артикул</th><th class="num">Объём м²</th><th class="num">Тариф ₽/м²</th><th class="num">Начислено</th><th></th></tr></thead><tbody>';
+  html += '<div class="tbl-wrap"><table><thead><tr><th>Сотрудник</th><th>Артикул</th><th class="num">Рулоны</th><th class="num">м²</th><th class="num">Тариф ₽/м²</th><th class="num">Начислено</th><th></th></tr></thead><tbody>';
   var indiv = day.indiv||[];
   if (indiv.length) {
     indiv.forEach(function(r,i) {
@@ -440,8 +443,9 @@ function renderDay() {
       html += '<tr>' +
         '<td><select class="sel" style="width:110px" onchange="updIndiv(' + i + ',\'empId\',this.value);autoSewRate(' + i + ')">' + empOpts + '</select></td>' +
         '<td><select class="sel" style="width:75px" onchange="updIndiv(' + i + ',\'op\',this.value);autoSewRate(' + i + ')">' + artOpts + '</select></td>' +
-        '<td><input class="ci num" style="width:70px" value="' + (r.qty||'') + '" onchange="updIndiv(' + i + ',\'qty\',parseFloat(this.value)||0)"></td>' +
-        '<td><input class="ci num" style="width:70px" value="' + (r.rate?(+r.rate).toFixed(2):'') + '" onchange="updIndiv(' + i + ',\'rate\',parseFloat(this.value)||0)"></td>' +
+        '<td><input class="ci num" style="width:60px" value="' + (r.rolls||'') + '" placeholder="0" onchange="updSewRolls(' + i + ',parseFloat(this.value)||0)"></td>' +
+        '<td><input class="ci num" style="width:60px" value="' + (r.qty||'') + '" placeholder="0" onchange="updIndiv(' + i + ',\'qty\',parseFloat(this.value)||0)"></td>' +
+        '<td><input class="ci num" style="width:60px" value="' + (r.rate?(+r.rate).toFixed(2):'') + '" onchange="updIndiv(' + i + ',\'rate\',parseFloat(this.value)||0)"></td>' +
         '<td class="num g">' + fmt(r.gross||0) + '</td>' +
         '<td><button class="btn del sm" onclick="delIndiv(' + i + ')">✕</button></td>' +
         '</tr>';
@@ -623,6 +627,16 @@ function toggleBrigMember(empId, checked) {
   renderContent();
 }
 
+function updSewRolls(i, rolls) {
+  var d = getDay(curDay), r = d.indiv[i];
+  r.rolls = rolls;
+  var m2 = SEW_ROLL_M2[r.op] || 0;
+  if (m2 > 0) { r.qty = Math.round(rolls * m2 * 100) / 100; }
+  // Если m2=0 (нет стандарта) — просто сохраняем рулоны, м² вводится вручную
+  r.gross = (r.qty||0) * (r.rate||0);
+  renderContent();
+}
+
 function updAfter(i, key, val) {
   var d = getDay(curDay), r = d.after[i];
   r[key] = val;
@@ -739,6 +753,14 @@ function renderPeriod() {
     '<th class="num">База</th><th class="num">Премия</th><th class="num">Начислено</th>' +
     '<th class="num" style="color:var(--amber)">Наличка</th><th class="num">Офиц.база</th>' +
     '<th class="num">НДФЛ</th><th class="num">На руки</th><th class="num">Взносы</th><th class="num">Затраты</th>' +
+    '<th></th>' +
+    '</tr></thead>';
+  // thead для отпускных: вместо Должность — сразу Сумма отпускных
+  var vacThead = '<thead><tr><th>Сотрудник 🏖</th>' +
+    '<th class="num">Отпускные</th><th></th><th class="num">Начислено</th>' +
+    '<th class="num" style="color:var(--amber)">Наличка</th><th class="num">Офиц.база</th>' +
+    '<th class="num">НДФЛ</th><th class="num">На руки</th><th class="num">Взносы</th><th class="num">Затраты</th>' +
+    '<th></th>' +
     '</tr></thead>';
 
   function makeRow(row) {
@@ -755,26 +777,31 @@ function renderPeriod() {
       '<td class="num g">' + fmt(tx.net) + '</td>' +
       '<td class="num b">' + fmt(tx.ins) + '</td>' +
       '<td class="num" style="font-weight:700">' + fmt(row.cost) + '</td>' +
+      '<td></td>' +
       '</tr>';
   }
 
-  // Строки отпускных
-  var vacRows = [];
-  var vacKeys = Object.keys(DB.premiums).filter(function(k){ return k.indexOf(pKey+'_vac_')===0; });
-  var vTot=0,vTax=0,vNet=0,vIns=0,vCost=0;
-  vacKeys.forEach(function(k) {
-    var vac = DB.premiums[k];
-    var total = vac.amount||0;
-    var offB  = Math.max(0, total - (vac.cash||0));
-    var tx    = calcTax(offB);
-    var cost  = offB + tx.ins + (vac.cash||0);
-    vTot+=total; vTax+=tx.tax; vNet+=tx.net; vIns+=tx.ins; vCost+=cost;
-    vacRows.push({k:k, vac:vac, total:total, offB:offB, tx:tx, cost:cost});
-  });
-  function vacRowHtml(row) {
+  // Строки отпускных — для производственных и офисных
+  function getVacRows(prefix) {
+    var keys = Object.keys(DB.premiums).filter(function(k){ return k.indexOf(pKey+'_'+prefix+'_')===0; });
+    keys.sort();
+    return keys.map(function(k) {
+      var vac = DB.premiums[k] || {};
+      var total = vac.amount||0;
+      var offB  = Math.max(0, total - (vac.cash||0));
+      var tx    = calcTax(offB);
+      var cost  = offB + tx.ins + (vac.cash||0);
+      return {k:k, vac:vac, total:total, offB:offB, tx:tx, cost:cost};
+    });
+  }
+  function vacRowHtml(row, allEmps) {
+    var empOpts = allEmps.map(function(e){
+      return '<option value="' + e.id + '"' + (e.id===row.vac.empId?' selected':'') + '>' + e.name + '</option>';
+    }).join('');
     return '<tr style="background:rgba(251,191,36,.05)">' +
-      '<td style="font-weight:600;color:var(--amber)">' + (row.vac.name||'Сотрудник') + ' 🏖</td>' +
-      '<td style="color:var(--text3)">Отпускные</td>' +
+      '<td><select class="sel" style="width:130px" onchange="setVac(\'' + row.k + '\',\'empId\',this.value)">' +
+        '<option value="">— выберите —</option>' + empOpts +
+      '</select> <span style="color:var(--amber);font-size:10px">🏖</span></td>' +
       '<td class="num"><input class="ci num" style="width:80px" value="' + (row.vac.amount||'') + '" placeholder="0" onchange="setVac(\'' + row.k + '\',\'amount\',parseFloat(this.value)||0)"></td>' +
       '<td></td>' +
       '<td class="num" style="font-weight:600">' + fmt(row.total) + '</td>' +
@@ -784,6 +811,7 @@ function renderPeriod() {
       '<td class="num g">' + fmt(row.tx.net) + '</td>' +
       '<td class="num b">' + fmt(row.tx.ins) + '</td>' +
       '<td class="num" style="font-weight:700">' + fmt(row.cost) + '</td>' +
+      '<td><button class="btn del sm" onclick="delVacRow(\'' + row.k + '\')">✕</button></td>' +
       '</tr>';
   }
 
@@ -795,6 +823,7 @@ function renderPeriod() {
       '<td class="num g">' + fmt(net) + '</td>' +
       '<td class="num b">' + fmt(ins) + '</td>' +
       '<td class="num">' + fmt(cost) + '</td>' +
+      '<td></td>' +
       '</tr></tfoot>';
   }
 
@@ -841,14 +870,40 @@ function renderPeriod() {
   html += '</div></div>';
 
   // Таблицы
+  // Отпускные производственных
+  var pvRows = getVacRows('pvac');
+  var pvTot=0,pvTax=0,pvNet=0,pvIns=0,pvCost=0;
+  pvRows.forEach(function(r){pvTot+=r.total;pvTax+=r.tx.tax;pvNet+=r.tx.net;pvIns+=r.tx.ins;pvCost+=r.cost;});
+
   if (prods.length) {
-    html += '<div class="card" style="margin-bottom:10px"><div class="card-hdr"><div class="card-title" style="color:var(--purple)">🔨 Производственный персонал</div><div class="card-actions"><button class="btn sm" onclick="addVacRow(\'' + pKey + '\')">+ Отпускные</button></div></div>';
-    var allPRows = pRows.map(makeRow).join('') + vacRows.map(vacRowHtml).join('');
-    html += '<div class="tbl-wrap"><table>' + thead + '<tbody>' + (allPRows||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:10px">Нет данных</td></tr>') + '</tbody>' + makeFoot(pTot+vTot,pTax+vTax,pNet+vNet,pIns+vIns,pCost+vCost) + '</table></div></div>';
+    html += '<div class="card" style="margin-bottom:10px"><div class="card-hdr"><div class="card-title" style="color:var(--purple)">🔨 Производственный персонал</div></div>';
+    html += '<div class="tbl-wrap"><table>' + thead + '<tbody>' + (pRows.map(makeRow).join('')||'<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:10px">Нет данных</td></tr>') + '</tbody>' + makeFoot(pTot,pTax,pNet,pIns,pCost) + '</table></div></div>';
+    // Отпускные производственных
+    html += '<div class="card" style="margin-bottom:10px;border-color:rgba(251,191,36,.3)"><div class="card-hdr" style="background:rgba(251,191,36,.05)">' +
+      '<div class="card-title" style="color:var(--amber)">🏖 Отпускные — производственный персонал</div>' +
+      '<div class="card-actions"><button class="btn sm" onclick="addVacRow(\'' + pKey + '\',\'pvac\')">+ Строка</button></div></div>';
+    var pvacHtml = pvRows.map(function(r){return vacRowHtml(r,prods);}).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Нет отпускных</td></tr>';
+    html += '<div class="tbl-wrap"><table>' + vacThead + '<tbody>' + pvacHtml + '</tbody>';
+    if(pvTot>0) html += makeFoot(pvTot,pvTax,pvNet,pvIns,pvCost);
+    html += '</table></div></div>';
   }
+
+  // Отпускные офисных
+  var ovRows = getVacRows('ovac');
+  var ovTot=0,ovTax=0,ovNet=0,ovIns=0,ovCost=0;
+  ovRows.forEach(function(r){ovTot+=r.total;ovTax+=r.tx.tax;ovNet+=r.tx.net;ovIns+=r.tx.ins;ovCost+=r.cost;});
+
   if (offs.length) {
-    html += '<div class="card"><div class="card-hdr"><div class="card-title" style="color:var(--blue)">💼 Офисный персонал</div></div>';
+    html += '<div class="card" style="margin-bottom:10px"><div class="card-hdr"><div class="card-title" style="color:var(--blue)">💼 Офисный персонал</div></div>';
     html += '<div class="tbl-wrap"><table>' + thead + '<tbody>' + oRows.map(makeRow).join('') + '</tbody>' + makeFoot(oTot,oTax,oNet,oIns,oCost) + '</table></div></div>';
+    // Отпускные офисных
+    html += '<div class="card" style="margin-bottom:10px;border-color:rgba(251,191,36,.3)"><div class="card-hdr" style="background:rgba(251,191,36,.05)">' +
+      '<div class="card-title" style="color:var(--amber)">🏖 Отпускные — офисный персонал</div>' +
+      '<div class="card-actions"><button class="btn sm" onclick="addVacRow(\'' + pKey + '\',\'ovac\')">+ Строка</button></div></div>';
+    var ovacHtml = ovRows.map(function(r){return vacRowHtml(r,offs);}).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:8px;font-size:11px">Нет отпускных</td></tr>';
+    html += '<div class="tbl-wrap"><table>' + vacThead + '<tbody>' + ovacHtml + '</tbody>';
+    if(ovTot>0) html += makeFoot(ovTot,ovTax,ovNet,ovIns,ovCost);
+    html += '</table></div></div>';
   }
 
   // Комментарий к периоду
@@ -876,13 +931,15 @@ function setVac(k, field, val) {
   DB.premiums[k][field] = val;
   renderPeriod();
 }
-function addVacRow(pKey) {
-  var n = Object.keys(DB.premiums).filter(function(k){return k.indexOf(pKey+'_vac_')===0;}).length;
-  var k = pKey + '_vac_' + n;
-  DB.premiums[k] = {name:'', amount:0, cash:0};
-  // Предложим ввести имя
-  var name = prompt('Имя сотрудника для отпускных:');
-  if (name) DB.premiums[k].name = name.trim();
+function addVacRow(pKey, prefix) {
+  var n = 0;
+  while (DB.premiums[pKey+'_'+prefix+'_'+n]) n++;
+  var k = pKey + '_' + prefix + '_' + n;
+  DB.premiums[k] = {empId:'', amount:0, cash:0};
+  renderPeriod();
+}
+function delVacRow(k) {
+  delete DB.premiums[k];
   renderPeriod();
 }
 
