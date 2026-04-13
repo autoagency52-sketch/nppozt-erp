@@ -49,7 +49,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:11px}
 th{background:var(--bg3);color:var(--text3);font-weight:600;padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:4px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+td{padding:4px 8px;border-bottom:1px solid var(--border);vertical-align:middle}td.num input,td.num select{margin:0 auto;display:block}
 tr:hover td{background:rgba(255,255,255,.02)}
 .num{text-align:right;font-family:monospace}.g{color:var(--green)}.r{color:var(--red)}.a{color:var(--amber)}.b{color:var(--blue)}
 tfoot td{font-weight:700;background:var(--bg3)}
@@ -81,7 +81,7 @@ tfoot td{font-weight:700;background:var(--bg3)}
 </style>
 </head>
 <body>
-<div class="ver-bar">ВЕРСИЯ 3.0 — НПП ОЗТ Зарплата</div>
+<div class="ver-bar">ВЕРСИЯ 3.1 — НПП ОЗТ Зарплата</div>
 <div class="app">
   <div class="sidebar">
     <div class="sb-top">
@@ -459,20 +459,26 @@ function renderDay() {
   var bOps = day.brigade && day.brigade.ops || [];
   html += '<div class="card"><div class="card-hdr"><div class="card-title" style="color:var(--green)">◈ Фольгирование — бригадный котёл</div>';
   html += '<div class="card-actions"><button class="btn sm g" onclick="addBrigOp()">+ Операция</button></div></div>';
-  html += '<div class="tbl-wrap"><table><thead><tr><th>Артикул</th><th class="num">Рулоны</th><th class="num">м² (авто)</th><th class="num">Тариф ₽/м²</th><th class="num">Сумма</th><th></th></tr></thead><tbody>';
+  html += '<div class="tbl-wrap"><table><thead><tr><th style="min-width:110px">Артикул</th><th class="num" style="min-width:70px">Рулоны/<br>Вёдра</th><th class="num" style="min-width:70px">м² / кг</th><th class="num" style="min-width:70px">Тариф ₽</th><th class="num" style="min-width:75px">Сумма</th><th style="width:30px"></th></tr></thead><tbody>';
   if (bOps.length) {
     bOps.forEach(function(b,i) {
       var artOpts = Object.keys(FOL_OPS).map(function(k){
         return '<option value="' + k + '"' + (k===b.op?' selected':'') + '>' + FOL_OPS[k] + '</option>';
       }).join('');
-      var rollM2 = ROLL_M2[b.op] || 0;
-      var rolls  = rollM2 > 0 && b.qty > 0 ? Math.round(b.qty / rollM2 * 100)/100 : '';
+      var isGlue = b.op === 'glue';
+      var rollM2 = isGlue ? 25 : (ROLL_M2[b.op] || 0); // для клея: 1 ведро = 25 кг
+      // Поле 1: рулоны (фольга) или вёдра (клей)
+      var col1 = '<input class="ci num" style="width:65px" value="' + (b.rolls||'') + '" placeholder="0" onchange="updBrigRolls(' + i + ',parseFloat(this.value)||0)">';
+      // Поле 2: м² (фольга, вводится вручную или авто) / кг (клей, вводится вручную или авто)
+      var col2 = '<input class="ci num" style="width:65px" value="' + (b.qty||'') + '" placeholder="0" onchange="updBrig(' + i + ',\'qty\',parseFloat(this.value)||0)">';
+      // Тариф
+      var col3 = '<input class="ci num" style="width:65px" value="' + (b.rate?(+b.rate).toFixed(2):'') + '" onchange="updBrig(' + i + ',\'rate\',parseFloat(this.value)||0)">';
       html += '<tr>' +
-        '<td><select class="sel" style="width:100px" onchange="updBrig(' + i + ',\'op\',this.value)">' + artOpts + '</select></td>' +
-        '<td><input class="ci num" style="width:65px" value="' + (b.rolls||'') + '" placeholder="0" onchange="updBrigRolls(' + i + ',parseFloat(this.value)||0)"></td>' +
-        '<td class="num" style="color:var(--text2)">' + (b.qty||0) + '</td>' +
-        '<td><input class="ci num" style="width:65px" value="' + (b.rate?(+b.rate).toFixed(2):'') + '" onchange="updBrig(' + i + ',\'rate\',parseFloat(this.value)||0)"></td>' +
-        '<td class="num g">' + fmt(b.gross||0) + '</td>' +
+        '<td><select class="sel" style="width:105px" onchange="updBrig(' + i + ',\'op\',this.value)">' + artOpts + '</select></td>' +
+        '<td class="num">' + col1 + '</td>' +
+        '<td class="num">' + col2 + '</td>' +
+        '<td class="num">' + col3 + '</td>' +
+        '<td class="num g" style="font-weight:600">' + fmt(b.gross||0) + '</td>' +
         '<td><button class="btn del sm" onclick="delBrig(' + i + ')">✕</button></td>' +
         '</tr>';
     });
@@ -480,7 +486,7 @@ function renderDay() {
     html += '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px">Нет операций</td></tr>';
   }
   html += '</tbody>';
-  if (bTotal > 0) html += '<tfoot><tr><td colspan="3" style="padding:5px 8px">Котёл итого</td><td class="num g" style="font-weight:700">' + fmt(bTotal) + '</td><td></td></tr></tfoot>';
+  if (bTotal > 0) html += '<tfoot><tr><td colspan="4" style="padding:5px 8px">Котёл итого</td><td class="num g" style="font-weight:700">' + fmt(bTotal) + '</td><td></td></tr></tfoot>';
   html += '</table></div>';
   // Состав бригады
   html += '<div style="padding:10px 12px;border-top:1px solid var(--border)">';
@@ -583,6 +589,7 @@ function toggleAbsence(date, empId, type) {
 function updIndiv(i, key, val) {
   var d = getDay(curDay);
   d.indiv[i][key] = val;
+  if (key==='qty') d.indiv[i].rolls = 0; // ручной ввод м² — сбрасываем рулоны
   d.indiv[i].gross = (d.indiv[i].qty||0) * (d.indiv[i].rate||0);
   renderContent();
 }
@@ -602,7 +609,12 @@ function delIndiv(i) { getDay(curDay).indiv.splice(i,1); renderContent(); }
 function updBrig(i, key, val) {
   var d = getDay(curDay), b = d.brigade.ops[i];
   b[key] = val;
-  if (key==='op') { var r2=getBrigRate(val); if(r2) b.rate=r2; }
+  if (key==='op') {
+    var r2 = getBrigRate(val);
+    if(r2) b.rate = r2;
+    b.rolls = 0; // сброс при смене артикула
+  }
+  if (key==='qty') b.rolls = 0; // ввод м²/кг вручную — сбрасываем рулоны/вёдра
   b.gross = (b.qty||0)*(b.rate||0);
   renderContent();
 }
@@ -615,9 +627,10 @@ function delBrig(i) { getDay(curDay).brigade.ops.splice(i,1); renderContent(); }
 function updBrigRolls(i, rolls) {
   var d = getDay(curDay), b = d.brigade.ops[i];
   b.rolls = rolls;
-  var m2 = ROLL_M2[b.op] || 0;
-  b.qty  = m2 > 0 ? Math.round(rolls * m2 * 100) / 100 : 0;
-  b.gross = b.qty * (b.rate||0);
+  var isGlue = b.op === 'glue';
+  var factor = isGlue ? 25 : (ROLL_M2[b.op] || 0); // вёдра→кг или рулоны→м²
+  if (factor > 0) b.qty = Math.round(rolls * factor * 100) / 100;
+  b.gross = (b.qty||0) * (b.rate||0);
   renderContent();
 }
 function toggleBrigMember(empId, checked) {
