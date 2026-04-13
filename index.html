@@ -133,6 +133,8 @@ const GS = 'https://script.google.com/macros/s/AKfycbzC0vd34pjqKioZyiy_f7P9zTbrm
 const SEW_OPS = {sew5f:'5П',sew5nf:'5НФ',sew8f:'8П',sew8nf:'8НФ',sew10f:'10П',sew10nf:'10НФ',sew13f:'13П',sew13nf:'13НФ',sew16f:'16П',sew16nf:'16НФ'};
 const FOL_OPS = {fol_5f:'5Ф',fol_5tf:'5ТФ',fol_8f:'8Ф',fol_8tf:'8ТФ',fol_10f:'10Ф',fol_10tf:'10ТФ',fol_13f:'13Ф',fol_13tf:'13ТФ',fol_16f:'16Ф',fol_16tf:'16ТФ',glue:'Клей FP'};
 const ALL_OPS = Object.assign({}, SEW_OPS, FOL_OPS);
+// Метров в рулоне для каждого артикула фольгирования
+const ROLL_M2 = {fol_5f:24,fol_5tf:24,fol_8f:12,fol_8tf:12,fol_10f:12,fol_10tf:12,fol_13f:12,fol_13tf:12,fol_16f:12,fol_16tf:12};
 const ABSENCE = {vacation:'Отпуск',sick:'Больничный',admin:'Административный'};
 
 const DB = {
@@ -453,22 +455,25 @@ function renderDay() {
   var bOps = day.brigade && day.brigade.ops || [];
   html += '<div class="card"><div class="card-hdr"><div class="card-title" style="color:var(--green)">◈ Фольгирование — бригадный котёл</div>';
   html += '<div class="card-actions"><button class="btn sm g" onclick="addBrigOp()">+ Операция</button></div></div>';
-  html += '<div class="tbl-wrap"><table><thead><tr><th>Артикул</th><th class="num">Объём</th><th class="num">Тариф ₽</th><th class="num">Сумма</th><th></th></tr></thead><tbody>';
+  html += '<div class="tbl-wrap"><table><thead><tr><th>Артикул</th><th class="num">Рулоны</th><th class="num">м² (авто)</th><th class="num">Тариф ₽/м²</th><th class="num">Сумма</th><th></th></tr></thead><tbody>';
   if (bOps.length) {
     bOps.forEach(function(b,i) {
       var artOpts = Object.keys(FOL_OPS).map(function(k){
         return '<option value="' + k + '"' + (k===b.op?' selected':'') + '>' + FOL_OPS[k] + '</option>';
       }).join('');
+      var rollM2 = ROLL_M2[b.op] || 0;
+      var rolls  = rollM2 > 0 && b.qty > 0 ? Math.round(b.qty / rollM2 * 100)/100 : '';
       html += '<tr>' +
         '<td><select class="sel" style="width:100px" onchange="updBrig(' + i + ',\'op\',this.value)">' + artOpts + '</select></td>' +
-        '<td><input class="ci num" style="width:65px" value="' + (b.qty||'') + '" onchange="updBrig(' + i + ',\'qty\',parseFloat(this.value)||0)"></td>' +
+        '<td><input class="ci num" style="width:65px" value="' + (b.rolls||'') + '" placeholder="0" onchange="updBrigRolls(' + i + ',parseFloat(this.value)||0)"></td>' +
+        '<td class="num" style="color:var(--text2)">' + (b.qty||0) + '</td>' +
         '<td><input class="ci num" style="width:65px" value="' + (b.rate?(+b.rate).toFixed(2):'') + '" onchange="updBrig(' + i + ',\'rate\',parseFloat(this.value)||0)"></td>' +
         '<td class="num g">' + fmt(b.gross||0) + '</td>' +
         '<td><button class="btn del sm" onclick="delBrig(' + i + ')">✕</button></td>' +
         '</tr>';
     });
   } else {
-    html += '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:8px">Нет операций</td></tr>';
+    html += '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:8px">Нет операций</td></tr>';
   }
   html += '</tbody>';
   if (bTotal > 0) html += '<tfoot><tr><td colspan="3" style="padding:5px 8px">Котёл итого</td><td class="num g" style="font-weight:700">' + fmt(bTotal) + '</td><td></td></tr></tfoot>';
@@ -603,6 +608,14 @@ function addBrigOp() {
   renderContent();
 }
 function delBrig(i) { getDay(curDay).brigade.ops.splice(i,1); renderContent(); }
+function updBrigRolls(i, rolls) {
+  var d = getDay(curDay), b = d.brigade.ops[i];
+  b.rolls = rolls;
+  var m2 = ROLL_M2[b.op] || 0;
+  b.qty  = m2 > 0 ? Math.round(rolls * m2 * 100) / 100 : 0;
+  b.gross = b.qty * (b.rate||0);
+  renderContent();
+}
 function toggleBrigMember(empId, checked) {
   var d = getDay(curDay), m = d.brigade.members;
   if (checked && m.indexOf(empId)<0) m.push(empId);
@@ -644,7 +657,7 @@ function renderPeriod() {
   var ndfl   = parseFloat(document.getElementById('p-ndfl')?document.getElementById('p-ndfl').value:13)||13;
   var ins1   = parseFloat(document.getElementById('p-ins1')?document.getElementById('p-ins1').value:30.2)||30.2;
   var ins2   = parseFloat(document.getElementById('p-ins2')?document.getElementById('p-ins2').value:7.6)||7.6;
-  var thresh = parseFloat(document.getElementById('p-thresh')?document.getElementById('p-thresh').value:40639.5)||40639.5;
+  var thresh = parseFloat(document.getElementById('p-thresh')?document.getElementById('p-thresh').value:(DB.settings&&DB.settings.thresh||40639.5))||(DB.settings&&DB.settings.thresh||40639.5);
   var pKey   = month + curPeriod;
   var payLbl = curPeriod===1?'Выплата 25-го':'Выплата 10-го следующего месяца';
 
@@ -745,6 +758,35 @@ function renderPeriod() {
       '</tr>';
   }
 
+  // Строки отпускных
+  var vacRows = [];
+  var vacKeys = Object.keys(DB.premiums).filter(function(k){ return k.indexOf(pKey+'_vac_')===0; });
+  var vTot=0,vTax=0,vNet=0,vIns=0,vCost=0;
+  vacKeys.forEach(function(k) {
+    var vac = DB.premiums[k];
+    var total = vac.amount||0;
+    var offB  = Math.max(0, total - (vac.cash||0));
+    var tx    = calcTax(offB);
+    var cost  = offB + tx.ins + (vac.cash||0);
+    vTot+=total; vTax+=tx.tax; vNet+=tx.net; vIns+=tx.ins; vCost+=cost;
+    vacRows.push({k:k, vac:vac, total:total, offB:offB, tx:tx, cost:cost});
+  });
+  function vacRowHtml(row) {
+    return '<tr style="background:rgba(251,191,36,.05)">' +
+      '<td style="font-weight:600;color:var(--amber)">' + (row.vac.name||'Сотрудник') + ' 🏖</td>' +
+      '<td style="color:var(--text3)">Отпускные</td>' +
+      '<td class="num"><input class="ci num" style="width:80px" value="' + (row.vac.amount||'') + '" placeholder="0" onchange="setVac(\'' + row.k + '\',\'amount\',parseFloat(this.value)||0)"></td>' +
+      '<td></td>' +
+      '<td class="num" style="font-weight:600">' + fmt(row.total) + '</td>' +
+      '<td><input class="ci num" style="width:70px;border-color:var(--amber)" value="' + (row.vac.cash||'') + '" placeholder="0" onchange="setVac(\'' + row.k + '\',\'cash\',parseFloat(this.value)||0)"></td>' +
+      '<td class="num">' + fmt(row.offB) + '</td>' +
+      '<td class="num r">' + fmt(row.tx.tax) + '</td>' +
+      '<td class="num g">' + fmt(row.tx.net) + '</td>' +
+      '<td class="num b">' + fmt(row.tx.ins) + '</td>' +
+      '<td class="num" style="font-weight:700">' + fmt(row.cost) + '</td>' +
+      '</tr>';
+  }
+
   function makeFoot(tot,tax,net,ins,cost) {
     return '<tfoot><tr style="font-weight:700">' +
       '<td colspan="4" style="padding:5px 8px">Итого</td>' +
@@ -760,10 +802,10 @@ function renderPeriod() {
 
   // Параметры
   html += '<div class="card" style="margin-bottom:10px"><div class="card-hdr"><div class="card-title">⚙ Параметры расчёта</div></div><div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">' +
-    '<div class="field" style="width:100px"><label>НДФЛ %</label><input class="inp" id="p-ndfl" value="13" type="number" onchange="renderPeriod()"></div>' +
+    '<div class="field" style="width:100px"><label>НДФЛ %</label><input class="inp" id="p-ndfl" value="' + (DB.settings&&DB.settings.ndfl||13) + '" type="number" onchange="DB.settings=DB.settings||{};DB.settings.ndfl=parseFloat(this.value)||13;renderPeriod()"></div>' +
     '<div class="field" style="width:110px"><label>Взносы до порога</label><input class="inp" id="p-ins1" value="30.2" type="number" onchange="renderPeriod()"></div>' +
     '<div class="field" style="width:110px"><label>Взносы сверх</label><input class="inp" id="p-ins2" value="7.6" type="number" onchange="renderPeriod()"></div>' +
-    '<div class="field" style="width:130px"><label>Порог МСП, ₽</label><input class="inp" id="p-thresh" value="40639.5" type="number" onchange="renderPeriod()"></div>' +
+    '<div class="field" style="width:130px"><label>Порог МСП, ₽</label><input class="inp" id="p-thresh" value="' + (DB.settings&&DB.settings.thresh||40639.5) + '" type="number" onchange="DB.settings=DB.settings||{};DB.settings.thresh=parseFloat(this.value)||40639.5;renderPeriod()"></div>' +
     '</div></div>';
 
   // KPI
@@ -800,21 +842,47 @@ function renderPeriod() {
 
   // Таблицы
   if (prods.length) {
-    html += '<div class="card" style="margin-bottom:10px"><div class="card-hdr"><div class="card-title" style="color:var(--purple)">🔨 Производственный персонал</div></div>';
-    html += '<div class="tbl-wrap"><table>' + thead + '<tbody>' + pRows.map(makeRow).join('') + '</tbody>' + makeFoot(pTot,pTax,pNet,pIns,pCost) + '</table></div></div>';
+    html += '<div class="card" style="margin-bottom:10px"><div class="card-hdr"><div class="card-title" style="color:var(--purple)">🔨 Производственный персонал</div><div class="card-actions"><button class="btn sm" onclick="addVacRow(\'' + pKey + '\')">+ Отпускные</button></div></div>';
+    var allPRows = pRows.map(makeRow).join('') + vacRows.map(vacRowHtml).join('');
+    html += '<div class="tbl-wrap"><table>' + thead + '<tbody>' + (allPRows||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:10px">Нет данных</td></tr>') + '</tbody>' + makeFoot(pTot+vTot,pTax+vTax,pNet+vNet,pIns+vIns,pCost+vCost) + '</table></div></div>';
   }
   if (offs.length) {
     html += '<div class="card"><div class="card-hdr"><div class="card-title" style="color:var(--blue)">💼 Офисный персонал</div></div>';
     html += '<div class="tbl-wrap"><table>' + thead + '<tbody>' + oRows.map(makeRow).join('') + '</tbody>' + makeFoot(oTot,oTax,oNet,oIns,oCost) + '</table></div></div>';
   }
 
+  // Комментарий к периоду
+  var commentKey = 'comment_' + month + curPeriod;
+  var commentVal = DB.premiums[commentKey] ? DB.premiums[commentKey].text||'' : '';
+  html += '<div class="card" style="margin-top:10px"><div class="card-hdr"><div class="card-title">📝 Комментарий к периоду</div></div>' +
+    '<div class="card-body"><textarea id="period-comment" style="width:100%;height:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Введите комментарий..." onchange="savePeriodComment(\'' + commentKey + '\',this.value)">' + commentVal + '</textarea></div></div>';
+
   document.getElementById('content').innerHTML = html;
+}
+
+function savePeriodComment(key, val) {
+  if (!DB.premiums[key]) DB.premiums[key] = {};
+  DB.premiums[key].text = val;
 }
 
 function setPrem(empId, pKey, field, val) {
   var k = pKey + '_' + empId;
   if (!DB.premiums[k]) DB.premiums[k] = {premium:0, cash:0};
   DB.premiums[k][field] = val;
+  renderPeriod();
+}
+function setVac(k, field, val) {
+  if (!DB.premiums[k]) DB.premiums[k] = {};
+  DB.premiums[k][field] = val;
+  renderPeriod();
+}
+function addVacRow(pKey) {
+  var n = Object.keys(DB.premiums).filter(function(k){return k.indexOf(pKey+'_vac_')===0;}).length;
+  var k = pKey + '_vac_' + n;
+  DB.premiums[k] = {name:'', amount:0, cash:0};
+  // Предложим ввести имя
+  var name = prompt('Имя сотрудника для отпускных:');
+  if (name) DB.premiums[k].name = name.trim();
   renderPeriod();
 }
 
